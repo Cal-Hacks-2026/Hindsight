@@ -2,7 +2,7 @@
 // The API returns plain text with [n] markers, "- " bullets, and an optional
 // "Confirm with your advisor…" tail (apps/api/app/services/counselor.py); we lay that out here.
 import { Fragment, useEffect, useRef, useState, type FormEvent, type ReactNode, type Ref } from "react";
-import { Link } from "react-router";
+import { Link, useLocation, useNavigate, useSearchParams } from "react-router";
 import type { ChatMessage, Citation } from "@hindsight/contracts";
 import { api, ApiError } from "../lib/api";
 import { loadSession } from "../lib/session";
@@ -23,8 +23,8 @@ const FIRST_CHIPS = [
   "What do I still need for my major?",
   "Which of my courses count at my university?",
 ];
+// No summer-term chip: the planner schedules Fall and Spring only (AUDIT I-12).
 const NEXT_CHIPS = [
-  "What if I take a summer term?",
   "What if I drop my second major?",
   "Which requirements should I check with my advisor?",
   "Which courses should I take next term?",
@@ -35,6 +35,10 @@ export function Counselor() {
   const [exchanges, setExchanges] = useState<Exchange[]>([]);
   const [draft, setDraft] = useState("");
   const latest = useRef<HTMLElement>(null);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const handedOff = useRef(false);
 
   const busy = exchanges.at(-1)?.state.status === "pending";
 
@@ -64,6 +68,17 @@ export function Counselor() {
     }
     setExchanges([...before, { ...pending, state }]);
   }
+
+  // A question typed on Degree arrives as router state and ?q= (a shared link has only ?q=).
+  // Ask it once, then drop it from the URL and history so a reload doesn't ask again.
+  useEffect(() => {
+    if (handedOff.current) return;
+    handedOff.current = true;
+    const question = (location.state as { question?: string } | null)?.question ?? params.get("q");
+    if (!question?.trim()) return;
+    navigate(location.pathname, { replace: true });
+    void ask(question, []);
+  }, []);
 
   function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -120,7 +135,7 @@ export function Counselor() {
                   type="text"
                   value={draft}
                   maxLength={2000}
-                  placeholder={exchanges.length ? "What if I take a summer term?" : "Can I graduate by Spring 2028?"}
+                  placeholder={exchanges.length ? "Ask a follow-up question" : "Can I graduate by Spring 2028?"}
                   onChange={(e) => setDraft(e.target.value)}
                   disabled={busy}
                 />

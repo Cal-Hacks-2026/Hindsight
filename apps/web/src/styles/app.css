@@ -1223,3 +1223,98 @@ table.confirm button {
   line-height: 1.5;
   color: var(--gray);
 }
+
+/* ---- Phones: confirm rows become cards, intake masthead gets out of the way ---- */
+
+@media (max-width: 600px) {
+  .intake .masthead {
+    padding-top: 28px;
+    padding-bottom: 24px;
+  }
+
+  .intake .masthead h1 {
+    margin-top: 14px;
+    font-size: 44px;
+  }
+
+  .intake .masthead .byline {
+    margin-top: 16px;
+  }
+
+  .intake .section {
+    padding-top: 28px;
+  }
+
+  .intake .numeral {
+    font-size: 44px;
+  }
+
+  .intake .section-main h2 {
+    margin-bottom: 20px;
+    font-size: 28px;
+  }
+
+  .intake .steps {
+    margin-bottom: 28px;
+  }
+
+  /* Each course is a card: code and units, then the title, then grade and term. */
+  table.confirm,
+  table.confirm tbody {
+    display: block;
+  }
+
+  table.confirm caption {
+    display: block;
+  }
+
+  table.confirm thead {
+    display: none;
+  }
+
+  table.confirm tr {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr auto;
+    grid-template-areas:
+      "prefix number units remove"
+      "title  title  title title"
+      "grade  term   term  term";
+    gap: 4px 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(20, 20, 20, 0.18);
+  }
+
+  table.paper.confirm td {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+  }
+
+  table.confirm td[data-label]::before {
+    content: attr(data-label);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--gray);
+  }
+
+  table.confirm td:nth-child(1) { grid-area: prefix; }
+  table.confirm td:nth-child(2) { grid-area: number; }
+  table.confirm td:nth-child(3) { grid-area: title; }
+  table.confirm td:nth-child(4) { grid-area: units; }
+  table.confirm td:nth-child(5) { grid-area: grade; }
+  table.confirm td:nth-child(6) { grid-area: term; }
+  table.confirm td:nth-child(7) { grid-area: remove; justify-content: flex-end; }
+
+  table.confirm input,
+  table.confirm textarea {
+    border-bottom-color: var(--hair);
+  }
+
+  table.confirm textarea {
+    max-height: none;
+  }
+}
