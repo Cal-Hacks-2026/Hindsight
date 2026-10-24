@@ -12,7 +12,9 @@ import { useNow } from "../lib/time";
 
 const PICKS = 3;
 const SHELF = 10;
-const WEEK = 7 * 24 * 60 * 60 * 1000;
+const DAY = 24 * 60 * 60 * 1000;
+const WEEK = 7 * DAY;
+const CLOSING_WINDOW = 14 * DAY;
 
 export function Today() {
   const { profile } = loadSession();
@@ -54,15 +56,27 @@ export function Today() {
   );
 }
 
+function soonest(items: RankedOpportunity[]): { title: string; when: number } | undefined {
+  const dated = items.flatMap((i) => {
+    const at = Date.parse(i.deadline ?? i.starts_at ?? "");
+    return Number.isNaN(at) ? [] : [{ title: i.title, when: at }];
+  });
+  return dated.sort((a, b) => a.when - b.when)[0];
+}
+
+const monthOf = (when: number) =>
+  `in ${new Intl.DateTimeFormat("en-US", { month: "long" }).format(new Date(when))}`;
+
 function Edition({ profile, items, now }: { profile: Profile; items: RankedOpportunity[]; now: number }) {
   const upcoming = (i: RankedOpportunity) => {
     const at = i.deadline ? Date.parse(i.deadline) : NaN;
     return !Number.isNaN(at) && at > now;
   };
-  // Items stay in rank order; the lead section is the best-ranked ones that still have a deadline ahead.
-  const closing = items.filter(upcoming).slice(0, PICKS);
+  // Items stay in rank order; "Before it closes" holds only what actually closes soon.
+  const closing = items.filter((i) => upcoming(i) && Date.parse(i.deadline!) - now <= CLOSING_WINDOW).slice(0, PICKS);
   const byDeadline = closing.length > 0;
   const picks = byDeadline ? closing : items.slice(0, PICKS);
+  const nextUp = byDeadline ? undefined : soonest(picks);
   const rest = items.filter((i) => !picks.includes(i)).slice(0, SHELF);
   const thisWeek = items.filter((i) => upcoming(i) && Date.parse(i.deadline!) - now < WEEK).length;
   const hosts = [...new Set(items.flatMap((i) => {
@@ -91,16 +105,21 @@ function Edition({ profile, items, now }: { profile: Profile; items: RankedOppor
 
       <Section
         num={1}
-        label={byDeadline ? "Before it closes" : "Top picks"}
+        label={byDeadline ? "Before it closes" : "Coming up"}
         notes={
           <Note lead={`Why ${picks.length === 1 ? "this one" : `these ${countWord(picks.length)}`}.`}>
             {byDeadline
-              ? "The best-ranked listings that still have a deadline ahead, scored on your majors, goals and interests plus how soon they close."
-              : "Scored on your majors, goals and interests plus how soon they close."}{" "}
+              ? "The best-ranked listings closing within two weeks, scored on your majors, goals and interests plus how soon they close."
+              : "Nothing closes in the next two weeks, so these are your best matches further out."}{" "}
             The italic line is Claude's reason; the dates come only from the source page.
           </Note>
         }
       >
+        {!byDeadline && (
+          <p className="lede">
+            Nothing urgent this week.{nextUp ? ` Next up: ${nextUp.title}, ${monthOf(nextUp.when)}.` : ""}
+          </p>
+        )}
         <ol className="entries">
           {picks.map((item, i) => (
             <Listing key={item.id} item={item} now={now} rank={byDeadline ? undefined : i + 1} />
