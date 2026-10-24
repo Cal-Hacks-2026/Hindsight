@@ -227,6 +227,24 @@ npm run typecheck
 npm run smoke:live      # one real Droid self-heal session; uses Factory credits
 ```
 
+### What each key unlocks
+
+The API reads `.env` once at startup, so restart it after changing keys. `GET /health` reports whether storage and Claude are configured, and the web app shows a banner when either is missing.
+
+| Keys | Needed for | Without them |
+|---|---|---|
+| `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Saving profiles, courses and the Radar feed | Onboarding fails at "Continue" with "We couldn't save your profile" (503) |
+| `ANTHROPIC_API_KEY` (`ANTHROPIC_MODEL` optional) | Transcript reading, the Counselor, Radar reasons | Transcript upload and the Counselor are unavailable; Radar falls back to computed reasons |
+| `APIFY_TOKEN`, `APIFY_WEBHOOK_SECRET`, `PUBLIC_API_URL` | Scanning campus sources | The feed stays empty until a scan runs |
+| `FACTORY_API_KEY`, `AGENT_SECRET`, `DROID_MODEL` (optional) | The Droid agent | Droid activity page shows runs as not configured; ranking still works |
+
+## Current state and known gaps
+
+- Transfer path is fixed to De Anza → SJSU. UC Berkeley sources are scraped, but Berkeley onboarding isn't offered yet.
+- Term-by-term course offerings aren't confirmed, so planned terms are proposals.
+- Catalog requirements are not yet checked against the current catalog year.
+- Radar dates come from the source page. For hackathons the scraped end date is the end of the event, not a registration deadline.
+
 ## Deploy
 
 One Render web service runs the API and the Droid agent in a single container (see D-006 in `DECISIONS.md`). The web app is a Render static site with a `/* → /index.html` rewrite. `WEB_ORIGIN` on the API must match the site's URL exactly, and `VITE_API_URL` is baked into the web build.
