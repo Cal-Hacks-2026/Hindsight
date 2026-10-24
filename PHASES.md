@@ -75,7 +75,7 @@
 2. **Droid integration (Factory Droid SDK):**
    - Trigger: schedule (cron) + "new profile created".
    - Job: run campus scan → rank → write alerts; log `plan` / `step` / `result` to `agent_events`.
-   - Scope: Droid may only modify files in `apps/actor/`; no network writes beyond our API.
+   - Scope: Droid may only modify files in `apps/api/app/services/radar/extractors/` (D-003, D-006); no network writes beyond our API.
 3. UI: `/agent` timeline of runs (plan → steps → results), live-refresh polling.
 4. README section: where and how Droid is used (required by Factory track).
 
@@ -86,7 +86,7 @@
 ## Phase 4 — Wow + freeze (11:30 AM – 2:00 PM)
 
 Pick in this order; stop when time runs out:
-1. **Droid self-healing scraper:** break a selector on purpose → Droid detects failed scrape → patches `apps/actor/` → diff shown in `/agent` → re-run succeeds.
+1. **Droid self-healing scraper:** break a selector on purpose → Droid detects failed scrape → patches its extractor in `apps/api/app/services/radar/extractors/` → diff shown in `/agent` → re-run succeeds.
 2. **Interactive degree map** with critical path highlighted.
 3. **What-if:** toggle Econ double major → plan reflows.
 4. **PWA push** for one alert on a phone.
