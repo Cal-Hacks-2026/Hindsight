@@ -3,6 +3,7 @@ import uuid
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, Response, UploadFile
 
+from app.config import ASSIST_YEAR_ID
 from app.models import (
     CounselorRequest,
     CounselorResponse,
@@ -17,6 +18,7 @@ from app.models import (
     UpdateCoursesRequest,
 )
 from app.services import claude_limits, mocks, planner, store, transcript
+from app.services.assist import AssistError, AssistNotFound, get_service
 
 router = APIRouter(prefix="/profiles", tags=["profiles"])
 
@@ -75,8 +77,20 @@ def confirm_courses(profile_id: str, body: UpdateCoursesRequest) -> CoursesRespo
 @router.post("/{profile_id}/match", response_model=MatchResult,
              response_model_exclude_none=True)
 def match(profile_id: str, body: MatchRequest) -> MatchResult:
-    _get_profile(profile_id)
-    return mocks.match_result(body.major_label)
+    profile = _get_profile(profile_id)
+    courses = [c for c in store.courses.get(profile_id, []) if c.confirmed]
+    try:
+        return get_service().match(
+            profile.sending_institution_id,
+            profile.receiving_institution_id,
+            ASSIST_YEAR_ID,
+            body.major_label,
+            courses,
+        )
+    except AssistNotFound as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+    except AssistError as e:
+        raise HTTPException(status_code=502, detail=f"ASSIST unavailable: {e}") from e
 
 
 @router.get("/{profile_id}/plan", response_model=PlanResponse)

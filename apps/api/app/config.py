@@ -14,3 +14,6 @@ WEB_ORIGINS = [
     for o in os.getenv("WEB_ORIGIN", "http://localhost:5173").split(",")
     if o.strip()
 ]
+
+# ASSIST academic year used for matching (id = fall year − 1949; 77 = 2026–27).
+ASSIST_YEAR_ID = 77
