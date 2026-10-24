@@ -46,3 +46,18 @@ export function formatWhen(iso: string): string | null {
   const midnight = at.getHours() === 0 && at.getMinutes() === 0;
   return midnight ? dateFmt.format(at) : `${dateFmt.format(at)} · ${timeFmt.format(at)}`;
 }
+
+export type TimeLeft = { value: number; unit: string; urgency: Urgency };
+
+/** The big numeral on a listing: 3 / "Days left", 5 / "Hours left", 0 / "Closed". */
+export function timeLeft(iso: string, now: number): TimeLeft | null {
+  const at = Date.parse(iso);
+  if (Number.isNaN(at)) return null;
+  const left = at - now;
+  if (left <= 0) return { value: 0, unit: "Closed", urgency: "past" };
+  const urgency: Urgency = left < 2 * DAY ? "urgent" : left < 7 * DAY ? "soon" : "later";
+  if (left < HOUR) return { value: Math.max(1, Math.floor(left / MINUTE)), unit: "Minutes left", urgency };
+  if (left < DAY) return { value: Math.floor(left / HOUR), unit: left < 2 * HOUR ? "Hour left" : "Hours left", urgency };
+  const days = Math.floor(left / DAY);
+  return { value: days, unit: days === 1 ? "Day left" : "Days left", urgency };
+}

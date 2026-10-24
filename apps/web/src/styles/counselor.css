@@ -390,11 +390,9 @@
   }
 }
 
+/* The shell's footer carries this note on /counselor (Layout FOOTER_NOTE); a second line under it read as two footers. */
 .cs-foot {
-  padding: 20px 0 32px;
-  border-top: 1px solid var(--hair);
-  font-weight: 400;
-  color: var(--gray);
+  display: none;
 }
 
 /* ---- Agent log ---- */
