@@ -25,7 +25,7 @@ const STEPS: { id: Step; label: string; title: string; note: { lead: string; bod
     title: "Your transcript, as you have it.",
     note: {
       lead: "What happens next.",
-      body: "Claude reads the courses off the page. Nothing is matched until you've checked every row.",
+      body: "Claude reads the courses off the page. Your file isn't stored; we keep only the course rows you confirm. Nothing is matched until you've checked every row.",
     },
   },
   {
