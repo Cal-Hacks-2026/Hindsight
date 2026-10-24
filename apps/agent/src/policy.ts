@@ -23,10 +23,11 @@ type Details = ToolUse['details'];
 export const MCP_SERVER = 'hindsight';
 
 // Patch text is parsed strictly, so our reading and the CLI's can't disagree about which
-// files a patch touches: every line that could be a control line (a `*` after any
+// files a patch touches: every line that could be a header line (`***` after any
 // whitespace, control, or invisible format characters, however another parser trims)
 // must be exactly one of these, with nothing before it and no Add/Delete/Move.
-const PATCH_CONTROL = /^[\s\p{Cc}\p{Cf}\p{Z}]*\*/u;
+// Hunk lines like ` **kwargs,` or `-    *args` never reach `***`, so they pass.
+const PATCH_CONTROL = /^[\s\p{Cc}\p{Cf}\p{Z}]*\*\*\*/u;
 const PATCH_FRAME = /^\*\*\* (Begin Patch|End Patch|End of File)$/;
 const PATCH_UPDATE = /^\*\*\* Update File: (.+)$/;
 
@@ -93,12 +94,12 @@ export class EditScope {
           }
         }
         // The text, the CLI's own parse (files[]), and filePath must all name the same files;
-        // a patch the CLI reports no files for is refused.
+        // a patch the CLI reports no files or no filePath for is refused.
         const resolve = (f: string) => path.resolve(this.dir, f);
         const fromText = new Set(named.map(resolve));
         const fromCli = new Set((details.files ?? []).map((f) => resolve(f.filePath)));
         const sameFiles = fromCli.size === fromText.size && [...fromCli].every((f) => fromText.has(f));
-        if (!sameFiles || !fromText.has(resolve(details.filePath))) {
+        if (!sameFiles || !details.filePath || !fromText.has(resolve(details.filePath))) {
           return { denied: 'patch text and the files it reports disagree' };
         }
         const outside = named.filter((f) => this.target(f) === null);

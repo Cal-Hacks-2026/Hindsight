@@ -119,6 +119,8 @@ test('patch text is parsed strictly, and must agree with what the CLI reports', 
     ...['\u0085', '\u200b', '\ufeff', '\u0001'].map(
       (p) => `*** Begin Patch\n*** Update File: ${DIR}/localist.py\n@@\n-a\n+b\n${p}*** Add File: ${DIR}/new.py\n*** End Patch`,
     ),
+    // A context line's single leading space doesn't hide a header from a parser that trims.
+    `*** Begin Patch\n*** Update File: ${DIR}/localist.py\n@@\n-a\n+b\n *** Add File: ${DIR}/new.py\n*** End Patch`,
   ]) {
     assert.ok(denied(withText(sneaky)), sneaky);
   }
@@ -126,5 +128,9 @@ test('patch text is parsed strictly, and must agree with what the CLI reports', 
   assert.ok(denied({ ...ok, filePath: `${DIR}/x.py` }), 'filePath names another file');
   assert.ok(denied({ ...ok, files: undefined }), 'no files[] from the CLI');
   assert.ok(denied({ ...ok, files: [] }), 'empty files[] from the CLI');
+  assert.ok(denied({ ...ok, filePath: undefined }), 'no filePath from the CLI');
   assert.equal(denied({ ...ok, files: [{ filePath: `${DIR}/localist.py`, operation: 'update' }] }), false);
+  // Hunk lines that start with `*` after the prefix are code, not headers.
+  const starred = `*** Begin Patch\n*** Update File: ${DIR}/localist.py\n@@\n def f(\n **kwargs,\n     *args,\n-    *rest,\n+    **extra,\n )\n*** End Patch`;
+  assert.equal(denied(withText(starred)), false, 'context and changed lines with * or ** are fine');
 });
