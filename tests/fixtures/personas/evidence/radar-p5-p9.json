@@ -1,0 +1,410 @@
+{
+ "P5 Test Student Five": {
+  "items": [
+   {
+    "id": "679479f6-2bd4-4245-8607-a623764a4c2d",
+    "title": "Managing AI Intellectual Property at UC Berkeley",
+    "type": "event",
+    "org": "Intellectual Property and Industry Research Alliances (IPIRA)",
+    "url": "https://events.berkeley.edu/ipira/event/325249-managing-ai-intellectual-property-at-uc-berkeley",
+    "starts_at": "2026-10-29T19:00:00+00:00",
+    "score": 0.88,
+    "reason": "Your AI interest connects to this webinar on how Berkeley researchers handle intellectual property for AI innovations like model weights."
+   },
+   {
+    "id": "db9023ac-6732-4650-8475-35987463ca7f",
+    "title": "Condensed Matter Seminar with Archana Raja: Quantum Materials in the Age of AI: From 2D Heterostructures to Agentic Discovery",
+    "type": "event",
+    "org": "Physics",
+    "url": "https://events.berkeley.edu/physics/event/335640-condensed-matter-seminar-with-archana-raja-quantum-ma",
+    "starts_at": "2026-10-26T21:30:00+00:00",
+    "score": 0.84,
+    "reason": "This physics seminar applies artificial intelligence to quantum materials discovery, a loose link to your AI interest outside your majors."
+   },
+   {
+    "id": "906e3371-3564-4a15-a0d9-b58f3a678dd7",
+    "title": "From Limit Theorems to Finite-System Guarantees: Stein’s Method for Stochastic Systems (Siva Theja, Georgia Tech)",
+    "type": "event",
+    "org": "Department of Industrial Engineering and Operations Research",
+    "url": "https://events.berkeley.edu/IEOR/event/329792-from-limit-theorems-to-finite-system-guarantees-stein",
+    "starts_at": "2026-10-26T22:30:00+00:00",
+    "score": 0.84,
+    "reason": "This talk on probability and finite-system guarantees for stochastic systems relates to the statistical foundations behind your Data Science major."
+   },
+   {
+    "id": "65367913-0fa8-4be6-b676-e8f1585ab908",
+    "title": "Student Faculty Macro Lunch: “The Value of Codifying Organizational Knowledge”",
+    "type": "event",
+    "org": "Economics",
+    "url": "https://events.berkeley.edu/econ/event/326862-student-faculty-macro-lunch-the-value-of-codifying-or",
+    "starts_at": "2026-10-27T19:00:00+00:00",
+    "score": 0.84,
+    "reason": "This Economics department macro lunch on codifying organizational knowledge is tagged AI and touches your Economics major."
+   },
+   {
+    "id": "050ee2ab-df62-42e1-bf98-79da2d6a271a",
+    "title": "Meet MySuppleHub: An Open, Community-Contributed Evidence Base for Dietary Supplements (Bay Area Open Science Group)",
+    "type": "event",
+    "org": "Library",
+    "url": "https://berkeley.libcal.com/event/17661114",
+    "starts_at": "2026-10-27T21:00:00+00:00",
+    "score": 0.84,
+    "reason": "This library workshop presents an open, community-contributed evidence base, which relates to data work, though the supplement topic is only loosely connected…"
+   },
+   {
+    "id": "4754cde2-0944-4199-872c-6334950aa6c7",
+    "title": "Tracking AI-Related Job Loss Using Unemployment Insurance Claims Data in California",
+    "type": "event",
+    "org": "UC Berkeley Public Health",
+    "url": "https://events.berkeley.edu/bph/event/333069-tracking-ai-related-job-loss-using-unemployment",
+    "starts_at": "2026-10-28T19:00:00+00:00",
+    "score": 0.84,
+    "reason": "This online talk uses unemployment claims data to track AI-related job loss, combining your AI and data interests with an economics angle."
+   },
+   {
+    "id": "fb21d777-58f0-4d8e-814c-1f7cf886bf7f",
+    "title": "CTML Seminar Series: Tianyue Zhou (CTML GSR)",
+    "type": "event",
+    "org": "UC Berkeley Public Health",
+    "url": "https://events.berkeley.edu/bph/event/328429-ctml-seminar-series-tianyue-zhou-ctml-gsr",
+    "starts_at": "2026-10-28T19:00:00+00:00",
+    "score": 0.84,
+    "reason": "This biostatistics research gathering is tagged machine learning, so it offers a look at applied statistics relevant to Data Science."
+   },
+   {
+    "id": "b613bc09-102d-42dc-b155-23e29c0716b0",
+    "title": "Matrix on Point: The State of U.S. Immigration Enforcement and Surveillance",
+    "type": "event",
+    "org": "Social Science Matrix",
+    "url": "https://events.berkeley.edu/ssm/event/328626-matrix-on-point-the-state-of-us-immigration",
+    "starts_at": "2026-10-28T22:30:00+00:00",
+    "score": 0.84,
+    "reason": "This panel examines AI-assisted identification and data systems in immigration enforcement, linking your AI and data interests to policy questions."
+   },
+   {
+    "id": "d83e7327-523f-46e8-ac54-560f644f6287",
+    "title": "What is private equity?",
+    "type": "event",
+    "org": "Berkeley Economy and Society Initiative",
+    "url": "https://events.berkeley.edu/besi/event/332309-what-is-private-equity",
+    "starts_at": "2026-10-29T23:00:00+00:00",
+    "score": 0.84,
+    "reason": "This lecture analyzes private equity ownership patterns in the U.S. economy, which fits your Economics major more than your data interests."
+   },
+   {
+    "id": "710cab91-c89d-40ce-af05-47c2c0e2fb1c",
+    "title": "Cultural Analytics Series: Mads Rosendahl Thomsen",
+    "type": "event",
+    "org": "Berkeley Institute for Data Science (BIDS)",
+    "url": "https://www.ischool.berkeley.edu/events/2026/cultural-analytics-series-mads-rosendahl-thomsen",
+    "starts_at": "2026-10-30T19:15:00+00:00",
+    "score": 0.84,
+    "reason": "This Berkeley Institute for Data Science lecture features a comparative literature professor, a humanities angle on data rather than a technical topic."
+   },
+   {
+    "id": "fccb5832-f649-4bd9-a2a0-afb3260c6936",
+    "title": "Discussion with Mads Rosendahl Thomsen",
+    "type": "event",
+    "org": "Berkeley Institute for Data Science (BIDS)",
+    "url": "https://www.ischool.berkeley.edu/events/2026/discussion-mads-rosendahl-thomsen",
+    "starts_at": "2026-10-30T21:30:00+00:00",
+    "score": 0.84,
+    "reason": "This in-person discussion with the Cultural Analytics speaker is hosted by the Berkeley Institute for Data Science, which matches your data interest."
+   },
+   {
+    "id": "47426eda-7e05-4b89-91a6-fd8321b43194",
+    "title": "California and the 2026 Midterms: Pre-Election Roundtable",
+    "type": "event",
+    "org": "Citrin Center for Public Opinion",
+    "url": "https://events.berkeley.edu/ccpo/event/334908-california-and-the-2026-midterms-pre-election",
+    "starts_at": "2026-10-30T22:30:00+00:00",
+    "score": 0.84,
+    "reason": "This roundtable presents statewide polling data on California's 2026 midterms, offering a look at data used in political analysis."
+   },
+   {
+    "id": "f943ca0c-f926-46a0-97f8-3b5de212de93",
+    "title": "Catie Cuan // Physical AI: Giving AI a Robot Body",
+    "type": "event",
+    "org": "Jacobs Institute for Design Innovation",
+    "url": "https://events.berkeley.edu/Jacobs/event/328958-catie-cuan",
+    "starts_at": "2026-10-28T00:30:00+00:00",
+    "score": 0.78,
+    "reason": "This talk on physical AI and human-robot interaction speaks to your AI interest, though it focuses on robotics and design."
+   },
+   {
+    "id": "55cd5fbe-68d7-48d5-8012-ccd0188f8e93",
+    "title": "Geography Colloquia Series - All that is compute transforms into concrete: Monopoly rent and the fixity of AI’s infrastructure",
+    "type": "event",
+    "org": "Geography",
+    "url": "https://events.berkeley.edu/geog/event/327393-geography-colloquia-series-all-that-is-compute-transf",
+    "starts_at": "2026-10-28T22:30:00+00:00",
+    "score": 0.78,
+    "reason": "This geography colloquium looks at the infrastructure and economics behind AI compute, connecting your AI interest to a social-science view."
+   },
+   {
+    "id": "17d7b14a-851d-4e25-9cf4-4c64c15e9db0",
+    "title": "Neyman Statistics Seminar with Yizhe Zhu: Differentially private synthetic data generation",
+    "type": "event",
+    "org": "Statistics",
+    "url": "https://events.berkeley.edu/live/events/334132-neyman-statistics-seminar-with-yizhe-zhu",
+    "starts_at": "2026-10-28T23:00:00+00:00",
+    "score": 0.78,
+    "reason": "This Statistics seminar on differentially private synthetic data generation directly fits your Data Science major and data interest."
+   },
+   {
+    "id": "12b40938-11f8-4829-9b43-d425e847b95a",
+    "title": "EECS Colloquium: Compiler 2.0: Building the Next Generation of Compilers with Machine Learning",
+    "type": "event",
+    "org": "Electrical Engineering & Computer Sciences",
+    "url": "https://events.berkeley.edu/eecs/event/334780-eecs-colloquium-compiler-20-building-the-next",
+    "starts_at": "2026-10-28T23:00:00+00:00",
+    "score": 0.78,
+    "reason": "This EECS colloquium on building compilers with machine learning ties your AI interest to computer science research."
+   },
+   {
+    "id": "31c1998b-a64e-48c0-8253-e31ffb6b5507",
+    "title": "OITM Seminar - Kamalini Ramdas & Francis de Vericourt",
+    "type": "event",
+    "org": "Haas School of Business",
+    "url": "https://events.berkeley.edu/haas/event/326593-hold-oitm-seminar-possible-2-speakers",
+    "starts_at": "2026-10-29T20:00:00+00:00",
+    "score": 0.78,
+    "reason": "This Haas faculty seminar has no description, so the only clear link is its data science tag and business setting."
+   },
+   {
+    "id": "d9db41b9-2863-4cd0-8843-746cbf77b58f",
+    "title": "Learning and Pricing for Consumer Electronics Trade-in Program (Sean Zhou, The Chinese University of Hong Kong)",
+    "type": "event",
+    "org": "Department of Industrial Engineering and Operations Research",
+    "url": "https://events.berkeley.edu/IEOR/event/335852-learning-and-pricing-for-consumer-electronics-trade-i",
+    "starts_at": "2026-10-30T18:00:00+00:00",
+    "score": 0.78,
+    "reason": "This talk on learning and dynamic pricing for trade-in programs blends data-driven modeling with economics, matching both your majors."
+   },
+   {
+    "id": "893fcad7-8f76-40b5-a686-de84df072675",
+    "title": "BETR/EECS Solid State Technologies Seminar: Prof. Tania Roy, Duke University | Co-Designing Emerging Devices, Circuits, and Architectures for Edge AI",
+    "type": "event",
+    "org": "Electrical Engineering & Computer Sciences",
+    "url": "https://events.berkeley.edu/eecs/event/336039-betreecs-solid-state-technologies-seminar-prof",
+    "starts_at": "2026-10-30T19:00:00+00:00",
+    "score": 0.78,
+    "reason": "This seminar covers hardware design for edge AI, which is more engineering-focused than your majors but matches your AI interest."
+   },
+   {
+    "id": "9ec9ca05-cf2c-46f1-982f-85a40a8e0777",
+    "title": "Globally Converging Algorithm for Multistage Stochastic Mixed-Integer Programs Via Enhanced Lagrangian Cuts (Haoxiang Yang, The Chinese University of Hong Kong, Shenzhen)",
+    "type": "event",
+    "org": "Department of Industrial Engineering and Operations Research",
+    "url": "https://events.berkeley.edu/IEOR/event/335855-globally-converging-algorithm-for-multistage-stochast",
+    "starts_at": "2026-10-30T23:00:00+00:00",
+    "score": 0.78,
+    "reason": "This talk on stochastic mixed-integer optimization algorithms is highly technical, touching the quantitative side of your Data Science major."
+   }
+  ]
+ },
+ "P9 Test Student Nine": {
+  "items": [
+   {
+    "id": "74182d8e-e99b-4d56-b517-12a4b7f985d5",
+    "title": "Open Lab Hours at AI Center for Civic and Social Good",
+    "type": "event",
+    "org": "Dr. Martin Luther King Jr. Library",
+    "url": "https://events.sjsu.edu/event/open-lab-ai-center",
+    "starts_at": "2026-10-26T16:00:00+00:00",
+    "score": 0.94,
+    "reason": "You can drop in to try AI tools and work on projects, which fits your AI and research interests."
+   },
+   {
+    "id": "aa1d1744-8fd1-4ed8-af98-645130151bad",
+    "title": "What Makes AI Scary? A dialogue event for SJSU students",
+    "type": "workshop",
+    "org": "Future of Humanity and Civic Engagement",
+    "url": "https://events.sjsu.edu/event/what-makes-ai-scary-a-dialogue-event-for-ai-students",
+    "starts_at": "2026-10-29T22:00:00+00:00",
+    "score": 0.92,
+    "reason": "This dialogue with other SJSU students about AI concerns connects to your AI interest, though it is discussion rather than technical work."
+   },
+   {
+    "id": "cae33fe1-a72c-415b-af68-3b2ebfe00ed2",
+    "title": "Rage Baiting and Border Crossing: How AI/LLMs Complicate Translation",
+    "type": "event",
+    "org": "Future of Humanity and Civic Engagement",
+    "url": "https://events.sjsu.edu/event/ai-et-speaker-series-torsa-ghosal",
+    "starts_at": "2026-11-04T00:00:00+00:00",
+    "score": 0.82,
+    "reason": "This talk examines how large language models mistranslate across English and Bengali, a research-flavored look at AI limits that suits your AI interest."
+   },
+   {
+    "id": "794ce263-7fcc-456f-8c74-0b74dfbe5abf",
+    "title": "Navigating AI Resources",
+    "type": "workshop",
+    "org": "Peer Connections",
+    "url": "https://events.sjsu.edu/event/navigating-ai-resources-8303",
+    "starts_at": "2026-11-04T22:00:00+00:00",
+    "score": 0.76,
+    "reason": "This workshop covers using AI resources in classes and career pathways, relevant to your AI interest as a Data Science major."
+   },
+   {
+    "id": "186a1054-fb94-4e69-a4b8-498938a0c7cb",
+    "title": "Career Ready in 30: Hiration for customized AI Interview practice",
+    "type": "workshop",
+    "org": "Career Center",
+    "url": "https://events.sjsu.edu/event/career-ready-in-30-hiration-for-customized-ai-interview-practice",
+    "starts_at": "2026-11-10T20:00:00+00:00",
+    "score": 0.76,
+    "reason": "You can practice interviews with AI feedback tailored to your resume, useful as you look for internships."
+   },
+   {
+    "id": "cb831991-f60c-46eb-88e8-25e355bc83a1",
+    "title": "Fall 2026 University Scholar Series: Breaking Through the Noise",
+    "type": "event",
+    "org": "Design",
+    "url": "https://events.sjsu.edu/event/fall-2026-university-scholar-series-breaking-through-the-noise",
+    "starts_at": "2026-11-18T20:00:00+00:00",
+    "score": 0.76,
+    "reason": "This series showcases SJSU faculty research, though this talk centers on health design rather than AI or data science."
+   },
+   {
+    "id": "f2c973ec-2c12-4737-9695-c10d30093b63",
+    "title": "🎃 KLEVR After Dark 👻: A Halloween Backrooms experience Pop Up hosted by SJSU King Library KLEVR Lab",
+    "type": "workshop",
+    "org": "Dr. Martin Luther King Jr. Library",
+    "url": "https://events.sjsu.edu/event/klevr-after-dark",
+    "starts_at": "2026-10-26T18:00:00+00:00",
+    "score": 0.73,
+    "reason": "This VR and AR pop-up is a casual look at KLEVR Lab tools; its link to your goals is weak."
+   },
+   {
+    "id": "0286bf53-5476-4aec-b6ff-9e1f05b61420",
+    "title": "Writing and Generative AI",
+    "type": "event",
+    "org": "Writing Center",
+    "url": "https://events.sjsu.edu/event/writing-and-generative-ai-nov-2026",
+    "starts_at": "2026-11-12T20:00:00+00:00",
+    "score": 0.72,
+    "reason": "This workshop explains generative AI basics and responsible use in writing, which connects to your AI interest."
+   },
+   {
+    "id": "1050f2ea-57db-4ff5-a66c-b90211f01b63",
+    "title": "Sparthill Hackathon 2026 Day #2",
+    "type": "hackathon",
+    "org": "Network Engineering Technology Society",
+    "url": "https://sammyapp.sjsu.edu/NETS/rsvp?id=379796",
+    "starts_at": "2026-10-24T14:00:00+00:00",
+    "score": 0.66,
+    "reason": "This hackathon applies AI to sustainability challenges with mentors and industry contacts, a hands-on fit for a Data Science student interested in AI."
+   },
+   {
+    "id": "288e7abc-3575-4740-9d82-32e9a1869f4d",
+    "title": "Searching for Research Articles & Utilizing SJSU Library Resources",
+    "type": "event",
+    "org": "Writing Center",
+    "url": "https://events.sjsu.edu/event/searching-for-research-articles-fall-2026-session-2",
+    "starts_at": "2026-10-28T19:00:00+00:00",
+    "score": 0.63,
+    "reason": "You'll learn to find scholarly articles with library databases and Google Scholar, a practical skill for the research you want to do."
+   },
+   {
+    "id": "d184b902-5406-403a-a7b3-6db382ed283e",
+    "title": "Reading Journal Articles Workshop Series (Morning)",
+    "type": "workshop",
+    "org": "Writing Center",
+    "url": "https://events.sjsu.edu/event/reading-journal-articles-workshop-series-morning-session-2",
+    "starts_at": "2026-10-26T18:00:00+00:00",
+    "score": 0.55,
+    "reason": "This series teaches strategies for reading dense research articles, helpful groundwork for research opportunities."
+   },
+   {
+    "id": "450f0bf3-4683-47f4-80f8-f205dbce6c62",
+    "title": "Copy + Paste Reality — 3D Scan an Object into AR hosted by SJSU King Library KLEVR Lab",
+    "type": "workshop",
+    "org": "Dr. Martin Luther King Jr. Library",
+    "url": "https://events.sjsu.edu/event/copy-paste-reality",
+    "starts_at": "2026-11-10T20:00:00+00:00",
+    "score": 0.55,
+    "reason": "This hands-on 3D scanning and AR workshop is tech-oriented, but it has little direct link to AI, research, or internships."
+   },
+   {
+    "id": "590249c4-c70d-494d-bc98-a15cbfb5bbfe",
+    "title": "2026 Sustainability Fair: Feed the Future",
+    "type": "club",
+    "org": "Environmental Resource Center",
+    "url": "https://sammyapp.sjsu.edu/ERC/rsvp?id=379893",
+    "starts_at": "2026-10-27T18:00:00+00:00",
+    "score": 0.53,
+    "reason": "This fair features student research projects, so you could see examples of research, though the focus is sustainability rather than data or AI."
+   },
+   {
+    "id": "a7ea5cb8-3873-4cc8-93d6-1748c2a1c3ff",
+    "title": "SPSS Data Analysis: T-Tests",
+    "type": "workshop",
+    "org": "Dr. Martin Luther King Jr. Library",
+    "url": "https://events.sjsu.edu/event/spss-data-analysis-t-tests",
+    "starts_at": "2026-10-29T19:00:00+00:00",
+    "score": 0.53,
+    "reason": "This workshop teaches t-tests in SPSS, a statistics skill relevant to your Data Science major."
+   },
+   {
+    "id": "43df1348-e58d-4e9d-9da6-cc5e6c5dfe88",
+    "title": "AdoptAI Drop-In - Build Your First AI Chief of Staff: A Personalized Morning Briefing",
+    "type": "event",
+    "org": "San José State University",
+    "url": "https://events.sjsu.edu/event/adoptai-drop-in-build-your-first-ai-chief-of-staff-a-personalized-morning-briefing",
+    "starts_at": "2026-11-12T21:30:00+00:00",
+    "score": 0.51,
+    "reason": "This session shows how to build a personal AI assistant, matching your AI interest, but it is tagged for staff."
+   },
+   {
+    "id": "fe3c2283-93a2-427d-9a4d-9104c5226140",
+    "title": "Reading Journal Articles Workshop Series (Afternoon)",
+    "type": "workshop",
+    "org": "Writing Center",
+    "url": "https://events.sjsu.edu/event/reading-journal-articles-week-2-pm",
+    "starts_at": "2026-10-29T21:00:00+00:00",
+    "score": 0.49,
+    "reason": "This series builds skills for reading dense research articles, useful preparation for research work."
+   },
+   {
+    "id": "0f8518c4-7358-49d1-b91f-622b83f800f5",
+    "title": "Writing Workshop: Deconstructing the Prompt",
+    "type": "workshop",
+    "org": "Writing Center",
+    "url": "https://events.sjsu.edu/event/writing-workshop-deconstructing-the-prompt",
+    "starts_at": "2026-11-02T18:30:00+00:00",
+    "score": 0.43,
+    "reason": "This workshop helps you interpret assignment prompts and organize your own research into a paper; it is general writing support."
+   },
+   {
+    "id": "348cd6ab-8b2f-435f-90b8-83d353d1935a",
+    "title": "Decode Your Career: Explore Your Career Options with Focus2",
+    "type": "workshop",
+    "org": "UHS University Housing Services",
+    "url": "https://sammyapp.sjsu.edu/UHS/rsvp?id=379946",
+    "starts_at": "2026-11-06T00:00:00+00:00",
+    "score": 0.43,
+    "reason": "You can explore career paths and research job outlook and in-demand skills, which could help you target internships."
+   },
+   {
+    "id": "9c7ca764-44e5-40d9-aab2-09faf1471a74",
+    "title": "Advanced Qualtrics: Logic, Branching & Piping",
+    "type": "workshop",
+    "org": "Dr. Martin Luther King Jr. Library",
+    "url": "https://events.sjsu.edu/event/copy-of-introduction-to-qualtrics-a-workshop-on-effective-survey-design-and-data",
+    "starts_at": "2026-11-05T09:00:00+00:00",
+    "score": 0.41,
+    "reason": "This workshop covers survey logic and branching in Qualtrics, a data collection skill that supports research and your Data Science studies."
+   },
+   {
+    "id": "d5a89744-89e8-468d-8544-0b74ef89db5f",
+    "title": "SPSS Data Analysis: ANOVA",
+    "type": "workshop",
+    "org": "Dr. Martin Luther King Jr. Library",
+    "url": "https://events.sjsu.edu/event/spss-data-analysis-anova",
+    "starts_at": "2026-11-12T20:00:00+00:00",
+    "score": 0.41,
+    "reason": "This workshop covers ANOVA in SPSS, a statistical analysis skill that fits your Data Science major."
+   }
+  ]
+ }
+}

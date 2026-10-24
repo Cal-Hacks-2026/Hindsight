@@ -1,0 +1,185 @@
+{
+ "P8 Test Student Eight": {
+  "reply": "I can't tell you a finish term for that. The planner can't set a 6-unit cap or add summer terms, so any date I gave you would be a guess.\n- The current plan assumes Fall and Spring only. The catalog doesn't say which terms courses are offered, so I can't confirm any course is offered in summer.\n- The plan runs 9 terms, from Spring 2027 to Spring 2031. Its terms are 13 to 15 units, except the last, which is 3. Spring 2027 alone is 14 units: CS 46A, MATH 42, ECON 1B and MATH 31 [1][2][3][4]. That is well over your 6-unit limit.\n- At 6 units a term, the finish would be later than Spring 2031. I can't say by how much.\n- The plan covers major requirements only. It leaves out General Education, total degree units, residency and the graduation application.\n- Domain Field Electives (9 units, Data Science) aren't in any semester, so Spring 2031 doesn't include them. They need prior department approval [5].\n- MATH 42 has a prerequisite with no stored course edge, so its ordering needs review [2].\n\nConfirm with your advisor. Here's a question you can ask them:\n“I can only take 6 units a term and want to use summer terms. Which of CS 46A, MATH 42, ECON 1B, MATH 31 and my other Data Science and Economics requirements are offered in summer, and can the 9-unit Domain Field Electives be approved?”",
+  "citations": [
+   {
+    "source": "catalog",
+    "label": "SJSU catalog · CS 46A Introduction to Programming",
+    "url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=882",
+    "ref": "CS 46A · Data Science, B.S. (2025-26)"
+   },
+   {
+    "source": "catalog",
+    "label": "SJSU catalog · MATH 42 Discrete Mathematics",
+    "url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=1286",
+    "ref": "MATH 42 · Data Science, B.S. (2025-26)"
+   },
+   {
+    "source": "catalog",
+    "label": "SJSU catalog · ECON 1B Principles of Economics: Microeconomics",
+    "url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=939",
+    "ref": "ECON 1B · Economics, B.S. (2025-26)"
+   },
+   {
+    "source": "catalog",
+    "label": "SJSU catalog · MATH 31 Calculus II",
+    "url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=1284",
+    "ref": "MATH 31 · Data Science, B.S. (2025-26)"
+   },
+   {
+    "source": "catalog",
+    "label": "SJSU catalog · Data Science, B.S. · Domain Field Electives",
+    "url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=1903",
+    "ref": "Domain Field Electives · Data Science, B.S. (2025-26)"
+   }
+  ]
+ },
+ "P3": {
+  "reply": "I can only give you a timeline for Data Science. Computer Science requirements aren't loaded in the planner, so I can't compute how long it would take and won't estimate it.\n\nData Science, B.S.:\n- The planner finishes the major courses in Spring 2029, over 5 semesters starting Spring 2027 [1][2].\n- Your match shows 1 of 8 requirements satisfied (MATH 1A covers MATH 30) [3]. Still missing: MATH 31, 39 and 42, CS 46A and 46B, the second English composition course, and the major electives [4][5][6][7][8][9][10].\n- The electives match is low confidence with an unspecified_rule flag [10]. CS 22A counts only with prior department approval [11].\n- Domain Field Electives (9 units) aren't in any semester, so Spring 2029 doesn't include them [12].\n- The plan covers major courses only. It doesn't cover GE, total units, residency, or the graduation application. It also assumes every course is offered Fall and Spring [13].\n\nComputer Science, B.S. (ASSIST match only):\n- 1 of 11 requirements is satisfied (MATH 1A covers MATH 30) [14].\n- Still missing: MATH 31, 32, 39 and 42, CS 46A, 46B and 47, the CS 49C/49J elective, the second English composition course, and 8 science elective units [15][16][17][18][19][20][21][22][23][24].\n\nBoth majors share the same math and CS 46A/46B base, so starting those courses keeps both options open.\n\nConfirm with your advisor. Here's a question you can ask them:\n“I'm deciding between Computer Science and Data Science. Can you confirm how long Computer Science would take, and whether CS 22A and the 9-unit Domain Field Electives would count toward Data Science, B.S.?”",
+  "citations": [
+   {
+    "source": "catalog",
+    "label": "SJSU catalog · CS 46A Introduction to Programming",
+    "url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=882",
+    "ref": "CS 46A · Data Science, B.S. (2025-26)"
+   },
+   {
+    "source": "catalog",
+    "label": "SJSU catalog · CS 163 Data Science Senior Project",
+    "url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=892",
+    "ref": "CS 163 · Data Science, B.S. (2025-26)"
+   },
+   {
+    "source": "assist",
+    "label": "De Anza College → San Jose State University · Data Science, B.S. (2026–2027)",
+    "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F0739dd42-491e-45c4-3e82-08dec89fcc4a",
+    "ref": "PREPARATION FOR THE MAJOR › MATH 30 - Calculus I"
+   },
+   {
+    "source": "assist",
+    "label": "De Anza College → San Jose State University · Data Science, B.S. (2026–2027)",
+    "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F0739dd42-491e-45c4-3e82-08dec89fcc4a",
+    "ref": "PREPARATION FOR THE MAJOR › MATH 31 - Calculus II"
+   },
+   {
+    "source": "assist",
+    "label": "De Anza College → San Jose State University · Data Science, B.S. (2026–2027)",
+    "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F0739dd42-491e-45c4-3e82-08dec89fcc4a",
+    "ref": "PREPARATION FOR THE MAJOR › MATH 39 - Linear Algebra I"
+   },
+   {
+    "source": "assist",
+    "label": "De Anza College → San Jose State University · Data Science, B.S. (2026–2027)",
+    "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F0739dd42-491e-45c4-3e82-08dec89fcc4a",
+    "ref": "PREPARATION FOR THE MAJOR › MATH 42 - Discrete Mathematics"
+   },
+   {
+    "source": "assist",
+    "label": "De Anza College → San Jose State University · Data Science, B.S. (2026–2027)",
+    "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F0739dd42-491e-45c4-3e82-08dec89fcc4a",
+    "ref": "LOWER DIVISION CORE REQUIREMENTS OF THE MAJOR › CS 46A - Introduction to Programming"
+   },
+   {
+    "source": "assist",
+    "label": "De Anza College → San Jose State University · Data Science, B.S. (2026–2027)",
+    "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F0739dd42-491e-45c4-3e82-08dec89fcc4a",
+    "ref": "LOWER DIVISION CORE REQUIREMENTS OF THE MAJOR › CS 46B - Introduction to Data Structures"
+   },
+   {
+    "source": "assist",
+    "label": "De Anza College → San Jose State University · Data Science, B.S. (2026–2027)",
+    "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F0739dd42-491e-45c4-3e82-08dec89fcc4a",
+    "ref": "SECOND COURSE IN ENGLISH COMPOSITION › ENGL 1B - Argument and Analysis or ENGL 2 - Critical Thinking and Writing"
+   },
+   {
+    "source": "assist",
+    "label": "De Anza College → San Jose State University · Data Science, B.S. (2026–2027)",
+    "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F0739dd42-491e-45c4-3e82-08dec89fcc4a",
+    "ref": "MAJOR ELECTIVES › Choose from: CS 22A - Python for Everyone; CS 47 - Introduction to Computer Systems; CS 48 - Applied Algorithms; CS 49J - Programming in Java; MATH 32 - Calculus III"
+   },
+   {
+    "source": "catalog",
+    "label": "SJSU catalog · CS 22A Python for Everyone",
+    "url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=881",
+    "ref": "CS 22A · Data Science, B.S. (2025-26)"
+   },
+   {
+    "source": "catalog",
+    "label": "SJSU catalog · Data Science, B.S. · Domain Field Electives",
+    "url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=1903",
+    "ref": "Domain Field Electives · Data Science, B.S. (2025-26)"
+   },
+   {
+    "source": "catalog",
+    "label": "SJSU catalog · Data Science, B.S. (2025-26)",
+    "url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=1900"
+   },
+   {
+    "source": "assist",
+    "label": "De Anza College → San Jose State University · Computer Science, B.S. (2026–2027)",
+    "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F41298989-8aac-45c6-3e9d-08dec89fcc4a",
+    "ref": "PREPARATION FOR THE MAJOR › MATH 30 - Calculus I"
+   },
+   {
+    "source": "assist",
+    "label": "De Anza College → San Jose State University · Computer Science, B.S. (2026–2027)",
+    "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F41298989-8aac-45c6-3e9d-08dec89fcc4a",
+    "ref": "PREPARATION FOR THE MAJOR › MATH 31 - Calculus II"
+   },
+   {
+    "source": "assist",
+    "label": "De Anza College → San Jose State University · Computer Science, B.S. (2026–2027)",
+    "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F41298989-8aac-45c6-3e9d-08dec89fcc4a",
+    "ref": "PREPARATION FOR THE MAJOR › MATH 42 - Discrete Mathematics"
+   },
+   {
+    "source": "assist",
+    "label": "De Anza College → San Jose State University · Computer Science, B.S. (2026–2027)",
+    "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F41298989-8aac-45c6-3e9d-08dec89fcc4a",
+    "ref": "PREPARATION FOR THE MAJOR › MATH 39 - Linear Algebra I"
+   },
+   {
+    "source": "assist",
+    "label": "De Anza College → San Jose State University · Computer Science, B.S. (2026–2027)",
+    "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F41298989-8aac-45c6-3e9d-08dec89fcc4a",
+    "ref": "PREPARATION FOR THE MAJOR › MATH 32 - Calculus III"
+   },
+   {
+    "source": "assist",
+    "label": "De Anza College → San Jose State University · Computer Science, B.S. (2026–2027)",
+    "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F41298989-8aac-45c6-3e9d-08dec89fcc4a",
+    "ref": "LOWER DIVISION MAJOR REQUIREMENTS › CS 46A - Introduction to Programming"
+   },
+   {
+    "source": "assist",
+    "label": "De Anza College → San Jose State University · Computer Science, B.S. (2026–2027)",
+    "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F41298989-8aac-45c6-3e9d-08dec89fcc4a",
+    "ref": "LOWER DIVISION MAJOR REQUIREMENTS › CS 46B - Introduction to Data Structures"
+   },
+   {
+    "source": "assist",
+    "label": "De Anza College → San Jose State University · Computer Science, B.S. (2026–2027)",
+    "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F41298989-8aac-45c6-3e9d-08dec89fcc4a",
+    "ref": "LOWER DIVISION MAJOR REQUIREMENTS › CS 47 - Introduction to Computer Systems"
+   },
+   {
+    "source": "assist",
+    "label": "De Anza College → San Jose State University · Computer Science, B.S. (2026–2027)",
+    "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F41298989-8aac-45c6-3e9d-08dec89fcc4a",
+    "ref": "COMPUTER SCIENCE ELECTIVES › CS 49C - Programming in C or CS 49J - Programming in Java"
+   },
+   {
+    "source": "assist",
+    "label": "De Anza College → San Jose State University · Computer Science, B.S. (2026–2027)",
+    "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F41298989-8aac-45c6-3e9d-08dec89fcc4a",
+    "ref": "SECOND COURSE IN ENGLISH COMPOSITION › ENGL 1B - Argument and Analysis or ENGL 2 - Critical Thinking and Writing"
+   },
+   {
+    "source": "assist",
+    "label": "De Anza College → San Jose State University · Computer Science, B.S. (2026–2027)",
+    "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F41298989-8aac-45c6-3e9d-08dec89fcc4a",
+    "ref": "SCIENCE ELECTIVES › 8 from: BIOL 30 - Principles of Biology I; BIOL 31 - Principles of Biology II; CHEM 1A - General Chemistry; GEOL 1 - General Geology; GEOL 4L - Earth Systems Lab; GEOL 7 - Earth, Time and Life; METR 10 - Weather and Climate; PHYS 50 - General Physics I: Mechanics; PHYS 51 - General Physics II: Electricity and Magnetism"
+   }
+  ]
+ }
+}

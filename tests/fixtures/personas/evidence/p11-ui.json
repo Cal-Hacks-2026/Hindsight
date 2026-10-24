@@ -1,0 +1,99 @@
+[
+ {
+  "method": "POST",
+  "url": "/profiles/<AUDIT-P1-profile-id>/counselor",
+  "status": 200,
+  "body": {
+   "reply": "I can't guarantee admission, and nothing in your data covers admission decisions. Your records show you as already a transferred SJSU student with Data Science, B.S. and Economics, B.S. listed as your majors, so I can only explain how your completed coursework matches and what remains.\n\n- Data Science lower-division match: 6 requirements are satisfied, 1 is missing and 1 is partial. CS 46B - Introduction to Data Structures is still missing [1].\n- The Major Electives group is only a partial match at low confidence, flagged sequence_rule and unspecified_rule [2].\n\nIf you want to know whether you're formally admitted to the Data Science major or whether you can declare it, that's a question for the university.\n\nConfirm with your advisor. Here's a question you can ask them:\n“Am I formally admitted to or declared in the Data Science, B.S. major at SJSU, and is there anything I still need to do to keep that status? Also, how should the partial Major Electives match (MATH 1C toward the elective group) be handled?”",
+   "citations": [
+    {
+     "source": "assist",
+     "label": "De Anza College → San Jose State University · Data Science, B.S. (2026–2027)",
+     "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F0739dd42-491e-45c4-3e82-08dec89fcc4a",
+     "ref": "LOWER DIVISION CORE REQUIREMENTS OF THE MAJOR › CS 46B - Introduction to Data Structures"
+    },
+    {
+     "source": "assist",
+     "label": "De Anza College → San Jose State University · Data Science, B.S. (2026–2027)",
+     "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F0739dd42-491e-45c4-3e82-08dec89fcc4a",
+     "ref": "MAJOR ELECTIVES › Choose from: CS 22A - Python for Everyone; CS 47 - Introduction to Computer Systems; CS 48 - Applied Algorithms; CS 49J - Programming in Java; MATH 32 - Calculus III"
+    }
+   ]
+  },
+  "headers": {}
+ },
+ {
+  "method": "POST",
+  "url": "/profiles/<AUDIT-P1-profile-id>/counselor",
+  "status": 200,
+  "body": {
+   "reply": "I can't help with the weather. I can only help with your studies, your degree plan, and campus opportunities. If you want, I can go over your remaining Data Science and Economics requirements, or the AI and hackathon events that match your interests.",
+   "citations": []
+  },
+  "headers": {}
+ },
+ {
+  "method": "POST",
+  "url": "/profiles/<AUDIT-P1-profile-id>/counselor",
+  "status": 200,
+  "body": {
+   "reply": "You don't need to skip it, because you've already completed MATH 1C (B, Spring 2024). The matcher uses it, together with MATH 1B, for MATH 31 - Calculus II, which shows as satisfied at high confidence with a C- minimum grade [1]. I can't say whether MATH 31 would still be satisfied without MATH 1C, because the matcher only reports it with both courses.\n\n- MATH 1C is also listed as a partial match for the Data Science Major Electives group, at low confidence with sequence_rule and unspecified_rule flags [2]. Treat that elective credit as unconfirmed.\n- Your plan has no MATH 1C to take. It lists MATH 1C as already done, and MATH 31 is not scheduled [1].\n- MATH 32 - Calculus III is one of the listed electives and is scheduled in Fall 2029 [3][2].\n\nConfirm with your advisor. Here's a question you can ask them:\n“My MATH 1B and MATH 1C together satisfy MATH 31 - Calculus II in the Data Science, B.S. agreement. Does MATH 1C also count toward the Major Electives group, given the sequence_rule and unspecified_rule flags?”",
+   "citations": [
+    {
+     "source": "assist",
+     "label": "De Anza College → San Jose State University · Data Science, B.S. (2023–2024)",
+     "url": "https://assist.org/transfer/results?year=74&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=74%2F113%2Fto%2F39%2FMajor%2F351029ac-76f7-44c8-99b2-f1b56d2b5224",
+     "ref": "PREPARATION FOR THE MAJOR › MATH 31 - Calculus II"
+    },
+    {
+     "source": "assist",
+     "label": "De Anza College → San Jose State University · Data Science, B.S. (2026–2027)",
+     "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F0739dd42-491e-45c4-3e82-08dec89fcc4a",
+     "ref": "MAJOR ELECTIVES › Choose from: CS 22A - Python for Everyone; CS 47 - Introduction to Computer Systems; CS 48 - Applied Algorithms; CS 49J - Programming in Java; MATH 32 - Calculus III"
+    },
+    {
+     "source": "catalog",
+     "label": "SJSU catalog · MATH 32 Calculus III",
+     "url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=1285",
+     "ref": "MATH 32 · Data Science, B.S. (2025-26)"
+    }
+   ]
+  },
+  "headers": {}
+ },
+ {
+  "method": "POST",
+  "url": "/profiles/<AUDIT-P1-profile-id>/counselor",
+  "status": 200,
+  "body": {
+   "reply": "I can't tell you, because nothing in your data covers whether Data Science is impacted or what GPA it takes to get in. I won't guess from general knowledge. Your records already list Data Science, B.S. and Economics, B.S. as your majors, so this is a question for SJSU admissions or your advisor.\n\nWhat I can say from your data:\n- The Data Science lower-division match shows 6 requirements satisfied, 1 missing (CS 46B - Introduction to Data Structures [1]) and 1 partial (Major Electives, low confidence, flagged sequence_rule and unspecified_rule [2]).\n- Your plan schedules CS 46B in Spring 2027 [3].\n- The Data Science, B.S. grade flags in the matcher show a C- minimum on the matched courses, for example MATH 31 [4]. That is a course grade minimum, not an admission GPA.\n- The plan runs through Spring 2030, which is later than your Spring 2028 goal. It covers major requirements only, not GE, total units, residency, or the graduation application.\n\nConfirm with your advisor. Here's a question you can ask them:\n“Is the Data Science, B.S. major impacted at SJSU, and what GPA or other criteria apply to me given that I'm already listed in the major? Also, does my partial Major Electives match (MATH 1C) affect that status?”",
+   "citations": [
+    {
+     "source": "assist",
+     "label": "De Anza College → San Jose State University · Data Science, B.S. (2026–2027)",
+     "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F0739dd42-491e-45c4-3e82-08dec89fcc4a",
+     "ref": "LOWER DIVISION CORE REQUIREMENTS OF THE MAJOR › CS 46B - Introduction to Data Structures"
+    },
+    {
+     "source": "assist",
+     "label": "De Anza College → San Jose State University · Data Science, B.S. (2026–2027)",
+     "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F0739dd42-491e-45c4-3e82-08dec89fcc4a",
+     "ref": "MAJOR ELECTIVES › Choose from: CS 22A - Python for Everyone; CS 47 - Introduction to Computer Systems; CS 48 - Applied Algorithms; CS 49J - Programming in Java; MATH 32 - Calculus III"
+    },
+    {
+     "source": "catalog",
+     "label": "SJSU catalog · CS 46B Introduction to Data Structures",
+     "url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=883",
+     "ref": "CS 46B · Data Science, B.S. (2025-26)"
+    },
+    {
+     "source": "assist",
+     "label": "De Anza College → San Jose State University · Data Science, B.S. (2023–2024)",
+     "url": "https://assist.org/transfer/results?year=74&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=74%2F113%2Fto%2F39%2FMajor%2F351029ac-76f7-44c8-99b2-f1b56d2b5224",
+     "ref": "PREPARATION FOR THE MAJOR › MATH 31 - Calculus II"
+    }
+   ]
+  },
+  "headers": {}
+ }
+]
