@@ -20,7 +20,7 @@ from app.models import (
     RankedOpportunity,
     UpdateCoursesRequest,
 )
-from app.services import agent_client, claude_limits, counselor, planner, profile_store, transcript
+from app.services import agent_client, claude_limits, counselor, planner, profile_limits, profile_store, transcript
 from app.services.assist import AssistError, AssistNotFound, get_service
 from app.services.assist import limits as assist_limits
 from app.services.db import StoreError
@@ -41,7 +41,7 @@ def _get_profile(profile_id: str) -> Profile:
     return profile
 
 
-@router.post("", response_model=ProfileResponse)
+@router.post("", response_model=ProfileResponse, dependencies=[Depends(profile_limits.per_ip)])
 def create_profile(body: CreateProfileRequest, background: BackgroundTasks) -> ProfileResponse:
     profile = profile_store.create_profile(body)
     # Trigger: a new profile gets its own Droid run (rank + alerts) once the response is sent.

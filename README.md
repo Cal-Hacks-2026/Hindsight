@@ -67,7 +67,7 @@ Every plan, step, diff, result, and error is a row in Supabase `agent_events`, s
 **Triggers.**
 - Schedule: every `AGENT_INTERVAL_MINUTES` (default 120, to conserve credits; `0` turns it off) for each campus in `AGENT_CAMPUSES`.
 - Manual: `POST /agent/run {campus}` (the demo button). A click within `AGENT_MANUAL_COOLDOWN_MINUTES` (default 2) of the last manual run for that campus returns that run's id, instead of starting another paid run.
-- New profile: `POST /profiles` hands the agent a `profile_created` run that ranks and alerts for that profile only (no scan). Since anyone can create a profile, at most `AGENT_PROFILE_RUNS_PER_HOUR` (default 6) of these start a Droid session; past that, the agent ranks and alerts directly and logs why.
+- New profile: `POST /profiles` hands the agent a `profile_created` run that ranks and alerts for that profile only (no scan). Since anyone can create a profile, `POST /profiles` is limited to 20 per IP per minute (its own bucket, separate from the Claude endpoints), and at most `AGENT_PROFILE_RUNS_PER_HOUR` (default 6) of these runs start a Droid session; past that, the agent ranks and alerts directly and logs why.
 
 **How it runs.** The Node SDK starts the `droid` CLI (npm package `droid`, pinned in `apps/agent`) as a local subprocess and talks to it over stdio. There's no daemon; the model runs on Factory's side with `FACTORY_API_KEY`, and tools run on this machine. In production the API and the agent share one container (`Dockerfile`, `scripts/start-container.sh`). The API is public on `$PORT`, and the agent listens only on `127.0.0.1:8787`. They have to share a disk: Droid patches extractor files, and the API runs them on the next re-scan. A redeploy resets patches; the `diff` rows are how a human turns a good patch into a PR. **Droid never commits.**
 
@@ -81,7 +81,7 @@ POST /profiles ─────────────────► API ──
 ```
 
 **What Droid can touch (DECISIONS.md D-003, D-006).**
-- **Edits:** only `apps/api/app/services/radar/extractors/<kind>.py`, and within that only the files whose sources failed in this run. Edits must be in-place updates (no creating, deleting, or moving files), with at most `AGENT_MAX_PATCHES` (default 4) per run. It's enforced in `apps/agent/src/policy.ts`. The session runs at autonomy **Off**, so every call with a side effect asks that handler first, including calls made inside Droid's Script tool or by a subagent. The handler refuses everything else.
+- **Edits:** only `apps/api/app/services/radar/extractors/<kind>.py`, and within that only the files whose sources failed in this run. Edits must be in-place updates (no creating, deleting, or moving files), with at most `AGENT_MAX_PATCHES` (default 4) per run. It's enforced in `apps/agent/src/policy.ts`, which parses patch text strictly: every `***` control line must be an exact `Update File:` (or Begin/End) line, and the files it names must match the files the CLI reports. The session runs at autonomy **Off**, so every call with a side effect asks that handler first, including calls made inside Droid's Script tool or by a subagent. The handler refuses everything else.
 - **No shell, no web.** Shell commands, URL fetches, and web searches all ask for permission and are always refused. Droid reaches the outside world only through our five tools, which are bound to the run's campus (and profile). Droid never sees a profile id.
 - **No secrets.** Droid's Read tool can't be gated, so the container keeps secrets out of its reach rather than out of its sight:
   - The agent, and so Droid, runs as its own OS user (`droid`). The API runs as `node`, so Droid can't read the API's environment through `/proc`. The API also marks itself non-dumpable, so even processes running as `node` can't read it.
@@ -93,7 +93,7 @@ POST /profiles ─────────────────► API ──
 - **Run logs carry no profile ids.** `/agent/events` is public and a profile id works like a password (it's how a student gets back to their profile), so the internal rank and alerts endpoints return counts and opportunities only.
 - **Patched code runs in its own process.** The API runs extractors in a separate Python process (`extract_worker.py`): an empty environment, isolated mode, a timeout, and JSON in and out, all re-validated. A patch can't reach the API's keys or memory.
   - Inside that process, `extract.py` still checks the code first: only allowlisted `from X import Y` imports (`json`, `re`, `html`, `datetime`, `defusedxml`, our helpers), no `open`/`eval`/introspection, no underscore or frame attributes, no `match`, no attribute assignment, and a reduced set of Python built-ins.
-  - Each call gets a copy of its source config, and a broken or refused extractor fails only its own sources.
+  - Each call gets a plain copy of its source config (strings and lists, never the pydantic model, whose methods can read files), and a broken or refused extractor fails only its own sources.
   - The rules that make an item safe to show (http(s) URL, real title, dates only from the source, dedupe) live in `normalize.py`, outside Droid's folder.
 - **Page data is untrusted.** Fetched pages reach Droid labelled as third-party data, and the prompt tells it to ignore any instructions inside them. The permission scope above is what limits the damage if it doesn't.
 

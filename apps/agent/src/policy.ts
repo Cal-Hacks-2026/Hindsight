@@ -22,8 +22,24 @@ type Details = ToolUse['details'];
 
 export const MCP_SERVER = 'hindsight';
 
-const PATCH_HEADER = /^\*\*\* (Add|Delete|Update) File: (.+)$/gm;
-const PATCH_MOVE = /^\*\*\* Move to: /m;
+// Patch text is parsed strictly, so our reading and the CLI's can't disagree about which
+// files a patch touches: every line that looks like a control line (optional whitespace,
+// then ***) must be exactly one of these, with no Add/Delete/Move.
+const PATCH_CONTROL = /^\s*\*\*\*/;
+const PATCH_FRAME = /^\*\*\* (Begin Patch|End Patch|End of File)$/;
+const PATCH_UPDATE = /^\*\*\* Update File: (.+)$/;
+
+/** Files a patch's text updates, or why it is refused. */
+export function patchTargets(content: string): string[] | { denied: string } {
+  const files: string[] = [];
+  for (const line of content.split(/\r\n|[\n\r\u2028\u2029]/)) {
+    if (!PATCH_CONTROL.test(line) || PATCH_FRAME.test(line)) continue;
+    const update = PATCH_UPDATE.exec(line);
+    if (!update) return { denied: `patches may only update files in place (${line.trim().slice(0, 80)})` };
+    files.push(update[1]);
+  }
+  return files.length ? files : { denied: 'patch names no file' };
+}
 
 export interface Decision {
   outcome: ToolConfirmationOutcome.ProceedOnce | ToolConfirmationOutcome.Cancel;
@@ -68,24 +84,25 @@ export class EditScope {
         return file ? { files: [file] } : { denied: `edit outside the allowed extractors: ${details.filePath}` };
       }
       case ToolConfirmationType.ApplyPatch: {
-        if (PATCH_MOVE.test(details.patchContent)) return { denied: 'patches may not move files' };
-        const files: string[] = [];
-        for (const [, op, file] of details.patchContent.matchAll(PATCH_HEADER)) {
-          if (op !== 'Update') return { denied: `patches may not ${op.toLowerCase()} files (${file})` };
-          files.push(file.trim());
-        }
+        const named = patchTargets(details.patchContent);
+        if (!Array.isArray(named)) return named;
         for (const f of details.files ?? []) {
           if (f.operation !== 'update' || f.moveTo !== undefined) {
             return { denied: `patches may only update files in place (${f.filePath})` };
           }
-          files.push(f.filePath);
         }
-        if (files.length === 0) files.push(details.filePath);
-        const targets = files.map((f) => this.target(f));
-        const outside = files.filter((_, i) => targets[i] === null);
+        // The text, the CLI's own parse (files[]), and filePath must all name the same files.
+        const resolve = (f: string) => path.resolve(this.dir, f);
+        const fromText = new Set(named.map(resolve));
+        const fromCli = new Set((details.files ?? []).map((f) => resolve(f.filePath)));
+        const sameFiles = fromCli.size === 0 || (fromCli.size === fromText.size && [...fromCli].every((f) => fromText.has(f)));
+        if (!sameFiles || (details.filePath && !fromText.has(resolve(details.filePath)))) {
+          return { denied: 'patch text and the files it reports disagree' };
+        }
+        const outside = named.filter((f) => this.target(f) === null);
         return outside.length
           ? { denied: `patch outside the allowed extractors: ${outside.join(', ')}` }
-          : { files: [...new Set(targets as string[])] };
+          : { files: [...fromText] };
       }
       default:
         return { denied: `${details.type} is not allowed` };
