@@ -145,14 +145,9 @@ function tone(req: Requirement): { tone: StatusTone; label: string } {
   }
 }
 
-/** "MATH 1B", "MATH 1C" → "MATH 1B + 1C": spines are short. */
-function joinCodes(codes: string[]): string {
-  return codes
-    .map((c, i) => {
-      const dept = c.split(" ")[0];
-      return i > 0 && dept === codes[i - 1]!.split(" ")[0] ? c.slice(dept!.length + 1) : c;
-    })
-    .join(" + ");
+/** "CIS 36A", "CIS 36B", "CS 46A" → "CIS 36A +2": spines are short; the Credits table lists them all. */
+function shortCodes(codes: string[]): string {
+  return codes.length > 1 ? `${codes[0]} +${codes.length - 1}` : (codes[0] ?? "");
 }
 
 const rowCode = (r: Row) => (r.parsed.choose ? "Elective" : r.parsed.code);
@@ -214,7 +209,7 @@ function Report({ profile, matches, courses }: { profile: Profile; matches: Matc
     <>
       <Masthead
         kicker="Report No. 01 · Credit articulation & degree plan"
-        byline={`Prepared for ${bylineName(profile.name)} · ${SENDING_LONG} → ${CAMPUS_LONG[profile.campus]} · ${today}`}
+        byline={`${profile.name.trim() ? `Prepared for ${bylineName(profile.name)} · ` : ""}${SENDING_LONG} → ${CAMPUS_LONG[profile.campus]} · ${today}`}
       >
         Your degree,
         <br />
@@ -341,7 +336,7 @@ function spineFor(row: Row, campus: string): { kind: SpineKind; color: string; s
   const via = row.req.satisfied_by;
   switch (row.req.status) {
     case "satisfied":
-      return { kind: "solid", color: departmentColor(via[0] && row.parsed.choose ? via[0] : row.parsed.code), sub: via.length ? `via ${joinCodes(via)}` : "" };
+      return { kind: "solid", color: departmentColor(via[0] && row.parsed.choose ? via[0] : row.parsed.code), sub: via.length ? `via ${shortCodes(via)}` : "" };
     case "partial":
       return { kind: "dashed", color: "var(--check)", sub: "partly done" };
     case "missing":

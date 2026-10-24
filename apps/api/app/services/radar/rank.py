@@ -45,6 +45,15 @@ STAFF_AUDIENCE = {"faculty", "staff", "sjsu employees", "employees: faculty and 
 STUDENT_AUDIENCE = {"students", "current students", "undergraduate students", "graduate students",
                     "students and families", "general public"}
 STAFF_ONLY_PENALTY = 0.25
+# Left out entirely: a faculty unit as the org ("Center for Faculty Excellence"), or text saying the
+# item is for faculty ("for faculty and staff", "faculty only") unless students are named alongside.
+FACULTY_ORG = re.compile(r"\bfaculty\b", re.I)
+FACULTY_TEXT = re.compile(
+    r"\bfaculty[- ]only\b"
+    r"|\b(?:for|open to|intended for|designed for|calling all)\s+(?:all\s+|sjsu\s+)?faculty\b"
+    r"(?!(?:\s*(?:,|&|/|\band\b|\bor\b|\bstaff\b)\s*)*\s*(?:and\s+)?students\b)",
+    re.I,
+)
 
 # Words a major or interest implies beyond its own label.
 EXPANSIONS: dict[str, list[str]] = {
@@ -142,6 +151,12 @@ def _urgency(row: dict[str, Any], now: datetime) -> float:
     return 0.1
 
 
+def is_for_faculty(row: dict[str, Any]) -> bool:
+    if FACULTY_ORG.search(row.get("org") or ""):
+        return True
+    return bool(FACULTY_TEXT.search(f"{row.get('title') or ''} {row.get('description') or ''}"))
+
+
 def is_current(row: dict[str, Any], now: datetime) -> bool:
     deadline, starts = parse_when(row.get("deadline")), parse_when(row.get("starts_at"))
     if deadline is not None:
@@ -177,7 +192,7 @@ def score(row: dict[str, Any], terms: ProfileTerms, now: datetime) -> Scored:
 
 def rank(profile: Profile, rows: list[dict[str, Any]], now: datetime, limit: int = FEED_SIZE) -> list[Scored]:
     terms = ProfileTerms.of(profile)
-    scored = sorted((score(r, terms, now) for r in rows if is_current(r, now)),
+    scored = sorted((score(r, terms, now) for r in rows if is_current(r, now) and not is_for_faculty(r)),
                     key=lambda s: (-s.score, s.row.get("deadline") or s.row.get("starts_at") or "9999"))
     # The same event is often listed by more than one source (e.g. Devpost and the campus calendar).
     seen, out = set(), []

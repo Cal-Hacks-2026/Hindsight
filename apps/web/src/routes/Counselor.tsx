@@ -1,7 +1,7 @@
 // Counselor: ask about your plan; every answer shows its sources (DESIGN.md §6).
 // The API returns plain text with [n] markers, "- " bullets, and an optional
 // "Confirm with your advisor…" tail (apps/api/app/services/counselor.py); we lay that out here.
-import { useEffect, useRef, useState, type FormEvent, type ReactNode, type Ref } from "react";
+import { Fragment, useEffect, useRef, useState, type FormEvent, type ReactNode, type Ref } from "react";
 import { Link } from "react-router";
 import type { ChatMessage, Citation } from "@hindsight/contracts";
 import { api, ApiError } from "../lib/api";
@@ -345,24 +345,39 @@ function toBlocks(body: string): Block[] {
   return blocks.filter((b) => b.kind === "list" || b.text);
 }
 
-/** "…ends Spring 2029.[1][2]" → text with a superscript "1 2" linking to the margin. */
+/**
+ * "…ends Spring 2029.[1][2]" → text with a superscript "1,2" linking to the margin. The last word
+ * and its superscript stay together so a citation never wraps onto its own line.
+ */
 function withCitations(text: string, count: number, id: string): ReactNode[] {
   const out: ReactNode[] = [];
   let at = 0;
   for (const m of text.matchAll(MARKERS)) {
-    out.push(text.slice(at, m.index).replace(/\s+$/, ""));
-    const nums = [...m[0].matchAll(/\d+/g)].map((n) => Number(n[0])).filter((n) => n >= 1 && n <= count);
+    const before = text.slice(at, m.index).replace(/\s+$/, "");
+    const nums = [
+      ...new Set([...m[0].matchAll(/\d+/g)].map((n) => Number(n[0])).filter((n) => n >= 1 && n <= count)),
+    ];
     if (nums.length) {
+      const word = before.search(/\S+$/);
+      const tail = word < 0 ? "" : before.slice(word);
       out.push(
-        <sup key={m.index} className="cs-cite">
-          {nums.map((n, i) => (
-            <a key={n} href={`#${id}-cite-${n}`} aria-label={`Source ${n}`}>
-              {i > 0 ? " " : ""}
-              {n}
-            </a>
-          ))}
-        </sup>,
+        word < 0 ? before : before.slice(0, word),
+        <span key={m.index} className="cs-cited">
+          {tail}
+          <sup className="cs-cite">
+            {nums.map((n, i) => (
+              <Fragment key={n}>
+                {i > 0 && ","}
+                <a href={`#${id}-cite-${n}`} aria-label={`Source ${n}`}>
+                  {n}
+                </a>
+              </Fragment>
+            ))}
+          </sup>
+        </span>,
       );
+    } else {
+      out.push(before);
     }
     at = m.index + m[0].length;
   }

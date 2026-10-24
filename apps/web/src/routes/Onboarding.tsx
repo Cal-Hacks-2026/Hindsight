@@ -305,7 +305,14 @@ function ConfirmStep({
               <tr key={key}>
                 <td><input aria-label="Prefix" value={c.prefix} onChange={(e) => text(key, "prefix", e.target.value)} /></td>
                 <td><input aria-label="Number" value={c.number} onChange={(e) => text(key, "number", e.target.value)} /></td>
-                <td><input aria-label="Title" value={c.title} onChange={(e) => text(key, "title", e.target.value)} /></td>
+                <td>
+                  <textarea
+                    aria-label="Title"
+                    rows={1}
+                    value={c.title}
+                    onChange={(e) => text(key, "title", e.target.value.replace(/\s*\n\s*/g, " "))}
+                  />
+                </td>
                 <td>
                   <input
                     aria-label="Units"

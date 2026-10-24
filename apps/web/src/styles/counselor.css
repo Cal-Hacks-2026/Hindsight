@@ -150,6 +150,10 @@
   color: var(--gray-num);
 }
 
+.cs-cited {
+  white-space: nowrap;
+}
+
 .cs-cite {
   font-size: 0.68em;
   line-height: 0;
