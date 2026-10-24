@@ -204,6 +204,7 @@ function Report({ profile, matches, courses }: { profile: Profile; matches: Matc
 
   const campus = CAMPUS_SHORT[profile.campus];
   const today = formatLongDate();
+  const missed = rows.filter((r) => r.req.status === "satisfied" && r.older);
 
   return (
     <>
@@ -215,6 +216,8 @@ function Report({ profile, matches, courses }: { profile: Profile; matches: Matc
         <br />
         in <em>hindsight</em>.
       </Masthead>
+
+      {missed.length > 0 && <Missed rows={missed} courses={courses} />}
 
       <Section
         label="Abstract"
@@ -349,7 +352,6 @@ function spineFor(row: Row, campus: string): { kind: SpineKind; color: string; s
 function Credits({ rows, courses, majors, campus }: { rows: Row[]; courses?: Course[]; majors: string[]; campus: string }) {
   const onShelf = rows.filter((r) => r.req.status === "satisfied");
   const gaps = rows.filter((r) => r.req.status !== "satisfied");
-  const older = onShelf.filter((r) => r.older);
   const present = new Set(rows.map((r) => r.req.status));
 
   const spine = (r: Row) => {
@@ -388,8 +390,6 @@ function Credits({ rows, courses, majors, campus }: { rows: Row[]; courses?: Cou
         </figcaption>
       </figure>
 
-      {older.length > 0 && <Caught rows={older} courses={courses} />}
-
       <div className="table-scroll req-table">
         <table className="paper">
           <caption>Table 1. Requirement by requirement.</caption>
@@ -412,28 +412,32 @@ function Credits({ rows, courses, majors, campus }: { rows: Row[]; courses?: Cou
   );
 }
 
-function Caught({ rows, courses }: { rows: Row[]; courses?: Course[] }) {
-  const one = rows.length === 1;
-  const spans = [...new Set(rows.map((r) => r.older!))];
-  const items = rows.map((r) => {
-    const via = r.req.satisfied_by
-      .map((code) => {
-        const term = findCourse(courses, code)?.term;
-        return term ? `${code} (${term})` : code;
-      })
-      .join(" + ");
-    return `${rowCode(r)} through ${via}`;
-  });
+function Missed({ rows, courses }: { rows: Row[]; courses?: Course[] }) {
   return (
-    <div className="callout">
-      <div className="label">Caught</div>
-      <p>
-        {listing(items)} {one ? "counts" : "count"} under the {listing(spans)} agreement in effect when you took{" "}
-        {one ? "it" : "them"}. The current agreement rates {one ? "it" : "them"} lower or doesn't count{" "}
-        {one ? "it" : "them"} at all.
-        <Refs ns={rows.flatMap((r) => r.refs)} />
-      </p>
-    </div>
+    <Section label="Heads up" notesFlush>
+      <div className="missed">
+        <h2>Things your counselor missed.</h2>
+        <ul>
+          {rows.map((r) => {
+            const via = r.req.satisfied_by
+              .map((code) => {
+                const term = findCourse(courses, code)?.term;
+                return term ? `${code} (${term})` : code;
+              })
+              .join(" + ");
+            return (
+              <li key={r.key}>
+                <strong>{rowCode(r)}</strong> counts through {via} only under the {r.older} agreement. The current one
+                rates it lower or doesn't count it.{" "}
+                <a href={r.req.citation.url} target="_blank" rel="noreferrer">
+                  ASSIST {r.older}
+                </a>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    </Section>
   );
 }
 

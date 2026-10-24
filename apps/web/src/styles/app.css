@@ -1150,3 +1150,33 @@ table.confirm button {
   color: var(--missing);
   border-bottom: 1px solid var(--missing);
 }
+
+.missed {
+  padding-left: 20px;
+  border-left: 3px solid var(--accent);
+}
+
+.missed h2 {
+  margin: 0 0 12px;
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: 32px;
+  line-height: 1.1;
+}
+
+.missed ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.missed li {
+  padding: 10px 0;
+  border-top: 1px solid var(--hair);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.missed li:first-child {
+  border-top: 0;
+}
