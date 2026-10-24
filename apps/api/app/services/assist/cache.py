@@ -15,6 +15,8 @@ from typing import Any
 
 import httpx
 
+from app.config import supabase_rest_url
+
 log = logging.getLogger(__name__)
 
 
@@ -23,14 +25,14 @@ MAX_IN_MEMORY = 256
 
 
 class ArticulationCache:
-    def __init__(self, supabase_url: str | None = None, service_key: str | None = None,
+    def __init__(self, rest_url: str | None = None, service_key: str | None = None,
                  transport: httpx.BaseTransport | None = None):
         self._mem: OrderedDict[str, dict[str, Any]] = OrderedDict()  # least recently used first
         self._lock = threading.Lock()
         self._db: httpx.Client | None = None
-        if supabase_url and service_key:
+        if rest_url and service_key:
             self._db = httpx.Client(
-                base_url=f"{supabase_url.rstrip('/')}/rest/v1",
+                base_url=rest_url,
                 headers={"apikey": service_key, "Authorization": f"Bearer {service_key}"},
                 timeout=10.0,
                 transport=transport,
@@ -38,7 +40,7 @@ class ArticulationCache:
 
     @classmethod
     def from_env(cls) -> "ArticulationCache":
-        return cls(os.getenv("SUPABASE_URL") or None, os.getenv("SUPABASE_SERVICE_ROLE_KEY") or None)
+        return cls(supabase_rest_url(), os.getenv("SUPABASE_SERVICE_ROLE_KEY") or None)
 
     def get(self, key: str) -> dict[str, Any] | None:
         with self._lock:

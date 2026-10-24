@@ -20,6 +20,7 @@ from app.models import (
 from app.services import claude_limits, mocks, planner, store, transcript
 from app.services.assist import AssistError, AssistNotFound, get_service
 from app.services.assist import limits as assist_limits
+from app.services.radar import rank, store as radar_store
 
 router = APIRouter(prefix="/profiles", tags=["profiles"])
 
@@ -109,10 +110,14 @@ def plan(profile_id: str, majors: str | None = Query(None, description="Comma-se
 
 
 @router.get("/{profile_id}/opportunities", response_model=OpportunitiesResponse,
-            response_model_exclude_none=True)
+            response_model_exclude_none=True, dependencies=[Depends(claude_limits.per_ip)])
 def opportunities(profile_id: str) -> OpportunitiesResponse:
-    _get_profile(profile_id)
-    return OpportunitiesResponse(items=mocks.opportunities())
+    profile = _get_profile(profile_id)
+    try:
+        rows = radar_store.candidates(profile.campus)
+    except radar_store.StoreError as e:
+        raise HTTPException(status_code=e.status, detail=str(e)) from e
+    return OpportunitiesResponse(items=rank.ranked_opportunities(profile, rows))
 
 
 @router.post("/{profile_id}/counselor", response_model=CounselorResponse,

@@ -110,6 +110,14 @@ def test_remaining_endpoints():
         client.get("/agent/events", params={"run_id": run_id}).json()
     ).events
     assert all(e.run_id == run_id for e in events)
-    assert client.post("/webhooks/apify", json={"eventType": "ACTOR.RUN.SUCCEEDED"}).json() == {
-        "ok": True
-    }
+
+
+
+def test_webhook_contract(monkeypatch):
+    from app.routers import webhooks
+
+    monkeypatch.setenv("APIFY_WEBHOOK_SECRET", "s3cret")
+    monkeypatch.setattr(webhooks, "_ingest", lambda run_id: None)
+    res = client.post("/webhooks/apify", headers={"X-Hindsight-Webhook-Secret": "s3cret"},
+                      json={"eventType": "ACTOR.RUN.SUCCEEDED", "eventData": {"actorRunId": "abc123"}})
+    assert res.json() == {"ok": True}

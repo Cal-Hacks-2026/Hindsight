@@ -17,3 +17,12 @@ WEB_ORIGINS = [
 
 # ASSIST academic year used for matching (id = fall year − 1949; 77 = 2026–27).
 ASSIST_YEAR_ID = 77
+
+
+def supabase_rest_url() -> str | None:
+    """PostgREST base for SUPABASE_URL, which should be the project URL; a pasted
+    `.../rest/v1` URL is accepted too."""
+    url = (os.getenv("SUPABASE_URL") or "").strip().rstrip("/")
+    if not url:
+        return None
+    return url if url.endswith("/rest/v1") else f"{url}/rest/v1"
