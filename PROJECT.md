@@ -221,11 +221,11 @@ All responses JSON. Phase 0 stubs return exactly these shapes with mock data.
 type Course = { prefix: string; number: string; title: string; units: number;
                 grade: string; term: string; academic_year_id?: number; confirmed: boolean };
 type Requirement = { id: string; group_title: string; rule: "all" | "n_of"; n?: number;
-                     receiving_course: string; status: "satisfied" | "partial" | "missing" | "uc_only";
+                     receiving_course: string; status: "satisfied" | "partial" | "missing" | "at_university";
                      satisfied_by: string[]; flags: string[]; // e.g. "sequence_rule", "min_grade_C"
                      citation: Citation; confidence: "high" | "medium" | "low" };
 type MatchResult = { major_label: string; agreement_key: string; requirements: Requirement[];
-                     summary: { satisfied: number; partial: number; missing: number } };
+                     summary: { satisfied: number; partial: number; missing: number; at_university: number } };
 type Semester = { term: string; courses: { code: string; title: string; units: number;
                   reason: string; prereqs: string[] }[] };
 type RankedOpportunity = { id: string; title: string; type: string; org: string; url: string;
