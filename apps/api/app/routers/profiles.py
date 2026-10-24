@@ -1,6 +1,7 @@
+import json
 import uuid
 
-from fastapi import APIRouter, File, HTTPException, Query, UploadFile
+from fastapi import APIRouter, File, HTTPException, Query, Response, UploadFile
 
 from app.models import (
     CounselorRequest,
@@ -15,11 +16,12 @@ from app.models import (
     ProfileResponse,
     UpdateCoursesRequest,
 )
-from app.services import mocks, store
+from app.services import mocks, planner, store, transcript
 
 router = APIRouter(prefix="/profiles", tags=["profiles"])
 
 ALLOWED_UPLOAD_TYPES = {"application/pdf", "image/png", "image/jpeg", "image/webp", "image/heic"}
+TRANSCRIPT_NOTES_HEADER = "X-Transcript-Notes"
 
 
 def _get_profile(profile_id: str) -> Profile:
@@ -43,12 +45,20 @@ def get_profile(profile_id: str) -> ProfileResponse:
 
 @router.post("/{profile_id}/transcript", response_model=CoursesResponse,
              response_model_exclude_none=True)
-async def upload_transcript(profile_id: str, file: UploadFile = File(...)) -> CoursesResponse:
+async def upload_transcript(profile_id: str, response: Response,
+                            file: UploadFile = File(...)) -> CoursesResponse:
     _get_profile(profile_id)
     if file.content_type not in ALLOWED_UPLOAD_TYPES:
         raise HTTPException(status_code=415, detail="Upload a PDF or image")
-    # Phase 1: store in Supabase Storage `transcripts/` and parse with Claude.
-    return CoursesResponse(courses=mocks.transcript_courses())
+    # TODO: also store the file in Supabase Storage `transcripts/` once Supabase is wired.
+    try:
+        courses, notes = await transcript.parse_transcript(await file.read(), file.content_type)
+    except transcript.TranscriptError as e:
+        raise HTTPException(status_code=e.status, detail=str(e)) from e
+    # Course has no confidence field (frozen contract), so renumbering notes ride in a
+    # header, index-aligned with `courses`.
+    response.headers[TRANSCRIPT_NOTES_HEADER] = json.dumps([n.model_dump() for n in notes])
+    return CoursesResponse(courses=courses)
 
 
 @router.put("/{profile_id}/courses", response_model=CoursesResponse,
@@ -69,8 +79,16 @@ def match(profile_id: str, body: MatchRequest) -> MatchResult:
 
 @router.get("/{profile_id}/plan", response_model=PlanResponse)
 def plan(profile_id: str, majors: str | None = Query(None, description="Comma-separated major labels")) -> PlanResponse:
-    _get_profile(profile_id)
-    return PlanResponse(semesters=mocks.plan())
+    profile = _get_profile(profile_id)
+    try:
+        chosen = planner.resolve_majors(majors, profile.majors, profile.campus, planner.load_majors())
+        # Match results aren't persisted yet; once /match stores them, add
+        # planner.satisfied_from_match(result) for each chosen major here.
+        satisfied = planner.satisfied_from_courses(store.courses.get(profile_id, []))
+        semesters = planner.build_plan(chosen, satisfied)
+    except planner.PlannerError as e:
+        raise HTTPException(status_code=e.status, detail=str(e)) from e
+    return PlanResponse(semesters=semesters)
 
 
 @router.get("/{profile_id}/opportunities", response_model=OpportunitiesResponse,

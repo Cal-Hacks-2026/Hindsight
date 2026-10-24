@@ -1,0 +1,49 @@
+{
+  "placeholder": true,
+  "placeholder_note": "PLACEHOLDER — invented course list and prerequisite edges used to wire up the planner. This is NOT SJSU's real Data Science B.S. requirements. Replace it with curated catalog data (PHASES.md Phase 1, step 5), set placeholder to false, and give every item its real source_url.",
+  "major_label": "Data Science, B.S.",
+  "campus": "sjsu",
+  "catalog_year": "2026-27",
+  "source_url": "https://catalog.sjsu.edu/",
+  "courses": {
+    "MATH 30": { "title": "Calculus I", "units": 3, "prereqs": [], "source_url": "https://catalog.sjsu.edu/" },
+    "MATH 31": { "title": "Calculus II", "units": 4, "prereqs": ["MATH 30"], "source_url": "https://catalog.sjsu.edu/" },
+    "MATH 39": { "title": "Linear Algebra I", "units": 3, "prereqs": ["MATH 31"], "source_url": "https://catalog.sjsu.edu/" },
+    "CS 46A": { "title": "Introduction to Programming", "units": 4, "prereqs": [], "source_url": "https://catalog.sjsu.edu/" },
+    "CS 46B": { "title": "Introduction to Data Structures", "units": 4, "prereqs": ["CS 46A"], "source_url": "https://catalog.sjsu.edu/" },
+    "STAT 95": { "title": "Elementary Statistics", "units": 3, "prereqs": [], "source_url": "https://catalog.sjsu.edu/" },
+    "DATA 101": { "title": "Data Science Fundamentals", "units": 3, "prereqs": ["MATH 39", "CS 46B"], "source_url": "https://catalog.sjsu.edu/" },
+    "DATA 120": { "title": "Probability and Statistical Inference", "units": 3, "prereqs": ["MATH 31", "STAT 95"], "source_url": "https://catalog.sjsu.edu/" },
+    "DATA 130": { "title": "Data Management and Databases", "units": 3, "prereqs": ["CS 46B"], "source_url": "https://catalog.sjsu.edu/" },
+    "DATA 140": { "title": "Statistical Learning", "units": 3, "prereqs": ["DATA 101", "DATA 120"], "source_url": "https://catalog.sjsu.edu/" },
+    "DATA 150": { "title": "Data Visualization and Communication", "units": 3, "prereqs": ["DATA 101"], "terms_offered": ["Spring"], "source_url": "https://catalog.sjsu.edu/" },
+    "DATA 160": { "title": "Machine Learning", "units": 3, "prereqs": ["DATA 140"], "terms_offered": ["Fall"], "source_url": "https://catalog.sjsu.edu/" },
+    "DATA 170": { "title": "Big Data Systems", "units": 3, "prereqs": ["DATA 130"], "source_url": "https://catalog.sjsu.edu/" },
+    "DATA 180": { "title": "Data Ethics and Policy", "units": 3, "prereqs": ["DATA 101"], "source_url": "https://catalog.sjsu.edu/" },
+    "DATA 195": { "title": "Senior Capstone", "units": 3, "prereqs": ["DATA 140", "DATA 130"], "source_url": "https://catalog.sjsu.edu/" }
+  },
+  "groups": [
+    {
+      "id": "ds-prep",
+      "title": "Lower-division preparation",
+      "rule": "all",
+      "courses": ["MATH 30", "MATH 31", "MATH 39", "CS 46A", "CS 46B", "STAT 95"],
+      "source_url": "https://catalog.sjsu.edu/"
+    },
+    {
+      "id": "ds-core",
+      "title": "Upper-division core",
+      "rule": "all",
+      "courses": ["DATA 101", "DATA 120", "DATA 130", "DATA 140", "DATA 195"],
+      "source_url": "https://catalog.sjsu.edu/"
+    },
+    {
+      "id": "ds-electives",
+      "title": "Upper-division electives",
+      "rule": "n_of",
+      "n": 2,
+      "courses": ["DATA 150", "DATA 160", "DATA 170", "DATA 180"],
+      "source_url": "https://catalog.sjsu.edu/"
+    }
+  ]
+}
