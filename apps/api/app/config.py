@@ -1,10 +1,10 @@
 import os
-from pathlib import Path
 
-from dotenv import load_dotenv
+from dotenv import find_dotenv, load_dotenv
 
-# Single .env at the repo root (see .env.example). Real env vars win.
-load_dotenv(Path(__file__).resolve().parents[3] / ".env")
+# Locally: the single .env at the repo root (see .env.example), found by walking up.
+# Deployed: no .env exists and the host's env vars are used. Real env vars always win.
+load_dotenv(find_dotenv())
 
 APP_NAME = "Hindsight"
 
