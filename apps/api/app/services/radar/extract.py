@@ -20,7 +20,9 @@ import ast
 import builtins
 import html
 import json
+import os
 import re
+import stat
 import subprocess
 import sys
 import types
@@ -214,6 +216,22 @@ def _guarded_import(name, globals=None, locals=None, fromlist=(), level=0):
     return __import__(name, globals, locals, fromlist, level)
 
 
+def read_regular(path: Path) -> str:
+    """Read a file in Droid's folder, refusing symlinks and anything not a regular file:
+    the folder is writable by Droid's OS user, so a link could point the API at a file
+    only the API can read."""
+    fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW)
+    try:
+        if not stat.S_ISREG(os.fstat(fd).st_mode):
+            raise OSError(f"{path.name} is not a regular file")
+        with os.fdopen(fd, encoding="utf-8") as f:
+            fd = -1
+            return f.read()
+    finally:
+        if fd != -1:
+            os.close(fd)
+
+
 def extractor_path(kind: str) -> Path:
     return EXTRACTORS_DIR / f"{kind}.py"
 
@@ -223,7 +241,7 @@ def load(kind: str) -> Extractor:
     ExtractorError, which normalize() records against that kind's sources only."""
     path = extractor_path(kind)
     try:
-        text = path.read_text()
+        text = read_regular(path)
     except OSError as e:
         raise ExtractorError(f"{path.name}: unreadable: {e}") from e
     check_source(text, path.name)
@@ -357,4 +375,4 @@ def run_isolated(batches: Batches, extractors_dir: Path | None = None,
 
 def page_function() -> str:
     """The Cheerio Scraper pageFunction, read per scan so a patch reaches the next run."""
-    return (EXTRACTORS_DIR / "page_function.js").read_text()
+    return read_regular(EXTRACTORS_DIR / "page_function.js")

@@ -9,7 +9,7 @@ import os
 from dataclasses import asdict
 from typing import Any, Literal
 
-from fastapi import APIRouter, Depends, Header, HTTPException
+from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from pydantic import BaseModel, Field
 
 from app.models.contracts import Campus
@@ -22,7 +22,15 @@ MAX_RAW_LIST = 3
 MAX_RAW_STRING = 400
 
 
-def require_agent_secret(secret: str | None = Header(None, alias=SECRET_HEADER)) -> None:
+LOOPBACK = {"127.0.0.1", "::1"}
+
+
+def require_agent_secret(request: Request, secret: str | None = Header(None, alias=SECRET_HEADER)) -> None:
+    """Loopback only (the agent runs in the same container), then the shared secret. So a
+    leaked AGENT_SECRET is useless from outside: host proxies connect from their own
+    address, and uvicorn only trusts X-Forwarded-For from loopback."""
+    if request.client is None or request.client.host not in LOOPBACK:
+        raise HTTPException(status_code=403, detail="Agent endpoints are loopback-only")
     expected = os.getenv("AGENT_SECRET")
     if not expected:
         raise HTTPException(status_code=503, detail="Agent endpoints not configured")

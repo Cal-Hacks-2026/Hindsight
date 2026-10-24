@@ -159,3 +159,18 @@ def test_isolated_runner_fails_closed_on_a_dead_process(tmp_path):
 def test_worker_output_is_revalidated(forged):
     with pytest.raises((ValueError, TypeError)):
         extract.parsed_from_json(forged)
+
+
+def test_symlinked_extractors_are_refused(tmp_path, monkeypatch):
+    """Droid's OS user owns the folder; a link must not point the API at its own files."""
+    secret = tmp_path / "secret.txt"
+    secret.write_text("sb_secret_x = 1\n")
+    folder = tmp_path / "extractors"
+    folder.mkdir()
+    (folder / "k.py").symlink_to(secret)
+    (folder / "page_function.js").symlink_to(secret)
+    monkeypatch.setattr(extract, "EXTRACTORS_DIR", folder)
+    with pytest.raises(extract.ExtractorError, match="unreadable"):
+        extract.load("k")
+    with pytest.raises(OSError):
+        extract.page_function()

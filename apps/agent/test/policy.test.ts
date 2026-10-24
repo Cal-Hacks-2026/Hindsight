@@ -1,11 +1,16 @@
 import assert from 'node:assert/strict';
+import { mkdtempSync, realpathSync, symlinkSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 import { test } from 'node:test';
 
 import { ToolConfirmationOutcome as O, ToolConfirmationType as T } from '@factory/droid-sdk/node';
 
 import { EditScope, type PermissionRequest } from '../src/policy.ts';
 
-const DIR = '/srv/app/apps/api/app/services/radar/extractors';
+// Real files: the scope refuses targets that aren't regular files (symlinks included).
+const DIR = realpathSync(mkdtempSync(path.join(tmpdir(), 'extractors-')));
+for (const name of ['localist.py', 'devpost.py', 'x.py', 'page_function.js']) writeFileSync(path.join(DIR, name), '');
 const OPTIONS = [O.ProceedOnce, O.ProceedAlways, O.Cancel].map((value) => ({ value, label: value }));
 
 function request(...details: unknown[]): PermissionRequest {
@@ -90,4 +95,11 @@ test('only plain extractor basenames can be opened', () => {
 test('cancels when ProceedOnce is not offered', () => {
   const req = { ...request(patch('localist.py')), options: [{ value: O.Cancel, label: 'no' }] } as PermissionRequest;
   assert.equal(scope().decide(req).outcome, O.Cancel);
+});
+
+test('refuses to patch a symlink, even under an allowed name', () => {
+  const s = new EditScope(DIR, 2);
+  symlinkSync(path.join(DIR, 'x.py'), path.join(DIR, 'linked.py'));
+  s.allow(['linked.py']);
+  assert.equal(s.decide(request(patch(`${DIR}/linked.py`))).outcome, O.Cancel);
 });

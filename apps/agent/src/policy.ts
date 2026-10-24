@@ -10,6 +10,7 @@
 // Reads, TodoWrite, ToolSearch, Script, and Task run without asking. Droid's environment
 // holds no secrets (config.ts scrubEnv) and the repo is public, so reads are harmless.
 // We don't also use disabledToolIds: in droid 0.249 any disabled tool hides ApplyPatch.
+import { lstatSync } from 'node:fs';
 import path from 'node:path';
 
 import { ToolConfirmationOutcome, ToolConfirmationType } from '@factory/droid-sdk/node';
@@ -52,7 +53,7 @@ export class EditScope {
 
   private target(filePath: string): string | null {
     const abs = path.resolve(this.dir, filePath);
-    return this.allowed.has(abs) ? abs : null;
+    return this.allowed.has(abs) && isRegularFile(abs) ? abs : null;
   }
 
   /** Files this confirmation would change, or a reason it is refused. */
@@ -113,5 +114,14 @@ export class EditScope {
     if (denied.length) return { outcome: ToolConfirmationOutcome.Cancel, denied, edits: [] };
     if (edits.length) this.approvals += 1;
     return { outcome: ToolConfirmationOutcome.ProceedOnce, denied, edits };
+  }
+}
+
+/** Not a symlink (or anything else): the API refuses those too (extract.read_regular). */
+function isRegularFile(file: string): boolean {
+  try {
+    return lstatSync(file).isFile();
+  } catch {
+    return false;
   }
 }

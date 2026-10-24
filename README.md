@@ -87,6 +87,8 @@ POST /profiles ─────────────────► API ──
   - The agent, and so Droid, runs as its own OS user (`droid`). The API runs as `node`, so Droid can't read the API's environment through `/proc`. The API also marks itself non-dumpable, so even processes running as `node` can't read it.
   - The start script withholds the Supabase, Apify, and Anthropic keys from the agent. It passes `AGENT_SECRET` as a file the agent deletes after reading, and the agent strips its environment to a short allowlist before starting Droid (the SDK passes `process.env` to the CLI).
   - What's left is Droid's own Factory key. The run log redacts it, `AGENT_SECRET`, and anything shaped like an API key before writing, since the log is public.
+  - `/internal/agent/*` accepts only loopback connections, so even a leaked `AGENT_SECRET` is useless from outside the container.
+  - The API refuses to read an extractor that is a symlink or not a regular file, and the permission handler refuses to patch one, since Droid's user owns that folder.
   - When you run it locally, both processes run as you and the repo-root `.env` is readable. The container has no `.env`.
 - **Run logs carry no profile ids.** `/agent/events` is public and a profile id works like a password (it's how a student gets back to their profile), so the internal rank and alerts endpoints return counts and opportunities only.
 - **Patched code runs in its own process.** The API runs extractors in a separate Python process (`extract_worker.py`): an empty environment, isolated mode, a timeout, and JSON in and out, all re-validated. A patch can't reach the API's keys or memory.

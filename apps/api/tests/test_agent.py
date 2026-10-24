@@ -20,6 +20,7 @@ from app.services.radar.normalize import RadarItem
 from tests.test_radar_scan import CHEERIO_ID, DATASET, NOW, FakeApify, a_run
 
 client = TestClient(app)
+local = TestClient(app, client=("127.0.0.1", 50000))  # the agent: same container, loopback
 SECRET = {"X-Agent-Secret": "agent-s3cret"}
 PROFILE = {"name": "Test Student", "campus": "sjsu", "sending_institution_id": 113,
            "receiving_institution_id": 39, "majors": ["Data Science, B.S."], "goals": "", "interests": ["ai"]}
@@ -95,20 +96,28 @@ def test_profile_is_created_even_when_the_agent_is_down(agent_fake, caplog):
 
 
 def test_internal_endpoints_need_the_secret(agent_env):
-    assert client.post("/internal/agent/scan", json={"campus": "sjsu"}).status_code == 401
-    assert client.post("/internal/agent/scan", json={"campus": "sjsu"},
+    assert local.post("/internal/agent/scan", json={"campus": "sjsu"}).status_code == 401
+    assert local.post("/internal/agent/scan", json={"campus": "sjsu"},
                        headers={"X-Agent-Secret": "wrong"}).status_code == 401
 
 
+def test_internal_endpoints_are_loopback_only(agent_env):
+    """A leaked AGENT_SECRET is useless from outside the container."""
+    assert client.post("/internal/agent/scan", json={"campus": "sjsu"}, headers=SECRET).status_code == 403
+    proxied = TestClient(app, client=("10.0.0.7", 443))
+    assert proxied.post("/internal/agent/scan", json={"campus": "sjsu"},
+                        headers={**SECRET, "X-Forwarded-For": "127.0.0.1"}).status_code == 403
+
+
 def test_internal_endpoints_disabled_without_secret():
-    assert client.post("/internal/agent/events", json={}, headers=SECRET).status_code == 503
+    assert local.post("/internal/agent/events", json={}, headers=SECRET).status_code == 503
 
 
 def test_scan_reports_every_source(monkeypatch, agent_env, radar_fake):
     apify = FakeApify(a_run(), DATASET)
     monkeypatch.setattr(scan, "client", lambda: apify)
     monkeypatch.setattr(scan.normalize, "normalize", _at_now(scan.normalize.normalize))
-    report = client.post("/internal/agent/scan", json={"campus": "sjsu"}, headers=SECRET).json()
+    report = local.post("/internal/agent/scan", json={"campus": "sjsu"}, headers=SECRET).json()
     assert report["apify_run_id"] == "run1" and report["stored"] > 0
     by_id = {r["source_id"]: r for r in report["sources"]}
     assert set(by_id) == {s.id for s in scan.sources.for_campus("sjsu")}
@@ -128,12 +137,12 @@ def test_rescan_reextracts_with_the_extractors_on_disk(monkeypatch, agent_env, r
     monkeypatch.setattr(scan, "client", lambda: apify)
     monkeypatch.setattr(scan.normalize, "normalize", _at_now(scan.normalize.normalize))
     body = {"campus": "sjsu", "apify_run_id": "run1"}
-    report = client.post("/internal/agent/rescan", json=body, headers=SECRET).json()
+    report = local.post("/internal/agent/rescan", json=body, headers=SECRET).json()
     assert {r["source_id"]: r["status"] for r in report["sources"]}["sjsu-events-ai-tech"] == "empty"
 
 
 def test_rescan_rejects_bad_run_ids(agent_env):
-    res = client.post("/internal/agent/rescan", json={"campus": "sjsu", "apify_run_id": "../x"}, headers=SECRET)
+    res = local.post("/internal/agent/rescan", json={"campus": "sjsu", "apify_run_id": "../x"}, headers=SECRET)
     assert res.status_code == 502 and "Invalid" in res.json()["detail"]
 
 
@@ -154,7 +163,7 @@ def test_source_reports_statuses():
 
 def test_raw_shows_a_trimmed_page(monkeypatch, agent_env):
     monkeypatch.setattr(scan, "client", lambda: FakeApify(a_run(), DATASET))
-    res = client.get("/internal/agent/raw", params={"apify_run_id": "run1", "source_id": "sjsu-events-ai-tech"},
+    res = local.get("/internal/agent/raw", params={"apify_run_id": "run1", "source_id": "sjsu-events-ai-tech"},
                      headers=SECRET).json()
     assert res["extractor"] == "localist.py"
     (item,) = res["items"]
@@ -164,19 +173,19 @@ def test_raw_shows_a_trimmed_page(monkeypatch, agent_env):
 
 
 def test_raw_unknown_source(agent_env):
-    res = client.get("/internal/agent/raw", params={"apify_run_id": "run1", "source_id": "nope"}, headers=SECRET)
+    res = local.get("/internal/agent/raw", params={"apify_run_id": "run1", "source_id": "nope"}, headers=SECRET)
     assert res.status_code == 404
 
 
 def test_events_endpoint_records(agent_fake, agent_env):
     run_id = str(uuid.uuid4())
     body = {"run_id": run_id, "kind": "diff", "message": "Patched localist.py", "payload": {"diff": "--- a\n+++ b"}}
-    assert client.post("/internal/agent/events", json=body, headers=SECRET).json() == {"ok": True}
+    assert local.post("/internal/agent/events", json=body, headers=SECRET).json() == {"ok": True}
     events = client.get("/agent/events", params={"run_id": run_id}).json()["events"]
     assert events[0]["kind"] == "diff" and events[0]["payload"] == {"diff": "--- a\n+++ b"}
-    bad = client.post("/internal/agent/events", json={**body, "run_id": "x"}, headers=SECRET)
+    bad = local.post("/internal/agent/events", json={**body, "run_id": "x"}, headers=SECRET)
     assert bad.status_code == 422
-    assert client.post("/internal/agent/events", json={**body, "kind": "chat"}, headers=SECRET).status_code == 422
+    assert local.post("/internal/agent/events", json={**body, "kind": "chat"}, headers=SECRET).status_code == 422
 
 
 def test_rank_and_alerts_for_one_profile(monkeypatch, agent_env, radar_fake, profile_fake):
@@ -188,7 +197,7 @@ def test_rank_and_alerts_for_one_profile(monkeypatch, agent_env, radar_fake, pro
                         "org": "SJSU", "starts_at": soon, "deadline": None, "url": "https://events.sjsu.edu/ai",
                         "description": "ai", "tags": ["ai"], "scraped_at": soon}]
     monkeypatch.setattr(rank, "ask_claude", lambda profile, items: {})
-    ranked = client.post("/internal/agent/rank", json={"campus": "sjsu", "profile_id": pid}, headers=SECRET).json()
+    ranked = local.post("/internal/agent/rank", json={"campus": "sjsu", "profile_id": pid}, headers=SECRET).json()
     assert ranked["profiles"][0]["ranked"] == 1 and len(radar_fake.ranked[pid]) == 1
     assert pid not in json.dumps(ranked)  # profile ids are bearer tokens; this reaches the public log
 
@@ -197,7 +206,7 @@ def test_rank_and_alerts_for_one_profile(monkeypatch, agent_env, radar_fake, pro
         {"opportunity_id": radar_fake.rows[0]["id"], "score": 1.0, "notified": False,
          "opportunities": {"title": "AI workshop", "url": "https://events.sjsu.edu/ai", "starts_at": soon}}])
     monkeypatch.setattr(store, "mark_notified", lambda profile_id, ids: marked.append(ids) or len(ids))
-    res = client.post("/internal/agent/alerts", json={"campus": "sjsu", "profile_id": pid}, headers=SECRET).json()
+    res = local.post("/internal/agent/alerts", json={"campus": "sjsu", "profile_id": pid}, headers=SECRET).json()
     assert res["new"] == 1 and marked == [[radar_fake.rows[0]["id"]]]
     assert pid not in json.dumps(res)
     assert "within 7 days" in res["rule"]
@@ -205,7 +214,7 @@ def test_rank_and_alerts_for_one_profile(monkeypatch, agent_env, radar_fake, pro
 
 def test_rank_unknown_or_other_campus_profile(agent_env, profile_fake):
     pid = client.post("/profiles", json=PROFILE).json()["profile"]["id"]
-    assert client.post("/internal/agent/rank", json={"campus": "berkeley", "profile_id": pid},
+    assert local.post("/internal/agent/rank", json={"campus": "berkeley", "profile_id": pid},
                        headers=SECRET).status_code == 404
 
 
