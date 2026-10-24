@@ -1,5 +1,8 @@
 <p align="center">
-  <img src="apps/web/public/brand/janus-ink.svg" alt="Hindsight's mark: an engraving of Janus, one face looking back and one looking forward" width="120">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="apps/web/public/brand/janus-paper.svg">
+    <img src="apps/web/public/brand/janus-ink.svg" alt="Hindsight's mark: an engraving of Janus, one face looking back and one looking forward" width="120">
+  </picture>
 </p>
 
 <h1 align="center">Hindsight</h1>
