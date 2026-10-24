@@ -234,7 +234,7 @@ function Report({ profile, matches, courses }: { profile: Profile; matches: Matc
 
       {plans.status === "ready" && <GoalCheck goals={profile.goals} majors={majors} plans={plans.plans} />}
 
-      <Credits rows={rows} courses={courses} majors={majors} campus={campus} />
+      <Credits rows={rows} courses={courses} majors={majors} campus={campus} plans={plans.status === "ready" ? plans.plans : undefined} />
 
       <Section num={2} label="Plan" title="The books still to collect, term by term." notes={<PlanNotes majors={majors} plans={plans.status === "ready" ? plans.plans : undefined} />}>
         {plans.status === "loading" ? (
@@ -242,7 +242,13 @@ function Report({ profile, matches, courses }: { profile: Profile; matches: Matc
         ) : plans.status === "error" ? (
           <PlanError error={plans.error} />
         ) : (
-          <PlanShelves semesters={plans.plans.combined} majors={majors} catalogRefs={catalogRefs} />
+          <>
+            <p className="plan-caveat">
+              Planned terms are proposals: we haven't confirmed which terms SJSU offers each course, so check the
+              schedule before you register.
+            </p>
+            <PlanShelves semesters={plans.plans.combined} majors={majors} catalogRefs={catalogRefs} />
+          </>
         )}
       </Section>
 
@@ -413,7 +419,8 @@ function spineFor(row: Row, campus: string): { kind: SpineKind; color: string; s
   }
 }
 
-function Credits({ rows, courses, majors, campus }: { rows: Row[]; courses?: Course[]; majors: string[]; campus: string }) {
+function Credits({ rows, courses, majors, campus, plans }: { rows: Row[]; courses?: Course[]; majors: string[]; campus: string; plans?: Plans }) {
+  const planned = plannedTerms(plans);
   const onShelf = rows.filter((r) => r.req.status === "satisfied");
   const gaps = rows.filter((r) => r.req.status !== "satisfied");
   const present = new Set(rows.map((r) => r.req.status));
@@ -467,7 +474,7 @@ function Credits({ rows, courses, majors, campus }: { rows: Row[]; courses?: Cou
           </thead>
           <tbody>
             {rows.map((r) => (
-              <RequirementRow key={r.key} row={r} courses={courses} majors={majors} />
+              <RequirementRow key={r.key} row={r} courses={courses} majors={majors} planned={planned} plansReady={!!plans} />
             ))}
           </tbody>
         </table>
@@ -505,7 +512,39 @@ function Missed({ rows, courses }: { rows: Row[]; courses?: Course[] }) {
   );
 }
 
-function RequirementRow({ row, courses, majors }: { row: Row; courses?: Course[]; majors: string[] }) {
+/** Where each planned course lands, by normalized code. */
+function plannedTerms(plans?: Plans): Map<string, string> {
+  const out = new Map<string, string>();
+  for (const sem of plans?.combined ?? []) {
+    for (const c of sem.courses) out.set(c.code.replace(/\s+/g, " ").trim().toUpperCase(), sem.term);
+  }
+  return out;
+}
+
+/** One line on what to do about a row that isn't plainly done; null when nothing is needed. */
+function nextStep(row: Row, via: string[], planned: Map<string, string>, plansReady: boolean): string | null {
+  const { req, parsed } = row;
+  const term = planned.get(parsed.code.replace(/\s+/g, " ").trim().toUpperCase());
+  const where = term ? ` Your plan puts it in ${term}.` : plansReady ? " It isn't in your plan yet; ask your advisor." : "";
+  switch (req.status) {
+    case "missing":
+      return parsed.choose
+        ? `Take one of: ${parsed.alternatives.join(", ")}.`
+        : `Take ${parsed.code} before or after transferring.${where}`;
+    case "at_university":
+      return `Take ${parsed.code} at SJSU; no De Anza course counts for it.${where}`;
+    case "partial":
+      return req.flags.includes("sequence_rule")
+        ? "Finish the whole De Anza sequence before you transfer, or none of it counts."
+        : "Take one more course from this list to finish it.";
+    case "satisfied":
+      return req.confidence === "high"
+        ? null
+        : `Ask your advisor: "Does ${via.join(" + ") || "my course"} satisfy ${parsed.code} for ${row.majors.map(shortMajor).join(" and ")}?"`;
+  }
+}
+
+function RequirementRow({ row, courses, majors, planned, plansReady }: { row: Row; courses?: Course[]; majors: string[]; planned: Map<string, string>; plansReady: boolean }) {
   const { req, parsed } = row;
   const t = tone(req);
   const via = req.satisfied_by.map((code) => {
@@ -513,6 +552,7 @@ function RequirementRow({ row, courses, majors }: { row: Row; courses?: Course[]
     return term ? `${code} · ${term}` : code;
   });
   const onlySome = majors.length > 1 && row.majors.length < majors.length;
+  const next = nextStep(row, req.satisfied_by, planned, plansReady);
   return (
     <tr>
       <td>
@@ -534,6 +574,7 @@ function RequirementRow({ row, courses, majors }: { row: Row; courses?: Course[]
       </td>
       <td>
         <StatusMark tone={t.tone}>{t.label}</StatusMark>
+        {next && <span className="req-sub next-step">{next}</span>}
       </td>
       <td className="muted nowrap">
         <a href={req.citation.url} target="_blank" rel="noreferrer" title={req.citation.ref} style={{ color: "inherit", textDecoration: "none" }}>
