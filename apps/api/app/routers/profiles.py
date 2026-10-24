@@ -19,7 +19,7 @@ from app.models import (
     RankedOpportunity,
     UpdateCoursesRequest,
 )
-from app.services import claude_limits, mocks, planner, profile_store, transcript
+from app.services import claude_limits, counselor, planner, profile_store, transcript
 from app.services.assist import AssistError, AssistNotFound, get_service
 from app.services.assist import limits as assist_limits
 from app.services.db import StoreError
@@ -130,8 +130,12 @@ def _record_ranked(profile_id: str, items: list[RankedOpportunity]) -> None:
 
 
 @router.post("/{profile_id}/counselor", response_model=CounselorResponse,
-             response_model_exclude_none=True)
-def counselor(profile_id: str, body: CounselorRequest) -> CounselorResponse:
-    _get_profile(profile_id)
-    reply, citations = mocks.counselor_reply(body.message)
+             response_model_exclude_none=True, dependencies=[Depends(claude_limits.per_ip)])
+def counselor_reply(profile_id: str, body: CounselorRequest) -> CounselorResponse:
+    profile = _get_profile(profile_id)
+    try:
+        reply, citations = counselor.answer(profile, profile_store.confirmed_courses(profile_id),
+                                            body.message, body.history)
+    except counselor.CounselorError as e:
+        raise HTTPException(status_code=e.status, detail=str(e)) from e
     return CounselorResponse(reply=reply, citations=citations)

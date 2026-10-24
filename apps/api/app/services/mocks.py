@@ -1,33 +1,21 @@
 """Phase 0 mock data, in exact contract shape.
 
 Every value here is fake and is replaced in Phase 1–3 (see PHASES.md).
-Citation labels are prefixed "MOCK" so nothing here can pass as a real claim.
+Labels are prefixed "MOCK" so nothing here can pass as a real claim.
 """
 
 from datetime import datetime, timezone
 
 from app.models import (
     AgentEvent,
-    Citation,
     Course,
     Semester,
     SemesterCourse,
 )
 
-ASSIST_URL = "https://assist.org/"
-
 
 def now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
-
-
-def _assist_citation(major_label: str, ref: str) -> Citation:
-    return Citation(
-        source="assist",
-        label=f"MOCK · De Anza → SJSU {major_label} (2026–27)",
-        url=ASSIST_URL,
-        ref=ref,
-    )
 
 
 def transcript_courses() -> list[Course]:
@@ -63,14 +51,6 @@ def plan() -> list[Semester]:
                            reason="Core upper-division requirement", prereqs=["MATH 39", "CS 46B"]),
         ]),
     ]
-
-
-def counselor_reply(message: str) -> tuple[str, list[Citation]]:
-    reply = (
-        "MOCK counselor reply. In Phase 3 this is answered by Claude, grounded in your "
-        f"confirmed courses and match results. You asked: “{message}”"
-    )
-    return reply, [_assist_citation("Data Science, B.S.", "Group A")]
 
 
 def agent_events(run_id: str) -> list[AgentEvent]:

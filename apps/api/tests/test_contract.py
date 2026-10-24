@@ -93,7 +93,13 @@ def test_match_omits_unset_optionals():
     assert all("n" not in r for r in body["requirements"] if r["rule"] == "all")
 
 
-def test_remaining_endpoints():
+def test_remaining_endpoints(counselor_claude):
+    from types import SimpleNamespace
+
+    from app.services.counselor import _Answer
+
+    counselor_claude.steps.append(lambda req: SimpleNamespace(
+        stop_reason="end_turn", content=[], parsed_output=_Answer(reply="Hi.", advisor_question=None)))
     pid = make_profile()
     AssistMajorsResponse.model_validate(
         client.get("/assist/majors", params={"sending": 113, "receiving": 39, "year": 77}).json()
