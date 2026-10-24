@@ -151,9 +151,12 @@ def test_confirmed_courses_are_stored(profile_fake):
     assert profile_fake.courses[pid] == [COURSE]
 
 
-@pytest.mark.parametrize("error,status", [(StoreNotConfigured("not configured"), 503),
-                                          (StoreError("Supabase unreachable"), 502)])
-def test_storage_outage_is_reported(monkeypatch, error, status):
+@pytest.mark.parametrize("error,status,detail", [
+    (StoreNotConfigured("Storage is not configured (SUPABASE_URL / ...)"), 503, "Storage is not configured"),
+    (StoreError('Supabase GET /profiles failed (400): {"code":"22P02","message":"secret detail"}'), 502,
+     "Storage is unavailable"),
+])
+def test_storage_outage_is_reported_without_upstream_detail(monkeypatch, error, status, detail):
     from app.services import profile_store
 
     def down(*args, **kwargs):
@@ -163,4 +166,4 @@ def test_storage_outage_is_reported(monkeypatch, error, status):
     monkeypatch.setattr(profile_store, "get_profile", down)
     assert client.post("/profiles", json=PROFILE).status_code == status
     res = client.get(f"/profiles/{PID}")
-    assert res.status_code == status and res.json()["detail"] == str(error)
+    assert res.status_code == status and res.json() == {"detail": detail}
