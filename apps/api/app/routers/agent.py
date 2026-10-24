@@ -1,19 +1,20 @@
 import uuid
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
 from app.models import AgentEventsResponse, AgentRunRequest, AgentRunResponse
-from app.services import mocks
+from app.services import agent_client, agent_events, claude_limits
 
 router = APIRouter(prefix="/agent", tags=["agent"])
 
 
-@router.post("/run", response_model=AgentRunResponse)
+@router.post("/run", response_model=AgentRunResponse, dependencies=[Depends(claude_limits.per_ip)])
 def run(body: AgentRunRequest) -> AgentRunResponse:
-    # Phase 3: kick off a Droid run for body.campus.
-    return AgentRunResponse(run_id=str(uuid.uuid4()))
+    """Queue a Droid run (scan → rank → alerts) for body.campus on apps/agent."""
+    run_id = agent_client.start_run(str(uuid.uuid4()), body.campus, "manual")
+    return AgentRunResponse(run_id=run_id)
 
 
 @router.get("/events", response_model=AgentEventsResponse, response_model_exclude_none=True)
 def events(run_id: str) -> AgentEventsResponse:
-    return AgentEventsResponse(events=mocks.agent_events(run_id))
+    return AgentEventsResponse(events=agent_events.for_run(run_id))

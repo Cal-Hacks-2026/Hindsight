@@ -66,3 +66,40 @@ def record_ranked(profile_id: str, items: list[RankedOpportunity],
     except httpx.HTTPError as e:
         raise StoreError(f"Supabase unreachable: {e}") from e
     return len(rows)
+
+
+def top_ranked(profile_id: str, limit: int, transport: httpx.BaseTransport | None = None) -> list[dict[str, Any]]:
+    """The profile's highest-scored rows in profile_opportunities, each with its opportunity."""
+    try:
+        with _client(transport) as db:
+            res = db.get("/profile_opportunities", params={
+                "select": "opportunity_id,score,notified,opportunities(title,url,starts_at,deadline)",
+                "profile_id": f"eq.{profile_id}",
+                "order": "score.desc",
+                "limit": str(limit),
+            })
+            res.raise_for_status()
+            return res.json()
+    except httpx.HTTPStatusError as e:
+        raise StoreError(f"Supabase read failed ({e.response.status_code})") from e
+    except (httpx.HTTPError, ValueError) as e:
+        raise StoreError(f"Supabase unreachable: {e}") from e
+
+
+def mark_notified(profile_id: str, opportunity_ids: list[str],
+                  transport: httpx.BaseTransport | None = None) -> int:
+    """Set notified=true on these rows. Returns rows sent."""
+    if not opportunity_ids:
+        return 0
+    try:
+        with _client(transport) as db:
+            res = db.patch("/profile_opportunities", params={
+                "profile_id": f"eq.{profile_id}",
+                "opportunity_id": f"in.({','.join(opportunity_ids)})",
+            }, json={"notified": True}, headers={"Prefer": "return=minimal"})
+            res.raise_for_status()
+    except httpx.HTTPStatusError as e:
+        raise StoreError(f"Supabase update failed ({e.response.status_code}): {e.response.text[:200]}") from e
+    except httpx.HTTPError as e:
+        raise StoreError(f"Supabase unreachable: {e}") from e
+    return len(opportunity_ids)

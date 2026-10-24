@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse
 
 from app.config import APP_NAME, WEB_ORIGINS
 from app.models import HealthResponse
-from app.routers import agent, assist, profiles, webhooks
+from app.routers import agent, assist, internal_agent, profiles, webhooks
 from app.routers.profiles import TRANSCRIPT_NOTES_HEADER
 from app.services.claude_limits import RateLimited
 from app.services.db import StoreError, StoreNotConfigured
@@ -42,6 +42,7 @@ app.include_router(profiles.router)
 app.include_router(assist.router)
 app.include_router(agent.router)
 app.include_router(webhooks.router)
+app.include_router(internal_agent.router)
 
 
 @app.get("/health", response_model=HealthResponse)

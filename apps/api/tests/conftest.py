@@ -135,3 +135,50 @@ def counselor_claude(monkeypatch) -> FakeCounselorClaude:
     fake = FakeCounselorClaude()
     monkeypatch.setattr(counselor, "_client", lambda: fake)
     return fake
+
+
+class FakeAgent:
+    """Stands in for Supabase `agent_events` and for apps/agent (agent_client.start_run's HTTP call)."""
+
+    def __init__(self):
+        self.events: list[dict] = []
+        self.started: list[dict] = []
+
+    def record(self, run_id, kind, message, payload=None, transport=None):
+        from app.services.agent_events import _is_uuid
+
+        if not _is_uuid(run_id):
+            raise ValueError("run_id must be a UUID")
+        self.events.append({"run_id": run_id, "kind": kind, "message": message, "payload": payload,
+                            "created_at": datetime.now(timezone.utc).isoformat()})
+
+    def for_run(self, run_id, transport=None):
+        from app.models import AgentEvent
+
+        return [AgentEvent(**e) for e in self.events if e["run_id"] == run_id]
+
+
+@pytest.fixture(autouse=True)
+def agent_fake(monkeypatch) -> FakeAgent:
+    """No test writes agent_events to Supabase or reaches apps/agent unless it opts in."""
+    import httpx
+
+    from app.services import agent_client, agent_events
+
+    fake = FakeAgent()
+    monkeypatch.setattr(agent_events, "record", fake.record)
+    monkeypatch.setattr(agent_events, "for_run", fake.for_run)
+    monkeypatch.delenv("AGENT_SECRET", raising=False)
+    monkeypatch.delenv("AGENT_URL", raising=False)
+
+    def agent_app(request: httpx.Request) -> httpx.Response:
+        import json
+
+        fake.started.append(json.loads(request.content))
+        return httpx.Response(202, json={"run_id": fake.started[-1]["run_id"]})
+
+    real_start = agent_client.start_run
+    monkeypatch.setattr(agent_client, "start_run",
+                        lambda *a, transport=None, **kw: real_start(
+                            *a, transport=transport or httpx.MockTransport(agent_app), **kw))
+    return fake
