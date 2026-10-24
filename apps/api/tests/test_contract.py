@@ -35,7 +35,9 @@ def make_profile() -> str:
 
 
 def test_health():
-    assert client.get("/health").json() == {"status": "ok", "app": "Hindsight"}
+    body = client.get("/health").json()
+    assert body["status"] == "ok" and body["app"] == "Hindsight"
+    assert isinstance(body["storage"], bool) and isinstance(body["claude"], bool)
 
 
 def test_cors_allows_web_origin():

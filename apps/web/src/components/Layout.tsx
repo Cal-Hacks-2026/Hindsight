@@ -1,4 +1,6 @@
+import { useEffect, useState } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router";
+import { api } from "../lib/api";
 import { APP_NAME } from "../lib/config";
 import { CAMPUS_SHORT, currentTerm, majorsLine } from "../lib/format";
 import { loadSession } from "../lib/session";
@@ -22,6 +24,17 @@ const DEFAULT_NOTE = "Every claim is sourced · Confirm decisions with your advi
 export function Layout() {
   const { pathname } = useLocation(); // also re-reads the session on navigation (onboarding writes it)
   const { profile } = loadSession();
+  const [degraded, setDegraded] = useState<string | null>(null);
+
+  useEffect(() => {
+    api
+      .health()
+      .then((h) => {
+        if (h.storage === false) setDegraded("Profiles can't be saved right now, so setup won't work yet.");
+        else if (h.claude === false) setDegraded("The counselor and transcript reading are offline right now.");
+      })
+      .catch(() => setDegraded("The server isn't reachable right now."));
+  }, []);
 
   return (
     <>
@@ -48,6 +61,11 @@ export function Layout() {
         )}
       </header>
       <div className="hairline" />
+      {degraded && (
+        <p className="status-banner" role="status">
+          {degraded}
+        </p>
+      )}
       <main>
         <Outlet />
       </main>

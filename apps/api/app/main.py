@@ -1,12 +1,13 @@
 import ctypes
 import logging
+import os
 import sys
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.config import APP_NAME, WEB_ORIGINS
+from app.config import APP_NAME, WEB_ORIGINS, supabase_rest_url
 from app.models import HealthResponse
 from app.routers import agent, assist, internal_agent, profiles, webhooks
 from app.routers.profiles import TRANSCRIPT_NOTES_HEADER
@@ -62,4 +63,9 @@ app.include_router(internal_agent.router)
 
 @app.get("/health", response_model=HealthResponse)
 def health() -> HealthResponse:
-    return HealthResponse(status="ok", app=APP_NAME)
+    return HealthResponse(
+        status="ok",
+        app=APP_NAME,
+        storage=bool(supabase_rest_url() and os.getenv("SUPABASE_SERVICE_ROLE_KEY")),
+        claude=bool(os.getenv("ANTHROPIC_API_KEY")),
+    )

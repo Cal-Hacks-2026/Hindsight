@@ -105,4 +105,4 @@ export type AgentRunRequest = { campus: Campus };
 export type AgentRunResponse = { run_id: string };
 export type AgentEventsResponse = { events: AgentEvent[] };
 export type WebhookResponse = { ok: true };
-export type HealthResponse = { status: "ok"; app: string };
+export type HealthResponse = { status: "ok"; app: string; storage?: boolean; claude?: boolean };

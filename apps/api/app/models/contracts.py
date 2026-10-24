@@ -175,3 +175,5 @@ class WebhookResponse(BaseModel):
 class HealthResponse(BaseModel):
     status: Literal["ok"]
     app: str
+    storage: bool = True
+    claude: bool = True

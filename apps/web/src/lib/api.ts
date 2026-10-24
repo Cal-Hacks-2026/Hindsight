@@ -26,6 +26,12 @@ export class ApiError extends Error {
   }
 }
 
+// Server-side setup problems are not something a student can act on; say so plainly.
+function friendlyDetail(detail: string): string {
+  if (detail.startsWith("Storage is")) return "We couldn't save your profile. Try again in a minute.";
+  return detail;
+}
+
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const isForm = init.body instanceof FormData;
   const res = await fetch(`${API_URL}${path}`, {
@@ -40,7 +46,7 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
     } catch {
       // non-JSON error body
     }
-    throw new ApiError(res.status, detail);
+    throw new ApiError(res.status, friendlyDetail(detail));
   }
   return res.json() as Promise<T>;
 }

@@ -1141,3 +1141,12 @@ table.confirm button {
   background: var(--ink);
   color: var(--paper);
 }
+
+.status-banner {
+  margin: 0;
+  padding: 10px var(--gutter, 32px);
+  font-size: 13px;
+  text-align: center;
+  color: var(--missing);
+  border-bottom: 1px solid var(--missing);
+}
