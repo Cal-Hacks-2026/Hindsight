@@ -561,7 +561,7 @@ td.nowrap {
 .status.missing { color: var(--missing); }
 .status.sjsu { color: var(--sjsu); }
 
-/* ---- Listings (Today, Radar) ---- */
+/* ---- Listings (Radar) ---- */
 
 .entries {
   display: flex;
@@ -652,6 +652,76 @@ td.nowrap {
   letter-spacing: 0.14em;
   text-transform: uppercase;
   padding: 14px 0;
+}
+
+/* Droid alerted on it. Ink on a hairline pill: no new color, and the accent stays on the masthead. */
+.new-label {
+  display: inline-block;
+  margin-left: 10px;
+  padding: 1px 7px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  line-height: 1.5;
+  text-transform: uppercase;
+  vertical-align: 2px;
+}
+
+.notes .new-label {
+  margin-left: 0;
+}
+
+/* Radar's "This week" strip: compact ruled rows, like .methods. */
+.week {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.week li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 24px;
+  padding: 16px 0;
+  border-top: 1px solid var(--hair);
+}
+
+.week li:first-child {
+  border-top-color: var(--ink);
+}
+
+.week li:last-child {
+  border-bottom: 1px solid var(--hair);
+}
+
+.week-when {
+  flex: 0 0 210px;
+  font-size: 13px;
+  color: var(--gray);
+  font-variant-numeric: tabular-nums;
+}
+
+.week-body {
+  flex: 1 1 320px;
+  min-width: 0;
+}
+
+.week-title {
+  font-family: var(--serif);
+  font-size: 24px;
+  line-height: 1.2;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+
+.week-body .meta {
+  margin-top: 4px;
 }
 
 .methods {
@@ -1111,6 +1181,19 @@ table.confirm button {
     font-size: 32px;
   }
 }
+
+/* Phones: all four nav links on one row at 390 px, so the header under the wordmark is nav + meta. */
+@media (max-width: 480px) {
+  .nav {
+    gap: 0 14px;
+  }
+
+  .nav a {
+    font-size: 10px;
+    letter-spacing: 0.1em;
+  }
+}
+
 
 .route-line {
   display: flex;

@@ -1,4 +1,4 @@
-// Loading, empty, error, and no-profile states shared by Today and Radar.
+// Loading, empty, error, and no-profile states used by Radar.
 import { Link } from "react-router";
 import type { Campus } from "@hindsight/contracts";
 import { ApiError } from "../lib/api";

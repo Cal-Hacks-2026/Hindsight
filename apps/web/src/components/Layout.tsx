@@ -6,7 +6,6 @@ import { CAMPUS_SHORT, currentTerm, majorsLine } from "../lib/format";
 import { loadSession } from "../lib/session";
 
 const NAV = [
-  { to: "/", label: "Today" },
   { to: "/degree", label: "Degree" },
   { to: "/radar", label: "Opportunities" },
   { to: "/counselor", label: "Counselor" },
@@ -15,7 +14,6 @@ const NAV = [
 
 // The footer's right-hand note, per page (design/mockups).
 const FOOTER_NOTE: Record<string, string> = {
-  "/": "Every listing links to its source",
   "/radar": "Every listing links to its source",
   "/counselor": "Hindsight explains computed results · It never decides whether a credit counts",
 };

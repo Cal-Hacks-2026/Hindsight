@@ -63,3 +63,29 @@ def for_run(run_id: str, transport: httpx.BaseTransport | None = None) -> list[A
         raise StoreError(f"Supabase read failed ({e.response.status_code})") from e
     except (httpx.HTTPError, ValueError) as e:
         raise StoreError(f"Supabase unreachable: {e}") from e
+
+
+# Campus-wide scans only: a profile_created run logs one student's ranked listings and alerts,
+# and anyone can call /agent/runs/latest.
+PUBLIC_TRIGGERS = ("manual", "schedule")
+
+
+def latest_run_id(campus: str, transport: httpx.BaseTransport | None = None) -> str | None:
+    """The newest scan run for a campus. apps/agent opens every run with a step whose payload
+    names its trigger and campus ("Run started: …"), so that row identifies it."""
+    try:
+        with client(transport) as db:
+            res = db.get("/agent_events", params={
+                "select": "run_id",
+                "payload->>campus": f"eq.{campus}",
+                "payload->>trigger": f"in.({','.join(PUBLIC_TRIGGERS)})",
+                "order": "created_at.desc",
+                "limit": "1",
+            })
+            res.raise_for_status()
+            rows = res.json()
+    except httpx.HTTPStatusError as e:
+        raise StoreError(f"Supabase read failed ({e.response.status_code})") from e
+    except (httpx.HTTPError, ValueError) as e:
+        raise StoreError(f"Supabase unreachable: {e}") from e
+    return str(rows[0]["run_id"]) if rows else None

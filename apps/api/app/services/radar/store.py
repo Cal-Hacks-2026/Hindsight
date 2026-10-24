@@ -115,3 +115,20 @@ def mark_notified(profile_id: str, opportunity_ids: list[str],
     except httpx.HTTPError as e:
         raise StoreError(f"Supabase unreachable: {e}") from e
     return len(opportunity_ids)
+
+
+def notified_ids(profile_id: str, transport: httpx.BaseTransport | None = None) -> set[str]:
+    """Opportunity ids Droid has alerted this profile about (write_alerts sets notified)."""
+    try:
+        with _client(transport) as db:
+            res = db.get("/profile_opportunities", params={
+                "select": "opportunity_id",
+                "profile_id": f"eq.{profile_id}",
+                "notified": "is.true",
+            })
+            res.raise_for_status()
+            return {str(row["opportunity_id"]) for row in res.json()}
+    except httpx.HTTPStatusError as e:
+        raise StoreError(f"Supabase read failed ({e.response.status_code})") from e
+    except (httpx.HTTPError, ValueError) as e:
+        raise StoreError(f"Supabase unreachable: {e}") from e

@@ -25,6 +25,15 @@ export function safeUrl(url: string): URL | undefined {
 
 export const hostOf = (url: URL) => url.hostname.replace(/^www\./, "");
 
+/** Droid alerted on this listing (RankedOpportunity.notified). */
+export function NewLabel() {
+  return (
+    <span className="new-label" title="Droid flagged this on a campus scan">
+      New
+    </span>
+  );
+}
+
 export function Listing({
   item,
   now,
@@ -78,7 +87,10 @@ export function Listing({
         )}
       </div>
       <div className="entry-body">
-        <div className="meta">{meta}</div>
+        <div className="meta">
+          {meta}
+          {item.notified && <NewLabel />}
+        </div>
         <h3>{link ? <a href={link.href} target="_blank" rel="noreferrer">{item.title}</a> : item.title}</h3>
         {item.reason && <p className="entry-reason">{item.reason}</p>}
         {when && <p className="entry-when">{when}</p>}

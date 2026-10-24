@@ -95,6 +95,7 @@ class RankedOpportunity(BaseModel):
     deadline: str | None = None
     score: float
     reason: str
+    notified: bool = False  # Droid alerted on it (profile_opportunities.notified)
 
 
 class AgentEvent(BaseModel):
@@ -167,6 +168,10 @@ class AgentRunResponse(BaseModel):
 
 class AgentEventsResponse(BaseModel):
     events: list[AgentEvent]
+
+
+class AgentLatestRunResponse(BaseModel):
+    run_id: str | None  # null until a run has logged for the campus
 
 
 class WebhookResponse(BaseModel):

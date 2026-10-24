@@ -49,6 +49,7 @@ class FakeRadarStore:
         self.rows: list[dict] = []
         self.upserts: list[list] = []
         self.ranked: dict[str, list] = {}
+        self.notified: dict[str, set[str]] = {}
 
     def candidates(self, campus, transport=None):
         return [r for r in self.rows if r["campus"] == campus or r["type"] == "hackathon"]
@@ -61,6 +62,9 @@ class FakeRadarStore:
         self.ranked[profile_id] = items
         return len(items)
 
+    def notified_ids(self, profile_id, transport=None):
+        return self.notified.get(profile_id, set())
+
 
 @pytest.fixture(autouse=True)
 def radar_fake(monkeypatch) -> FakeRadarStore:
@@ -71,6 +75,7 @@ def radar_fake(monkeypatch) -> FakeRadarStore:
     monkeypatch.setattr(store, "candidates", fake.candidates)
     monkeypatch.setattr(store, "upsert", fake.upsert)
     monkeypatch.setattr(store, "record_ranked", fake.record_ranked)
+    monkeypatch.setattr(store, "notified_ids", fake.notified_ids)
 
     def no_claude(profile, items):
         raise AssertionError("test called Claude without faking rank.ask_claude")
@@ -166,6 +171,13 @@ class FakeAgent:
 
         return [AgentEvent(**e) for e in self.events if e["run_id"] == run_id]
 
+    def latest_run_id(self, campus, transport=None):
+        from app.services.agent_events import PUBLIC_TRIGGERS
+
+        tagged = [e for e in self.events if isinstance(e["payload"], dict) and e["payload"].get("campus") == campus
+                  and e["payload"].get("trigger") in PUBLIC_TRIGGERS]
+        return tagged[-1]["run_id"] if tagged else None
+
 
 @pytest.fixture(autouse=True)
 def agent_fake(monkeypatch) -> FakeAgent:
@@ -177,6 +189,7 @@ def agent_fake(monkeypatch) -> FakeAgent:
     fake = FakeAgent()
     monkeypatch.setattr(agent_events, "record", fake.record)
     monkeypatch.setattr(agent_events, "for_run", fake.for_run)
+    monkeypatch.setattr(agent_events, "latest_run_id", fake.latest_run_id)
     monkeypatch.delenv("AGENT_SECRET", raising=False)
     monkeypatch.delenv("AGENT_URL", raising=False)
 

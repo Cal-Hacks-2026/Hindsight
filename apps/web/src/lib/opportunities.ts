@@ -1,6 +1,6 @@
-// Ranked Radar feed for a profile, shared by Today and Radar.
+// Ranked Radar feed for a profile, used by Radar.
 // The first request per profile can take ~14 s while Claude writes reasons (DECISIONS.md D-005),
-// so one in-flight request is shared across routes (and StrictMode's double effect) and the
+// so one in-flight request is shared across mounts (and StrictMode's double effect) and the
 // result is kept for the rest of the page session.
 import { useCallback, useEffect, useState } from "react";
 import type { RankedOpportunity } from "@hindsight/contracts";

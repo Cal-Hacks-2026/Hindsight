@@ -75,6 +75,8 @@ export type RankedOpportunity = {
   deadline?: string;
   score: number;
   reason: string;
+  /** Droid alerted on it (profile_opportunities.notified). */
+  notified: boolean;
 };
 
 export type AgentEvent = {
@@ -105,5 +107,6 @@ export type CounselorResponse = { reply: string; citations: Citation[] };
 export type AgentRunRequest = { campus: Campus };
 export type AgentRunResponse = { run_id: string };
 export type AgentEventsResponse = { events: AgentEvent[] };
+export type AgentLatestRunResponse = { run_id: string | null };
 export type WebhookResponse = { ok: true };
 export type HealthResponse = { status: "ok"; app: string; storage?: boolean; claude?: boolean };
