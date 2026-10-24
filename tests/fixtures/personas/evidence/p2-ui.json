@@ -1,0 +1,549 @@
+[
+ {
+  "method": "POST",
+  "url": "/profiles",
+  "status": 200,
+  "body": {
+   "profile": {
+    "name": "AUDIT-P2 Test Student Two",
+    "campus": "sjsu",
+    "sending_institution_id": 113,
+    "receiving_institution_id": 39,
+    "majors": [
+     "Data Science, B.S."
+    ],
+    "goals": "Starting at De Anza in Fall 2027 after high school; transfer to SJSU in 2 years",
+    "interests": [
+     "ai",
+     "data",
+     "robotics"
+    ],
+    "id": "<AUDIT-P2-profile-id>",
+    "created_at": "2026-10-24T21:26:08.498669+00:00"
+   }
+  },
+  "headers": {}
+ },
+ {
+  "method": "GET",
+  "url": "/profiles/<AUDIT-P2-profile-id>/opportunities",
+  "status": 200,
+  "body": {
+   "items": [
+    {
+     "id": "74182d8e-e99b-4d56-b517-12a4b7f985d5",
+     "title": "Open Lab Hours at AI Center for Civic and Social Good",
+     "type": "event",
+     "org": "Dr. Martin Luther King Jr. Library",
+     "url": "https://events.sjsu.edu/event/open-lab-ai-center",
+     "starts_at": "2026-10-26T16:00:00+00:00",
+     "score": 0.94,
+     "reason": "Matches your AI interest, offering a drop-in lab with AI tools and computers to experiment with at SJSU."
+    },
+    {
+     "id": "aa1d1744-8fd1-4ed8-af98-645130151bad",
+     "title": "What Makes AI Scary? A dialogue event for SJSU students",
+     "type": "workshop",
+     "org": "Future of Humanity and Civic Engagement",
+     "url": "https://events.sjsu.edu/event/what-makes-ai-scary-a-dialogue-event-for-ai-students",
+     "starts_at": "2026-10-29T22:00:00+00:00",
+     "score": 0.92,
+     "reason": "Connects to your AI interest through a dialogue-style discussion about AI concerns with other SJSU students."
+    },
+    {
+     "id": "a7ea5cb8-3873-4cc8-93d6-1748c2a1c3ff",
+     "title": "SPSS Data Analysis: T-Tests",
+     "type": "workshop",
+     "org": "Dr. Martin Luther King Jr. Library",
+     "url": "https://events.sjsu.edu/event/spss-data-analysis-t-tests",
+     "starts_at": "2026-10-29T19:00:00+00:00",
+     "score": 0.88,
+     "reason": "Teaches t-tests in SPSS, a statistics skill relevant to your Data Science major and data interest."
+    },
+    {
+     "id": "cae33fe1-a72c-415b-af68-3b2ebfe00ed2",
+     "title": "Rage Baiting and Border Crossing: How AI/LLMs Complicate Translation",
+     "type": "event",
+     "org": "Future of Humanity and Civic Engagement",
+     "url": "https://events.sjsu.edu/event/ai-et-speaker-series-torsa-ghosal",
+     "starts_at": "2026-11-04T00:00:00+00:00",
+     "score": 0.82,
+     "reason": "Fits your AI interest with a talk on how large language models affect translation across languages, though it leans humanities."
+    },
+    {
+     "id": "794ce263-7fcc-456f-8c74-0b74dfbe5abf",
+     "title": "Navigating AI Resources",
+     "type": "workshop",
+     "org": "Peer Connections",
+     "url": "https://events.sjsu.edu/event/navigating-ai-resources-8303",
+     "starts_at": "2026-11-04T22:00:00+00:00",
+     "score": 0.76,
+     "reason": "Fits your AI interest by helping students use AI resources in classes, career pathways, and everyday life."
+    },
+    {
+     "id": "186a1054-fb94-4e69-a4b8-498938a0c7cb",
+     "title": "Career Ready in 30: Hiration for customized AI Interview practice",
+     "type": "workshop",
+     "org": "Career Center",
+     "url": "https://events.sjsu.edu/event/career-ready-in-30-hiration-for-customized-ai-interview-practice",
+     "starts_at": "2026-11-10T20:00:00+00:00",
+     "score": 0.76,
+     "reason": "Uses AI for interview practice, which touches your AI interest and builds career skills for later."
+    },
+    {
+     "id": "d5a89744-89e8-468d-8544-0b74ef89db5f",
+     "title": "SPSS Data Analysis: ANOVA",
+     "type": "workshop",
+     "org": "Dr. Martin Luther King Jr. Library",
+     "url": "https://events.sjsu.edu/event/spss-data-analysis-anova",
+     "starts_at": "2026-11-12T20:00:00+00:00",
+     "score": 0.76,
+     "reason": "Covers ANOVA in SPSS, a statistical analysis method that supports your Data Science major and data interest."
+    },
+    {
+     "id": "cb831991-f60c-46eb-88e8-25e355bc83a1",
+     "title": "Fall 2026 University Scholar Series: Breaking Through the Noise",
+     "type": "event",
+     "org": "Design",
+     "url": "https://events.sjsu.edu/event/fall-2026-university-scholar-series-breaking-through-the-noise",
+     "starts_at": "2026-11-18T20:00:00+00:00",
+     "score": 0.76,
+     "reason": "Only loosely related: a faculty research talk on health communication and design, tagged with AI, so a weaker fit."
+    },
+    {
+     "id": "0286bf53-5476-4aec-b6ff-9e1f05b61420",
+     "title": "Writing and Generative AI",
+     "type": "event",
+     "org": "Writing Center",
+     "url": "https://events.sjsu.edu/event/writing-and-generative-ai-nov-2026",
+     "starts_at": "2026-11-12T20:00:00+00:00",
+     "score": 0.72,
+     "reason": "Covers generative AI basics and responsible use in writing, which connects to your AI interest and coursework."
+    },
+    {
+     "id": "1050f2ea-57db-4ff5-a66c-b90211f01b63",
+     "title": "Sparthill Hackathon 2026 Day #2",
+     "type": "hackathon",
+     "org": "Network Engineering Technology Society",
+     "url": "https://sammyapp.sjsu.edu/NETS/rsvp?id=379796",
+     "starts_at": "2026-10-24T14:00:00+00:00",
+     "score": 0.66,
+     "reason": "A hackathon about using AI on sustainability challenges, matching your AI interest and offering hands-on building experience."
+    },
+    {
+     "id": "9c7ca764-44e5-40d9-aab2-09faf1471a74",
+     "title": "Advanced Qualtrics: Logic, Branching & Piping",
+     "type": "workshop",
+     "org": "Dr. Martin Luther King Jr. Library",
+     "url": "https://events.sjsu.edu/event/copy-of-introduction-to-qualtrics-a-workshop-on-effective-survey-design-and-data",
+     "starts_at": "2026-11-05T09:00:00+00:00",
+     "score": 0.62,
+     "reason": "Teaches survey logic in Qualtrics, a data collection tool somewhat relevant to your data interest."
+    },
+    {
+     "id": "47c90392-07e9-4615-a48e-10f472ec917b",
+     "title": "PivotTables Made Easy: Google Sheets & Microsoft Excel 365",
+     "type": "workshop",
+     "org": "Dr. Martin Luther King Jr. Library",
+     "url": "https://events.sjsu.edu/event/copy-of-advanced-qualtrics-logic-branching-piping",
+     "starts_at": "2026-11-19T09:00:00+00:00",
+     "score": 0.56,
+     "reason": "Teaches PivotTables for summarizing and analyzing data, a practical skill for your Data Science major."
+    },
+    {
+     "id": "43df1348-e58d-4e9d-9da6-cc5e6c5dfe88",
+     "title": "AdoptAI Drop-In - Build Your First AI Chief of Staff: A Personalized Morning Briefing",
+     "type": "event",
+     "org": "San José State University",
+     "url": "https://events.sjsu.edu/event/adoptai-drop-in-build-your-first-ai-chief-of-staff-a-personalized-morning-briefing",
+     "starts_at": "2026-11-12T21:30:00+00:00",
+     "score": 0.51,
+     "reason": "Weak fit: it demonstrates building a personal AI assistant, but it is aimed at staff rather than students."
+    },
+    {
+     "id": "beb71acd-ea80-4e43-b7db-d52c6ec36c2f",
+     "title": "HackStorm 3.0: Sense, Think and Act",
+     "type": "hackathon",
+     "org": "HackStorm",
+     "url": "https://hackstorm3.devpost.com/",
+     "starts_at": "2027-01-15T08:00:00+00:00",
+     "deadline": "2027-01-17T08:00:00+00:00",
+     "score": 0.47,
+     "reason": "Touches your robotics interest through themes of IoT and robotic process automation, though it is not an SJSU event."
+    },
+    {
+     "id": "f2c973ec-2c12-4737-9695-c10d30093b63",
+     "title": "🎃 KLEVR After Dark 👻: A Halloween Backrooms experience Pop Up hosted by SJSU King Library KLEVR Lab",
+     "type": "workshop",
+     "org": "Dr. Martin Luther King Jr. Library",
+     "url": "https://events.sjsu.edu/event/klevr-after-dark",
+     "starts_at": "2026-10-26T18:00:00+00:00",
+     "score": 0.38,
+     "reason": "Weak fit: a VR and AR pop-up at the KLEVR Lab where you can try motion capture and other emerging tech."
+    },
+    {
+     "id": "73eb3394-584c-4f15-8b2a-1938f73e2ba4",
+     "title": "WGSS Lecture: Drag Story Time as a Site of Resistance, Queer World-Making and Community Building",
+     "type": "workshop",
+     "org": "Sociology and Interdisciplinary Social Sciences",
+     "url": "https://events.sjsu.edu/event/wgss-lecture-drag-story-time-as-a-site-of-resistance-queer-world-making-and-community-building",
+     "starts_at": "2026-10-26T19:00:00+00:00",
+     "score": 0.38,
+     "reason": "Weak fit: a gender studies lecture with no link to data, AI, or robotics, but it is an SJSU campus event."
+    },
+    {
+     "id": "a3eda138-f5a1-4e09-93de-c8ccdda30c5e",
+     "title": "Introduction to Covidence",
+     "type": "workshop",
+     "org": "Dr. Martin Luther King Jr. Library",
+     "url": "https://events.sjsu.edu/event/introduction-to-covidence-8870",
+     "starts_at": "2026-10-27T19:00:00+00:00",
+     "score": 0.38,
+     "reason": "Weak fit: a research tool workshop for systematic reviews that could become useful later in your SJSU studies."
+    },
+    {
+     "id": "30c3a962-a179-460d-b2dc-c61e00445d3c",
+     "title": "Exploring Graduate School: Strategy & Application Process",
+     "type": "workshop",
+     "org": "Career Center",
+     "url": "https://events.sjsu.edu/event/exploring-graduate-school-strategy-application-process",
+     "starts_at": "2026-10-27T19:00:00+00:00",
+     "score": 0.38,
+     "reason": "Weak fit for now: it covers graduate school planning, which is a long-term step beyond your transfer to SJSU."
+    },
+    {
+     "id": "5c3540d1-88d4-4e3e-9425-52e4cf4dfbd2",
+     "title": "2026 Lucas Graduate School of Business Virtual Open House",
+     "type": "event",
+     "org": "Lucas College and Graduate School of Business",
+     "url": "https://sammyapp.sjsu.edu/LCOB/rsvp?id=379870",
+     "starts_at": "2026-11-05T02:00:00+00:00",
+     "score": 0.37,
+     "reason": "Weak fit: a graduate business open house, though it lists analytics programs that relate loosely to data."
+    },
+    {
+     "id": "bfd96c18-915a-4689-addd-eeebae29ef90",
+     "title": "Graduate Business Virtual Open House",
+     "type": "event",
+     "org": "Lucas College and Graduate School of Business",
+     "url": "https://events.sjsu.edu/event/graduate-business-virtual-open-house",
+     "starts_at": "2026-11-05T02:00:00+00:00",
+     "score": 0.37,
+     "reason": "Weak fit: a graduate business open house that mentions analytics degrees, which loosely relate to your data interest."
+    }
+   ]
+  },
+  "headers": {}
+ },
+ {
+  "method": "GET",
+  "url": "/profiles/<AUDIT-P2-profile-id>/opportunities",
+  "status": 200,
+  "body": {
+   "items": [
+    {
+     "id": "74182d8e-e99b-4d56-b517-12a4b7f985d5",
+     "title": "Open Lab Hours at AI Center for Civic and Social Good",
+     "type": "event",
+     "org": "Dr. Martin Luther King Jr. Library",
+     "url": "https://events.sjsu.edu/event/open-lab-ai-center",
+     "starts_at": "2026-10-26T16:00:00+00:00",
+     "score": 0.94,
+     "reason": "Matches your AI interest, offering a drop-in lab with AI tools and computers to experiment with at SJSU."
+    },
+    {
+     "id": "aa1d1744-8fd1-4ed8-af98-645130151bad",
+     "title": "What Makes AI Scary? A dialogue event for SJSU students",
+     "type": "workshop",
+     "org": "Future of Humanity and Civic Engagement",
+     "url": "https://events.sjsu.edu/event/what-makes-ai-scary-a-dialogue-event-for-ai-students",
+     "starts_at": "2026-10-29T22:00:00+00:00",
+     "score": 0.92,
+     "reason": "Connects to your AI interest through a dialogue-style discussion about AI concerns with other SJSU students."
+    },
+    {
+     "id": "a7ea5cb8-3873-4cc8-93d6-1748c2a1c3ff",
+     "title": "SPSS Data Analysis: T-Tests",
+     "type": "workshop",
+     "org": "Dr. Martin Luther King Jr. Library",
+     "url": "https://events.sjsu.edu/event/spss-data-analysis-t-tests",
+     "starts_at": "2026-10-29T19:00:00+00:00",
+     "score": 0.88,
+     "reason": "Teaches t-tests in SPSS, a statistics skill relevant to your Data Science major and data interest."
+    },
+    {
+     "id": "cae33fe1-a72c-415b-af68-3b2ebfe00ed2",
+     "title": "Rage Baiting and Border Crossing: How AI/LLMs Complicate Translation",
+     "type": "event",
+     "org": "Future of Humanity and Civic Engagement",
+     "url": "https://events.sjsu.edu/event/ai-et-speaker-series-torsa-ghosal",
+     "starts_at": "2026-11-04T00:00:00+00:00",
+     "score": 0.82,
+     "reason": "Fits your AI interest with a talk on how large language models affect translation across languages, though it leans humanities."
+    },
+    {
+     "id": "794ce263-7fcc-456f-8c74-0b74dfbe5abf",
+     "title": "Navigating AI Resources",
+     "type": "workshop",
+     "org": "Peer Connections",
+     "url": "https://events.sjsu.edu/event/navigating-ai-resources-8303",
+     "starts_at": "2026-11-04T22:00:00+00:00",
+     "score": 0.76,
+     "reason": "Fits your AI interest by helping students use AI resources in classes, career pathways, and everyday life."
+    },
+    {
+     "id": "186a1054-fb94-4e69-a4b8-498938a0c7cb",
+     "title": "Career Ready in 30: Hiration for customized AI Interview practice",
+     "type": "workshop",
+     "org": "Career Center",
+     "url": "https://events.sjsu.edu/event/career-ready-in-30-hiration-for-customized-ai-interview-practice",
+     "starts_at": "2026-11-10T20:00:00+00:00",
+     "score": 0.76,
+     "reason": "Uses AI for interview practice, which touches your AI interest and builds career skills for later."
+    },
+    {
+     "id": "d5a89744-89e8-468d-8544-0b74ef89db5f",
+     "title": "SPSS Data Analysis: ANOVA",
+     "type": "workshop",
+     "org": "Dr. Martin Luther King Jr. Library",
+     "url": "https://events.sjsu.edu/event/spss-data-analysis-anova",
+     "starts_at": "2026-11-12T20:00:00+00:00",
+     "score": 0.76,
+     "reason": "Covers ANOVA in SPSS, a statistical analysis method that supports your Data Science major and data interest."
+    },
+    {
+     "id": "cb831991-f60c-46eb-88e8-25e355bc83a1",
+     "title": "Fall 2026 University Scholar Series: Breaking Through the Noise",
+     "type": "event",
+     "org": "Design",
+     "url": "https://events.sjsu.edu/event/fall-2026-university-scholar-series-breaking-through-the-noise",
+     "starts_at": "2026-11-18T20:00:00+00:00",
+     "score": 0.76,
+     "reason": "Only loosely related: a faculty research talk on health communication and design, tagged with AI, so a weaker fit."
+    },
+    {
+     "id": "0286bf53-5476-4aec-b6ff-9e1f05b61420",
+     "title": "Writing and Generative AI",
+     "type": "event",
+     "org": "Writing Center",
+     "url": "https://events.sjsu.edu/event/writing-and-generative-ai-nov-2026",
+     "starts_at": "2026-11-12T20:00:00+00:00",
+     "score": 0.72,
+     "reason": "Covers generative AI basics and responsible use in writing, which connects to your AI interest and coursework."
+    },
+    {
+     "id": "1050f2ea-57db-4ff5-a66c-b90211f01b63",
+     "title": "Sparthill Hackathon 2026 Day #2",
+     "type": "hackathon",
+     "org": "Network Engineering Technology Society",
+     "url": "https://sammyapp.sjsu.edu/NETS/rsvp?id=379796",
+     "starts_at": "2026-10-24T14:00:00+00:00",
+     "score": 0.66,
+     "reason": "A hackathon about using AI on sustainability challenges, matching your AI interest and offering hands-on building experience."
+    },
+    {
+     "id": "9c7ca764-44e5-40d9-aab2-09faf1471a74",
+     "title": "Advanced Qualtrics: Logic, Branching & Piping",
+     "type": "workshop",
+     "org": "Dr. Martin Luther King Jr. Library",
+     "url": "https://events.sjsu.edu/event/copy-of-introduction-to-qualtrics-a-workshop-on-effective-survey-design-and-data",
+     "starts_at": "2026-11-05T09:00:00+00:00",
+     "score": 0.62,
+     "reason": "Teaches survey logic in Qualtrics, a data collection tool somewhat relevant to your data interest."
+    },
+    {
+     "id": "47c90392-07e9-4615-a48e-10f472ec917b",
+     "title": "PivotTables Made Easy: Google Sheets & Microsoft Excel 365",
+     "type": "workshop",
+     "org": "Dr. Martin Luther King Jr. Library",
+     "url": "https://events.sjsu.edu/event/copy-of-advanced-qualtrics-logic-branching-piping",
+     "starts_at": "2026-11-19T09:00:00+00:00",
+     "score": 0.56,
+     "reason": "Teaches PivotTables for summarizing and analyzing data, a practical skill for your Data Science major."
+    },
+    {
+     "id": "43df1348-e58d-4e9d-9da6-cc5e6c5dfe88",
+     "title": "AdoptAI Drop-In - Build Your First AI Chief of Staff: A Personalized Morning Briefing",
+     "type": "event",
+     "org": "San José State University",
+     "url": "https://events.sjsu.edu/event/adoptai-drop-in-build-your-first-ai-chief-of-staff-a-personalized-morning-briefing",
+     "starts_at": "2026-11-12T21:30:00+00:00",
+     "score": 0.51,
+     "reason": "Weak fit: it demonstrates building a personal AI assistant, but it is aimed at staff rather than students."
+    },
+    {
+     "id": "beb71acd-ea80-4e43-b7db-d52c6ec36c2f",
+     "title": "HackStorm 3.0: Sense, Think and Act",
+     "type": "hackathon",
+     "org": "HackStorm",
+     "url": "https://hackstorm3.devpost.com/",
+     "starts_at": "2027-01-15T08:00:00+00:00",
+     "deadline": "2027-01-17T08:00:00+00:00",
+     "score": 0.47,
+     "reason": "Touches your robotics interest through themes of IoT and robotic process automation, though it is not an SJSU event."
+    },
+    {
+     "id": "f2c973ec-2c12-4737-9695-c10d30093b63",
+     "title": "🎃 KLEVR After Dark 👻: A Halloween Backrooms experience Pop Up hosted by SJSU King Library KLEVR Lab",
+     "type": "workshop",
+     "org": "Dr. Martin Luther King Jr. Library",
+     "url": "https://events.sjsu.edu/event/klevr-after-dark",
+     "starts_at": "2026-10-26T18:00:00+00:00",
+     "score": 0.38,
+     "reason": "Weak fit: a VR and AR pop-up at the KLEVR Lab where you can try motion capture and other emerging tech."
+    },
+    {
+     "id": "73eb3394-584c-4f15-8b2a-1938f73e2ba4",
+     "title": "WGSS Lecture: Drag Story Time as a Site of Resistance, Queer World-Making and Community Building",
+     "type": "workshop",
+     "org": "Sociology and Interdisciplinary Social Sciences",
+     "url": "https://events.sjsu.edu/event/wgss-lecture-drag-story-time-as-a-site-of-resistance-queer-world-making-and-community-building",
+     "starts_at": "2026-10-26T19:00:00+00:00",
+     "score": 0.38,
+     "reason": "Weak fit: a gender studies lecture with no link to data, AI, or robotics, but it is an SJSU campus event."
+    },
+    {
+     "id": "a3eda138-f5a1-4e09-93de-c8ccdda30c5e",
+     "title": "Introduction to Covidence",
+     "type": "workshop",
+     "org": "Dr. Martin Luther King Jr. Library",
+     "url": "https://events.sjsu.edu/event/introduction-to-covidence-8870",
+     "starts_at": "2026-10-27T19:00:00+00:00",
+     "score": 0.38,
+     "reason": "Weak fit: a research tool workshop for systematic reviews that could become useful later in your SJSU studies."
+    },
+    {
+     "id": "30c3a962-a179-460d-b2dc-c61e00445d3c",
+     "title": "Exploring Graduate School: Strategy & Application Process",
+     "type": "workshop",
+     "org": "Career Center",
+     "url": "https://events.sjsu.edu/event/exploring-graduate-school-strategy-application-process",
+     "starts_at": "2026-10-27T19:00:00+00:00",
+     "score": 0.38,
+     "reason": "Weak fit for now: it covers graduate school planning, which is a long-term step beyond your transfer to SJSU."
+    },
+    {
+     "id": "5c3540d1-88d4-4e3e-9425-52e4cf4dfbd2",
+     "title": "2026 Lucas Graduate School of Business Virtual Open House",
+     "type": "event",
+     "org": "Lucas College and Graduate School of Business",
+     "url": "https://sammyapp.sjsu.edu/LCOB/rsvp?id=379870",
+     "starts_at": "2026-11-05T02:00:00+00:00",
+     "score": 0.37,
+     "reason": "Weak fit: a graduate business open house, though it lists analytics programs that relate loosely to data."
+    },
+    {
+     "id": "bfd96c18-915a-4689-addd-eeebae29ef90",
+     "title": "Graduate Business Virtual Open House",
+     "type": "event",
+     "org": "Lucas College and Graduate School of Business",
+     "url": "https://events.sjsu.edu/event/graduate-business-virtual-open-house",
+     "starts_at": "2026-11-05T02:00:00+00:00",
+     "score": 0.37,
+     "reason": "Weak fit: a graduate business open house that mentions analytics degrees, which loosely relate to your data interest."
+    }
+   ]
+  },
+  "headers": {}
+ },
+ {
+  "method": "POST",
+  "url": "/profiles/<AUDIT-P2-profile-id>/counselor",
+  "status": 200,
+  "body": {
+   "reply": "I can't give you a quarter-by-quarter De Anza schedule. The app has no De Anza course list or quarter offerings, and its plan is built in SJSU semesters starting Spring 2027, before you start. It does show what you still need, since you have no credits yet. All of these are missing.\n- Second English composition course: ENGL 1B or ENGL 2 [1]\n- MATH 30 Calculus I, then MATH 31 Calculus II [2][3]. The plan puts MATH 30 before MATH 31 [4].\n- MATH 39 Linear Algebra I, which the plan places after MATH 31 [5][6]\n- MATH 42 Discrete Mathematics [7]. Its prerequisite is placement or MATH 19/18A+18B, and no course link is stored [8].\n- CS 46A, then CS 46B [9][10]. CS 46A is a prerequisite for CS 46B [11][12].\n- One major elective from CS 22A, CS 47, CS 48, CS 49J, or MATH 32. This match is low confidence with an unspecified rule [13].\n\nThe MATH and CS courses need a C- or better [2][3][5][7][9][10].\n\nThe plan also assumes every course is offered each Fall and Spring, because the catalog doesn't list terms [14]. It leaves out 9 units of Domain Field Electives, which need department approval [15]. It also doesn't cover General Education or total units [14].\n\nConfirm with your advisor. Here's a question you can ask them:\n“I'm starting at De Anza in Fall 2027 for SJSU Data Science, B.S. Which De Anza courses match MATH 30, 31, 39, 42, CS 46A, CS 46B and ENGL 1B/2 in ASSIST, and which major elective (CS 22A, CS 47, CS 48, CS 49J or MATH 32) should I take?”",
+   "citations": [
+    {
+     "source": "assist",
+     "label": "De Anza College → San Jose State University · Data Science, B.S. (2026–2027)",
+     "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F0739dd42-491e-45c4-3e82-08dec89fcc4a",
+     "ref": "SECOND COURSE IN ENGLISH COMPOSITION › ENGL 1B - Argument and Analysis or ENGL 2 - Critical Thinking and Writing"
+    },
+    {
+     "source": "assist",
+     "label": "De Anza College → San Jose State University · Data Science, B.S. (2026–2027)",
+     "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F0739dd42-491e-45c4-3e82-08dec89fcc4a",
+     "ref": "PREPARATION FOR THE MAJOR › MATH 30 - Calculus I"
+    },
+    {
+     "source": "assist",
+     "label": "De Anza College → San Jose State University · Data Science, B.S. (2026–2027)",
+     "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F0739dd42-491e-45c4-3e82-08dec89fcc4a",
+     "ref": "PREPARATION FOR THE MAJOR › MATH 31 - Calculus II"
+    },
+    {
+     "source": "catalog",
+     "label": "SJSU catalog · MATH 31 Calculus II",
+     "url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=1284",
+     "ref": "MATH 31 · Data Science, B.S. (2025-26)"
+    },
+    {
+     "source": "assist",
+     "label": "De Anza College → San Jose State University · Data Science, B.S. (2026–2027)",
+     "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F0739dd42-491e-45c4-3e82-08dec89fcc4a",
+     "ref": "PREPARATION FOR THE MAJOR › MATH 39 - Linear Algebra I"
+    },
+    {
+     "source": "catalog",
+     "label": "SJSU catalog · MATH 39 Linear Algebra I",
+     "url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=1286",
+     "ref": "MATH 39 · Data Science, B.S. (2025-26)"
+    },
+    {
+     "source": "assist",
+     "label": "De Anza College → San Jose State University · Data Science, B.S. (2026–2027)",
+     "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F0739dd42-491e-45c4-3e82-08dec89fcc4a",
+     "ref": "PREPARATION FOR THE MAJOR › MATH 42 - Discrete Mathematics"
+    },
+    {
+     "source": "catalog",
+     "label": "SJSU catalog · MATH 42 Discrete Mathematics",
+     "url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=1286",
+     "ref": "MATH 42 · Data Science, B.S. (2025-26)"
+    },
+    {
+     "source": "assist",
+     "label": "De Anza College → San Jose State University · Data Science, B.S. (2026–2027)",
+     "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F0739dd42-491e-45c4-3e82-08dec89fcc4a",
+     "ref": "LOWER DIVISION CORE REQUIREMENTS OF THE MAJOR › CS 46A - Introduction to Programming"
+    },
+    {
+     "source": "assist",
+     "label": "De Anza College → San Jose State University · Data Science, B.S. (2026–2027)",
+     "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F0739dd42-491e-45c4-3e82-08dec89fcc4a",
+     "ref": "LOWER DIVISION CORE REQUIREMENTS OF THE MAJOR › CS 46B - Introduction to Data Structures"
+    },
+    {
+     "source": "catalog",
+     "label": "SJSU catalog · CS 46A Introduction to Programming",
+     "url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=882",
+     "ref": "CS 46A · Data Science, B.S. (2025-26)"
+    },
+    {
+     "source": "catalog",
+     "label": "SJSU catalog · CS 46B Introduction to Data Structures",
+     "url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=883",
+     "ref": "CS 46B · Data Science, B.S. (2025-26)"
+    },
+    {
+     "source": "assist",
+     "label": "De Anza College → San Jose State University · Data Science, B.S. (2026–2027)",
+     "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F0739dd42-491e-45c4-3e82-08dec89fcc4a",
+     "ref": "MAJOR ELECTIVES › Choose from: CS 22A - Python for Everyone; CS 47 - Introduction to Computer Systems; CS 48 - Applied Algorithms; CS 49J - Programming in Java; MATH 32 - Calculus III"
+    },
+    {
+     "source": "catalog",
+     "label": "SJSU catalog · Data Science, B.S. (2025-26)",
+     "url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=1900"
+    },
+    {
+     "source": "catalog",
+     "label": "SJSU catalog · Data Science, B.S. · Domain Field Electives",
+     "url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=1903",
+     "ref": "Domain Field Electives · Data Science, B.S. (2025-26)"
+    }
+   ]
+  },
+  "headers": {}
+ }
+]

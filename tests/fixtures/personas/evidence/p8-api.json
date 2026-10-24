@@ -1,0 +1,375 @@
+{
+ "plan": {
+  "status": 200,
+  "body": {
+   "semesters": [
+    {
+     "term": "Spring 2027",
+     "courses": [
+      {
+       "code": "CS 46A",
+       "title": "Introduction to Programming",
+       "units": 4.0,
+       "reason": "Major Requirements: Lower Division: pick 1 of 1 still needed toward 1 course (Data Science, B.S.); any listed elective works; Prerequisite for CS 46B",
+       "prereqs": []
+      },
+      {
+       "code": "MATH 42",
+       "title": "Discrete Mathematics",
+       "units": 3.0,
+       "reason": "Major Preparation (Data Science, B.S.); Prerequisite for CS 47; Prerequisite for CS 146",
+       "prereqs": []
+      },
+      {
+       "code": "ECON 1B",
+       "title": "Principles of Economics: Microeconomics",
+       "units": 3.0,
+       "reason": "Core Courses (Economics, B.S.); Prerequisite for ECON 106; Prerequisite for ECON 104; Prerequisite for ECON 101; Prerequisite for ECON 100W",
+       "prereqs": []
+      },
+      {
+       "code": "MATH 31",
+       "title": "Calculus II",
+       "units": 4.0,
+       "reason": "Major Preparation (Data Science, B.S.); Prerequisite for MATH 32; Prerequisite for MATH 161A; Prerequisite for MATH 39",
+       "prereqs": [
+        "MATH 30"
+       ]
+      }
+     ]
+    },
+    {
+     "term": "Fall 2027",
+     "courses": [
+      {
+       "code": "CS 46B",
+       "title": "Introduction to Data Structures",
+       "units": 4.0,
+       "reason": "Major Requirements: Lower Division (Data Science, B.S.); Prerequisite for CS 123A; Prerequisite for CS 47; Prerequisite for CS 146; Prerequisite for CS 131",
+       "prereqs": [
+        "CS 46A or CS 46AX"
+       ]
+      },
+      {
+       "code": "STAT 95",
+       "title": "Elementary Statistics",
+       "units": 3.0,
+       "reason": "Major Preparation: Statistics: pick 1 of 1 still needed toward 1 course (Economics, B.S.); any listed elective works; Prerequisite for ECON 103A",
+       "prereqs": []
+      },
+      {
+       "code": "CS 100W",
+       "title": "Technical Writing Workshop",
+       "units": 3.0,
+       "reason": "Major Preparation (Data Science, B.S.); Prerequisite for CS 163",
+       "prereqs": []
+      },
+      {
+       "code": "CS 22A",
+       "title": "Python for Everyone",
+       "units": 3.0,
+       "reason": "CS 22A or CS 122: pick 1 of 1 still needed toward 1 course (Data Science, B.S.); any listed elective works; Prerequisite for CS 22B",
+       "prereqs": []
+      }
+     ]
+    },
+    {
+     "term": "Spring 2028",
+     "courses": [
+      {
+       "code": "CS 146",
+       "title": "Data Structures and Algorithms",
+       "units": 3.0,
+       "reason": "Major Requirements: Upper Division (Data Science, B.S.); Prerequisite for CS 171; Prerequisite for CS 157A; Prerequisite for CS 156; Prerequisite for CS 133",
+       "prereqs": [
+        "MATH 30",
+        "MATH 42",
+        "CS 46B"
+       ]
+      },
+      {
+       "code": "CS 131",
+       "title": "Processing Big Data - Tools and Techniques",
+       "units": 3.0,
+       "reason": "Major Requirements: Upper Division (Data Science, B.S.); Prerequisite for CS 163",
+       "prereqs": [
+        "CS 46B"
+       ]
+      },
+      {
+       "code": "ECON 100W",
+       "title": "Writing Workshop: Economic Reports",
+       "units": 4.0,
+       "reason": "Core Courses (Economics, B.S.); Prerequisite for ECON 103B",
+       "prereqs": [
+        "ECON 1A",
+        "ECON 1B"
+       ]
+      },
+      {
+       "code": "ECON 103A",
+       "title": "Introduction to Econometrics and Research Methods",
+       "units": 4.0,
+       "reason": "Core Courses (Economics, B.S.); Prerequisite for ECON 103B",
+       "prereqs": [
+        "STAT 95 or SOCI 15 or UNVS 15"
+       ]
+      }
+     ]
+    },
+    {
+     "term": "Fall 2028",
+     "courses": [
+      {
+       "code": "CS 156",
+       "title": "Introduction to Artificial Intelligence",
+       "units": 3.0,
+       "reason": "Major Requirements: Upper Division (Data Science, B.S.); Prerequisite for CS 163",
+       "prereqs": [
+        "CS 146"
+       ]
+      },
+      {
+       "code": "MATH 161A",
+       "title": "Applied Probability and Statistics I",
+       "units": 3.0,
+       "reason": "Major Preparation (Data Science, B.S.); Prerequisite for MATH 161B; Prerequisite for MATH 167R",
+       "prereqs": [
+        "MATH 31"
+       ]
+      },
+      {
+       "code": "CS 123A",
+       "title": "Bioinformatics I",
+       "units": 3.0,
+       "reason": "Major Electives: pick 4 of 5 still needed toward 15 units (Data Science, B.S.); any listed elective works",
+       "prereqs": [
+        "CS 46B or BIOL 31"
+       ]
+      },
+      {
+       "code": "CS 133",
+       "title": "Introduction to Data Visualization",
+       "units": 3.0,
+       "reason": "Major Requirements: Upper Division (Data Science, B.S.)",
+       "prereqs": [
+        "CS 146"
+       ]
+      },
+      {
+       "code": "CS 157A",
+       "title": "Introduction to Database Management Systems",
+       "units": 3.0,
+       "reason": "Major Requirements: Upper Division (Data Science, B.S.)",
+       "prereqs": [
+        "CS 146"
+       ]
+      }
+     ]
+    },
+    {
+     "term": "Spring 2029",
+     "courses": [
+      {
+       "code": "CS 163",
+       "title": "Data Science Senior Project",
+       "units": 3.0,
+       "reason": "Major Requirements: Upper Division (Data Science, B.S.)",
+       "prereqs": [
+        "CS 100W",
+        "CS 131",
+        "CS 156 or CS 171"
+       ]
+      },
+      {
+       "code": "CS 171",
+       "title": "Introduction to Machine Learning",
+       "units": 3.0,
+       "reason": "Major Requirements: Upper Division (Data Science, B.S.)",
+       "prereqs": [
+        "CS 146"
+       ]
+      },
+      {
+       "code": "CS 22B",
+       "title": "Python Programming for Data Analysis",
+       "units": 3.0,
+       "reason": "Major Electives: pick 1 of 5 still needed toward 15 units (Data Science, B.S.); any listed elective works",
+       "prereqs": [
+        "CS 22A"
+       ]
+      },
+      {
+       "code": "CS 47",
+       "title": "Introduction to Computer Systems",
+       "units": 3.0,
+       "reason": "Major Electives: pick 3 of 5 still needed toward 15 units (Data Science, B.S.); any listed elective works",
+       "prereqs": [
+        "MATH 42",
+        "CS 46B"
+       ]
+      },
+      {
+       "code": "MATH 161B",
+       "title": "Applied Probability and Statistics II",
+       "units": 3.0,
+       "reason": "Major Electives: pick 5 of 5 still needed toward 15 units (Data Science, B.S.); any listed elective works",
+       "prereqs": [
+        "MATH 161A"
+       ]
+      }
+     ]
+    },
+    {
+     "term": "Fall 2029",
+     "courses": [
+      {
+       "code": "ECON 101",
+       "title": "Microeconomic Analysis",
+       "units": 4.0,
+       "reason": "Core Courses (Economics, B.S.)",
+       "prereqs": [
+        "ECON 1B",
+        "MATH 30 or MATH 71"
+       ]
+      },
+      {
+       "code": "ECON 102",
+       "title": "Macroeconomic Analysis",
+       "units": 4.0,
+       "reason": "Core Courses (Economics, B.S.)",
+       "prereqs": [
+        "ECON 1A"
+       ]
+      },
+      {
+       "code": "ECON 103B",
+       "title": "Econometric Methods",
+       "units": 4.0,
+       "reason": "Core Courses (Economics, B.S.)",
+       "prereqs": [
+        "ECON 100W",
+        "ECON 103A"
+       ]
+      },
+      {
+       "code": "MATH 167R",
+       "title": "Statistical Programming with R",
+       "units": 3.0,
+       "reason": "Major Preparation (Data Science, B.S.)",
+       "prereqs": [
+        "MATH 161A"
+       ]
+      }
+     ]
+    },
+    {
+     "term": "Spring 2030",
+     "courses": [
+      {
+       "code": "ECON 104",
+       "title": "Mathematical Methods for Economics",
+       "units": 4.0,
+       "reason": "Core Courses (Economics, B.S.)",
+       "prereqs": [
+        "ECON 1A",
+        "ECON 1B",
+        "MATH 30 or MATH 71"
+       ]
+      },
+      {
+       "code": "ECON 106",
+       "title": "Managerial Economics",
+       "units": 4.0,
+       "reason": "Upper Division Economics Electives: pick 5 of 5 still needed toward 20 units (Economics, B.S.); any listed elective works",
+       "prereqs": [
+        "ECON 1B"
+       ]
+      },
+      {
+       "code": "ECON 113B",
+       "title": "Economic History of Europe",
+       "units": 4.0,
+       "reason": "Upper Division Economics Electives: pick 1 of 5 still needed toward 20 units (Economics, B.S.); any listed elective works",
+       "prereqs": []
+      },
+      {
+       "code": "MATH 32",
+       "title": "Calculus III",
+       "units": 3.0,
+       "reason": "Major Electives: pick 2 of 5 still needed toward 15 units (Data Science, B.S.); any listed elective works",
+       "prereqs": [
+        "MATH 31"
+       ]
+      }
+     ]
+    },
+    {
+     "term": "Fall 2030",
+     "courses": [
+      {
+       "code": "ECON 135",
+       "title": "Money and Banking",
+       "units": 4.0,
+       "reason": "Upper Division Economics Electives: pick 2 of 5 still needed toward 20 units (Economics, B.S.); any listed elective works",
+       "prereqs": [
+        "ECON 1A"
+       ]
+      },
+      {
+       "code": "ECON 141",
+       "title": "Law and Economics",
+       "units": 4.0,
+       "reason": "Upper Division Economics Electives: pick 3 of 5 still needed toward 20 units (Economics, B.S.); any listed elective works",
+       "prereqs": [
+        "ECON 1A or ECON 1B"
+       ]
+      },
+      {
+       "code": "ECON 165",
+       "title": "Regional Economics",
+       "units": 4.0,
+       "reason": "Upper Division Economics Electives: pick 4 of 5 still needed toward 20 units (Economics, B.S.); any listed elective works",
+       "prereqs": [
+        "ECON 1A or ECON 1B"
+       ]
+      },
+      {
+       "code": "MATH 39",
+       "title": "Linear Algebra I",
+       "units": 3.0,
+       "reason": "Major Preparation (Data Science, B.S.)",
+       "prereqs": [
+        "MATH 31"
+       ]
+      }
+     ]
+    },
+    {
+     "term": "Spring 2031",
+     "courses": [
+      {
+       "code": "PHIL 133",
+       "title": "Ethics in Science",
+       "units": 3.0,
+       "reason": "Major Preparation (Data Science, B.S.)",
+       "prereqs": []
+      }
+     ]
+    }
+   ]
+  }
+ },
+ "plan_unit_cap=6": {
+  "status": 200,
+  "terms": 9
+ },
+ "plan_units=6": {
+  "status": 200,
+  "terms": 9
+ },
+ "plan_summer=true": {
+  "status": 200,
+  "terms": 9
+ }
+}

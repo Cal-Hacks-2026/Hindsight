@@ -1,0 +1,202 @@
+{
+ "match_ds": {
+  "status": 200,
+  "body": {
+   "major_label": "Data Science, B.A.",
+   "agreement_key": "77/113/to/79/Major/dcf11170-13a5-4056-3f97-08dec89fcc4a",
+   "requirements": [
+    {
+     "id": "39154421-14f9-4cd3-8c0f-08dec89fcd17",
+     "group_title": "MAJOR REQUIREMENTS",
+     "rule": "all",
+     "receiving_course": "MATH 51 - Calculus I",
+     "status": "satisfied",
+     "satisfied_by": [
+      "MATH 1A",
+      "MATH 1B"
+     ],
+     "flags": [
+      "course_year_mismatch"
+     ],
+     "citation": {
+      "source": "assist",
+      "label": "De Anza College → University of California, Berkeley · Data Science, B.A. (2026–2027)",
+      "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=79&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F79%2FMajor%2Fdcf11170-13a5-4056-3f97-08dec89fcc4a",
+      "ref": "MAJOR REQUIREMENTS › MATH 51 - Calculus I"
+     },
+     "confidence": "medium"
+    },
+    {
+     "id": "754a35b5-41b0-4899-8c10-08dec89fcd17",
+     "group_title": "MAJOR REQUIREMENTS",
+     "rule": "all",
+     "receiving_course": "MATH 52 - Calculus II",
+     "status": "satisfied",
+     "satisfied_by": [
+      "MATH 1B",
+      "MATH 1C"
+     ],
+     "flags": [
+      "course_year_mismatch"
+     ],
+     "citation": {
+      "source": "assist",
+      "label": "De Anza College → University of California, Berkeley · Data Science, B.A. (2026–2027)",
+      "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=79&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F79%2FMajor%2Fdcf11170-13a5-4056-3f97-08dec89fcc4a",
+      "ref": "MAJOR REQUIREMENTS › MATH 52 - Calculus II"
+     },
+     "confidence": "medium"
+    },
+    {
+     "id": "fbe66f45-6887-ef11-8474-000d3a37e3b6/2",
+     "group_title": "MAJOR REQUIREMENTS",
+     "rule": "n_of",
+     "n": 1,
+     "receiving_course": "MATH 56 - Linear Algebra or MATH 54 - Linear Algebra and Differential Equations",
+     "status": "partial",
+     "satisfied_by": [
+      "MATH 2B"
+     ],
+     "flags": [],
+     "citation": {
+      "source": "assist",
+      "label": "De Anza College → University of California, Berkeley · Data Science, B.A. (2026–2027)",
+      "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=79&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F79%2FMajor%2Fdcf11170-13a5-4056-3f97-08dec89fcc4a",
+      "ref": "MAJOR REQUIREMENTS › MATH 56 - Linear Algebra or MATH 54 - Linear Algebra and Differential Equations"
+     },
+     "confidence": "high"
+    },
+    {
+     "id": "8d0d4a02-9800-4ace-8c13-08dec89fcd17",
+     "group_title": "HIGHLY RECOMMENDED",
+     "rule": "all",
+     "receiving_course": "DATA C8 - Foundations of Data Science",
+     "status": "missing",
+     "satisfied_by": [],
+     "flags": [],
+     "citation": {
+      "source": "assist",
+      "label": "De Anza College → University of California, Berkeley · Data Science, B.A. (2026–2027)",
+      "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=79&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F79%2FMajor%2Fdcf11170-13a5-4056-3f97-08dec89fcc4a",
+      "ref": "HIGHLY RECOMMENDED › DATA C8 - Foundations of Data Science"
+     },
+     "confidence": "high"
+    },
+    {
+     "id": "fee66f45-6887-ef11-8474-000d3a37e3b6/2",
+     "group_title": "HIGHLY RECOMMENDED",
+     "rule": "n_of",
+     "n": 1,
+     "receiving_course": "COMPSCI 61A - The Structure and Interpretation of Computer Programs or DATA C88C - Computational Structures in Data Science",
+     "status": "at_university",
+     "satisfied_by": [],
+     "flags": [
+      "no_current_articulation"
+     ],
+     "citation": {
+      "source": "assist",
+      "label": "De Anza College → University of California, Berkeley · Data Science, B.A. (2026–2027)",
+      "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=79&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F79%2FMajor%2Fdcf11170-13a5-4056-3f97-08dec89fcc4a",
+      "ref": "HIGHLY RECOMMENDED › COMPSCI 61A - The Structure and Interpretation of Computer Programs or DATA C88C - Computational Structures in Data Science"
+     },
+     "confidence": "high"
+    },
+    {
+     "id": "be94deb4-764e-4626-8c16-08dec89fcd17",
+     "group_title": "HIGHLY RECOMMENDED",
+     "rule": "all",
+     "receiving_course": "COMPSCI 61B - Data Structures",
+     "status": "missing",
+     "satisfied_by": [],
+     "flags": [],
+     "citation": {
+      "source": "assist",
+      "label": "De Anza College → University of California, Berkeley · Data Science, B.A. (2026–2027)",
+      "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=79&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F79%2FMajor%2Fdcf11170-13a5-4056-3f97-08dec89fcc4a",
+      "ref": "HIGHLY RECOMMENDED › COMPSCI 61B - Data Structures"
+     },
+     "confidence": "high"
+    }
+   ],
+   "summary": {
+    "satisfied": 2,
+    "partial": 1,
+    "missing": 2,
+    "at_university": 1
+   }
+  }
+ },
+ "match_ec": {
+  "status": 200,
+  "body": {
+   "major_label": "Economics, B.A.",
+   "agreement_key": "77/113/to/79/Major/9cb77eee-dd75-4993-3f5f-08dec89fcc4a",
+   "requirements": [
+    {
+     "id": "4a4d5eb7-de21-45eb-62a7-08dec89fcd17",
+     "group_title": "REQUIRED FOR ADMISSION",
+     "rule": "all",
+     "receiving_course": "ECON 1 - Introduction to Economics",
+     "status": "partial",
+     "satisfied_by": [
+      "ECON 1"
+     ],
+     "flags": [],
+     "citation": {
+      "source": "assist",
+      "label": "De Anza College → University of California, Berkeley · Economics, B.A. (2024–2025)",
+      "url": "https://assist.org/transfer/results?year=75&institution=113&agreement=79&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=75%2F113%2Fto%2F79%2FMajor%2Fd26ef3fe-0350-4b47-7dd0-08dcb87d5deb",
+      "ref": "REQUIRED FOR ADMISSION › ECON 1 - Introduction to Economics"
+     },
+     "confidence": "high"
+    },
+    {
+     "id": "64da6f45-6887-ef11-8474-000d3a37e3b6/1",
+     "group_title": "REQUIRED FOR ADMISSION",
+     "rule": "n_of",
+     "n": 1,
+     "receiving_course": "MATH 51 - Calculus I + MATH 52 - Calculus II or MATH 16A - Analytic Geometry and Calculus + MATH 16B - Analytic Geometry and Calculus",
+     "status": "satisfied",
+     "satisfied_by": [
+      "MATH 1A",
+      "MATH 1B",
+      "MATH 1C"
+     ],
+     "flags": [
+      "course_year_mismatch",
+      "sequence_grouping_inferred"
+     ],
+     "citation": {
+      "source": "assist",
+      "label": "De Anza College → University of California, Berkeley · Economics, B.A. (2026–2027)",
+      "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=79&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F79%2FMajor%2F9cb77eee-dd75-4993-3f5f-08dec89fcc4a",
+      "ref": "REQUIRED FOR ADMISSION › MATH 51 - Calculus I + MATH 52 - Calculus II or MATH 16A - Analytic Geometry and Calculus + MATH 16B - Analytic Geometry and Calculus"
+     },
+     "confidence": "medium"
+    }
+   ],
+   "summary": {
+    "satisfied": 1,
+    "partial": 1,
+    "missing": 0,
+    "at_university": 0
+   }
+  }
+ },
+ "plan": {
+  "status": 404,
+  "body": {
+   "detail": "No curated requirements for ['Data Science, B.A.', 'Economics, B.A.'] at berkeley; available: []"
+  }
+ },
+ "plan_sjsu_label": {
+  "status": 404,
+  "body": {
+   "detail": "No curated requirements for ['Data Science, B.S.'] at berkeley; available: []"
+  }
+ },
+ "ucla_majors": {
+  "status": 200,
+  "body": "{'majors': []}"
+ }
+}

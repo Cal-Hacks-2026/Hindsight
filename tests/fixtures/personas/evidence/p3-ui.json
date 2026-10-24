@@ -1,0 +1,719 @@
+[
+ {
+  "method": "POST",
+  "url": "/profiles",
+  "status": 200,
+  "body": {
+   "profile": {
+    "name": "AUDIT-P3 Test Student Three",
+    "campus": "sjsu",
+    "sending_institution_id": 113,
+    "receiving_institution_id": 39,
+    "majors": [
+     "Computer Science, B.S.",
+     "Data Science, B.S."
+    ],
+    "goals": "Undecided between CS and Data Science; transfer to SJSU Fall 2028",
+    "interests": [
+     "ai",
+     "software",
+     "data"
+    ],
+    "id": "<AUDIT-P3-profile-id>",
+    "created_at": "2026-10-24T21:27:15.515119+00:00"
+   }
+  },
+  "headers": {}
+ },
+ {
+  "method": "POST",
+  "url": "/profiles/<AUDIT-P3-profile-id>/transcript",
+  "status": 200,
+  "body": {
+   "courses": [
+    {
+     "prefix": "MATH",
+     "number": "1A",
+     "title": "Calculus",
+     "units": 5.0,
+     "grade": "A",
+     "term": "Summer 2026",
+     "academic_year_id": 76,
+     "confirmed": false
+    },
+    {
+     "prefix": "ENGL",
+     "number": "C1000",
+     "title": "Academic Reading and Writing",
+     "units": 5.0,
+     "grade": "A-",
+     "term": "Summer 2026",
+     "academic_year_id": 76,
+     "confirmed": false
+    },
+    {
+     "prefix": "CIS",
+     "number": "22A",
+     "title": "Beginning Programming Methodologies in C++",
+     "units": 4.5,
+     "grade": "IP",
+     "term": "Fall 2026",
+     "academic_year_id": 77,
+     "confirmed": false
+    }
+   ]
+  },
+  "headers": {
+   "x-transcript-notes": "[{\"code\": \"MATH 1A\", \"term\": \"Summer 2026\", \"confidence\": \"high\", \"flags\": []}, {\"code\": \"ENGL C1000\", \"term\": \"Summer 2026\", \"confidence\": \"high\", \"flags\": [\"common_course_number\"]}, {\"code\": \"CIS 22A\", \"term\": \"Fall 2026\", \"confidence\": \"high\", \"flags\": []}]"
+  }
+ },
+ {
+  "method": "PUT",
+  "url": "/profiles/<AUDIT-P3-profile-id>/courses",
+  "status": 200,
+  "body": {
+   "courses": [
+    {
+     "prefix": "MATH",
+     "number": "1A",
+     "title": "Calculus",
+     "units": 5.0,
+     "grade": "A",
+     "term": "Summer 2026",
+     "academic_year_id": 76,
+     "confirmed": true
+    },
+    {
+     "prefix": "ENGL",
+     "number": "C1000",
+     "title": "Academic Reading and Writing",
+     "units": 5.0,
+     "grade": "A-",
+     "term": "Summer 2026",
+     "academic_year_id": 76,
+     "confirmed": true
+    },
+    {
+     "prefix": "CIS",
+     "number": "22A",
+     "title": "Beginning Programming Methodologies in C++",
+     "units": 4.5,
+     "grade": "IP",
+     "term": "Fall 2026",
+     "academic_year_id": 77,
+     "confirmed": true
+    }
+   ]
+  },
+  "headers": {}
+ },
+ {
+  "method": "POST",
+  "url": "/profiles/<AUDIT-P3-profile-id>/match",
+  "status": 200,
+  "body": {
+   "major_label": "Data Science, B.S.",
+   "agreement_key": "77/113/to/39/Major/0739dd42-491e-45c4-3e82-08dec89fcc4a",
+   "requirements": [
+    {
+     "id": "fbf17145-6887-ef11-8474-000d3a37e3b6",
+     "group_title": "SECOND COURSE IN ENGLISH COMPOSITION",
+     "rule": "n_of",
+     "n": 1,
+     "receiving_course": "ENGL 1B - Argument and Analysis or ENGL 2 - Critical Thinking and Writing",
+     "status": "missing",
+     "satisfied_by": [],
+     "flags": [],
+     "citation": {
+      "source": "assist",
+      "label": "De Anza College → San Jose State University · Data Science, B.S. (2026–2027)",
+      "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F0739dd42-491e-45c4-3e82-08dec89fcc4a",
+      "ref": "SECOND COURSE IN ENGLISH COMPOSITION › ENGL 1B - Argument and Analysis or ENGL 2 - Critical Thinking and Writing"
+     },
+     "confidence": "high"
+    },
+    {
+     "id": "523a4697-b6f8-4ef6-4de7-08dec89fcd17",
+     "group_title": "PREPARATION FOR THE MAJOR",
+     "rule": "all",
+     "receiving_course": "MATH 30 - Calculus I",
+     "status": "satisfied",
+     "satisfied_by": [
+      "MATH 1A"
+     ],
+     "flags": [
+      "min_grade_C-"
+     ],
+     "citation": {
+      "source": "assist",
+      "label": "De Anza College → San Jose State University · Data Science, B.S. (2026–2027)",
+      "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F0739dd42-491e-45c4-3e82-08dec89fcc4a",
+      "ref": "PREPARATION FOR THE MAJOR › MATH 30 - Calculus I"
+     },
+     "confidence": "high"
+    },
+    {
+     "id": "6eaed0c6-2858-49bc-4de9-08dec89fcd17",
+     "group_title": "PREPARATION FOR THE MAJOR",
+     "rule": "all",
+     "receiving_course": "MATH 31 - Calculus II",
+     "status": "missing",
+     "satisfied_by": [],
+     "flags": [
+      "min_grade_C-"
+     ],
+     "citation": {
+      "source": "assist",
+      "label": "De Anza College → San Jose State University · Data Science, B.S. (2026–2027)",
+      "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F0739dd42-491e-45c4-3e82-08dec89fcc4a",
+      "ref": "PREPARATION FOR THE MAJOR › MATH 31 - Calculus II"
+     },
+     "confidence": "high"
+    },
+    {
+     "id": "4c0e5348-fcec-4179-4de8-08dec89fcd17",
+     "group_title": "PREPARATION FOR THE MAJOR",
+     "rule": "all",
+     "receiving_course": "MATH 39 - Linear Algebra I",
+     "status": "missing",
+     "satisfied_by": [],
+     "flags": [
+      "min_grade_C-"
+     ],
+     "citation": {
+      "source": "assist",
+      "label": "De Anza College → San Jose State University · Data Science, B.S. (2026–2027)",
+      "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F0739dd42-491e-45c4-3e82-08dec89fcc4a",
+      "ref": "PREPARATION FOR THE MAJOR › MATH 39 - Linear Algebra I"
+     },
+     "confidence": "high"
+    },
+    {
+     "id": "91999e07-58b5-4e7c-4dea-08dec89fcd17",
+     "group_title": "PREPARATION FOR THE MAJOR",
+     "rule": "all",
+     "receiving_course": "MATH 42 - Discrete Mathematics",
+     "status": "missing",
+     "satisfied_by": [],
+     "flags": [
+      "min_grade_C-"
+     ],
+     "citation": {
+      "source": "assist",
+      "label": "De Anza College → San Jose State University · Data Science, B.S. (2026–2027)",
+      "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F0739dd42-491e-45c4-3e82-08dec89fcc4a",
+      "ref": "PREPARATION FOR THE MAJOR › MATH 42 - Discrete Mathematics"
+     },
+     "confidence": "high"
+    },
+    {
+     "id": "73234f2d-6e59-4515-4de5-08dec89fcd17",
+     "group_title": "LOWER DIVISION CORE REQUIREMENTS OF THE MAJOR",
+     "rule": "all",
+     "receiving_course": "CS 46A - Introduction to Programming",
+     "status": "missing",
+     "satisfied_by": [],
+     "flags": [
+      "min_grade_C-"
+     ],
+     "citation": {
+      "source": "assist",
+      "label": "De Anza College → San Jose State University · Data Science, B.S. (2026–2027)",
+      "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F0739dd42-491e-45c4-3e82-08dec89fcc4a",
+      "ref": "LOWER DIVISION CORE REQUIREMENTS OF THE MAJOR › CS 46A - Introduction to Programming"
+     },
+     "confidence": "high"
+    },
+    {
+     "id": "18f2152d-e965-4d73-4de4-08dec89fcd17",
+     "group_title": "LOWER DIVISION CORE REQUIREMENTS OF THE MAJOR",
+     "rule": "all",
+     "receiving_course": "CS 46B - Introduction to Data Structures",
+     "status": "missing",
+     "satisfied_by": [],
+     "flags": [
+      "min_grade_C-"
+     ],
+     "citation": {
+      "source": "assist",
+      "label": "De Anza College → San Jose State University · Data Science, B.S. (2026–2027)",
+      "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F0739dd42-491e-45c4-3e82-08dec89fcc4a",
+      "ref": "LOWER DIVISION CORE REQUIREMENTS OF THE MAJOR › CS 46B - Introduction to Data Structures"
+     },
+     "confidence": "high"
+    },
+    {
+     "id": "09f27145-6887-ef11-8474-000d3a37e3b6",
+     "group_title": "MAJOR ELECTIVES",
+     "rule": "n_of",
+     "receiving_course": "Choose from: CS 22A - Python for Everyone; CS 47 - Introduction to Computer Systems; CS 48 - Applied Algorithms; CS 49J - Programming in Java; MATH 32 - Calculus III",
+     "status": "missing",
+     "satisfied_by": [],
+     "flags": [
+      "min_grade_C-",
+      "unspecified_rule"
+     ],
+     "citation": {
+      "source": "assist",
+      "label": "De Anza College → San Jose State University · Data Science, B.S. (2026–2027)",
+      "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F0739dd42-491e-45c4-3e82-08dec89fcc4a",
+      "ref": "MAJOR ELECTIVES › Choose from: CS 22A - Python for Everyone; CS 47 - Introduction to Computer Systems; CS 48 - Applied Algorithms; CS 49J - Programming in Java; MATH 32 - Calculus III"
+     },
+     "confidence": "low"
+    }
+   ],
+   "summary": {
+    "satisfied": 1,
+    "partial": 0,
+    "missing": 7,
+    "at_university": 0
+   }
+  },
+  "headers": {}
+ },
+ {
+  "method": "POST",
+  "url": "/profiles/<AUDIT-P3-profile-id>/match",
+  "status": 200,
+  "body": {
+   "major_label": "Computer Science, B.S.",
+   "agreement_key": "77/113/to/39/Major/41298989-8aac-45c6-3e9d-08dec89fcc4a",
+   "requirements": [
+    {
+     "id": "3b2f7445-6887-ef11-8474-000d3a37e3b6",
+     "group_title": "SECOND COURSE IN ENGLISH COMPOSITION",
+     "rule": "n_of",
+     "n": 1,
+     "receiving_course": "ENGL 1B - Argument and Analysis or ENGL 2 - Critical Thinking and Writing",
+     "status": "missing",
+     "satisfied_by": [],
+     "flags": [],
+     "citation": {
+      "source": "assist",
+      "label": "De Anza College → San Jose State University · Computer Science, B.S. (2026–2027)",
+      "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F41298989-8aac-45c6-3e9d-08dec89fcc4a",
+      "ref": "SECOND COURSE IN ENGLISH COMPOSITION › ENGL 1B - Argument and Analysis or ENGL 2 - Critical Thinking and Writing"
+     },
+     "confidence": "high"
+    },
+    {
+     "id": "038a264a-459c-4537-4f4e-08dec89fcd17",
+     "group_title": "PREPARATION FOR THE MAJOR",
+     "rule": "all",
+     "receiving_course": "MATH 30 - Calculus I",
+     "status": "satisfied",
+     "satisfied_by": [
+      "MATH 1A"
+     ],
+     "flags": [],
+     "citation": {
+      "source": "assist",
+      "label": "De Anza College → San Jose State University · Computer Science, B.S. (2026–2027)",
+      "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F41298989-8aac-45c6-3e9d-08dec89fcc4a",
+      "ref": "PREPARATION FOR THE MAJOR › MATH 30 - Calculus I"
+     },
+     "confidence": "high"
+    },
+    {
+     "id": "876a6d09-bed5-4c51-4f4f-08dec89fcd17",
+     "group_title": "PREPARATION FOR THE MAJOR",
+     "rule": "all",
+     "receiving_course": "MATH 31 - Calculus II",
+     "status": "missing",
+     "satisfied_by": [],
+     "flags": [],
+     "citation": {
+      "source": "assist",
+      "label": "De Anza College → San Jose State University · Computer Science, B.S. (2026–2027)",
+      "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F41298989-8aac-45c6-3e9d-08dec89fcc4a",
+      "ref": "PREPARATION FOR THE MAJOR › MATH 31 - Calculus II"
+     },
+     "confidence": "high"
+    },
+    {
+     "id": "9144409d-075c-466f-4f51-08dec89fcd17",
+     "group_title": "PREPARATION FOR THE MAJOR",
+     "rule": "all",
+     "receiving_course": "MATH 42 - Discrete Mathematics",
+     "status": "missing",
+     "satisfied_by": [],
+     "flags": [],
+     "citation": {
+      "source": "assist",
+      "label": "De Anza College → San Jose State University · Computer Science, B.S. (2026–2027)",
+      "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F41298989-8aac-45c6-3e9d-08dec89fcc4a",
+      "ref": "PREPARATION FOR THE MAJOR › MATH 42 - Discrete Mathematics"
+     },
+     "confidence": "high"
+    },
+    {
+     "id": "c7a5dd9f-b3e8-4c2c-4f50-08dec89fcd17",
+     "group_title": "PREPARATION FOR THE MAJOR",
+     "rule": "all",
+     "receiving_course": "MATH 39 - Linear Algebra I",
+     "status": "missing",
+     "satisfied_by": [],
+     "flags": [],
+     "citation": {
+      "source": "assist",
+      "label": "De Anza College → San Jose State University · Computer Science, B.S. (2026–2027)",
+      "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F41298989-8aac-45c6-3e9d-08dec89fcc4a",
+      "ref": "PREPARATION FOR THE MAJOR › MATH 39 - Linear Algebra I"
+     },
+     "confidence": "high"
+    },
+    {
+     "id": "81298944-f86e-4473-4f4d-08dec89fcd17",
+     "group_title": "PREPARATION FOR THE MAJOR",
+     "rule": "all",
+     "receiving_course": "MATH 32 - Calculus III",
+     "status": "missing",
+     "satisfied_by": [],
+     "flags": [],
+     "citation": {
+      "source": "assist",
+      "label": "De Anza College → San Jose State University · Computer Science, B.S. (2026–2027)",
+      "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F41298989-8aac-45c6-3e9d-08dec89fcc4a",
+      "ref": "PREPARATION FOR THE MAJOR › MATH 32 - Calculus III"
+     },
+     "confidence": "high"
+    },
+    {
+     "id": "432f7445-6887-ef11-8474-000d3a37e3b6",
+     "group_title": "SCIENCE ELECTIVES",
+     "rule": "n_of",
+     "n": 8,
+     "receiving_course": "8 from: BIOL 30 - Principles of Biology I; BIOL 31 - Principles of Biology II; CHEM 1A - General Chemistry; GEOL 1 - General Geology; GEOL 4L - Earth Systems Lab; GEOL 7 - Earth, Time and Life; METR 10 - Weather and Climate; PHYS 50 - General Physics I: Mechanics; PHYS 51 - General Physics II: Electricity and Magnetism",
+     "status": "missing",
+     "satisfied_by": [],
+     "flags": [],
+     "citation": {
+      "source": "assist",
+      "label": "De Anza College → San Jose State University · Computer Science, B.S. (2026–2027)",
+      "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F41298989-8aac-45c6-3e9d-08dec89fcc4a",
+      "ref": "SCIENCE ELECTIVES › 8 from: BIOL 30 - Principles of Biology I; BIOL 31 - Principles of Biology II; CHEM 1A - General Chemistry; GEOL 1 - General Geology; GEOL 4L - Earth Systems Lab; GEOL 7 - Earth, Time and Life; METR 10 - Weather and Climate; PHYS 50 - General Physics I: Mechanics; PHYS 51 - General Physics II: Electricity and Magnetism"
+     },
+     "confidence": "high"
+    },
+    {
+     "id": "da41716c-ddad-452c-4f41-08dec89fcd17",
+     "group_title": "LOWER DIVISION MAJOR REQUIREMENTS",
+     "rule": "all",
+     "receiving_course": "CS 46A - Introduction to Programming",
+     "status": "missing",
+     "satisfied_by": [],
+     "flags": [],
+     "citation": {
+      "source": "assist",
+      "label": "De Anza College → San Jose State University · Computer Science, B.S. (2026–2027)",
+      "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F41298989-8aac-45c6-3e9d-08dec89fcc4a",
+      "ref": "LOWER DIVISION MAJOR REQUIREMENTS › CS 46A - Introduction to Programming"
+     },
+     "confidence": "high"
+    },
+    {
+     "id": "c9fa38f1-07bd-47a8-4f3f-08dec89fcd17",
+     "group_title": "LOWER DIVISION MAJOR REQUIREMENTS",
+     "rule": "all",
+     "receiving_course": "CS 46B - Introduction to Data Structures",
+     "status": "missing",
+     "satisfied_by": [],
+     "flags": [],
+     "citation": {
+      "source": "assist",
+      "label": "De Anza College → San Jose State University · Computer Science, B.S. (2026–2027)",
+      "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F41298989-8aac-45c6-3e9d-08dec89fcc4a",
+      "ref": "LOWER DIVISION MAJOR REQUIREMENTS › CS 46B - Introduction to Data Structures"
+     },
+     "confidence": "high"
+    },
+    {
+     "id": "d3cf754b-52af-41c2-4f40-08dec89fcd17",
+     "group_title": "LOWER DIVISION MAJOR REQUIREMENTS",
+     "rule": "all",
+     "receiving_course": "CS 47 - Introduction to Computer Systems",
+     "status": "missing",
+     "satisfied_by": [],
+     "flags": [],
+     "citation": {
+      "source": "assist",
+      "label": "De Anza College → San Jose State University · Computer Science, B.S. (2026–2027)",
+      "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F41298989-8aac-45c6-3e9d-08dec89fcc4a",
+      "ref": "LOWER DIVISION MAJOR REQUIREMENTS › CS 47 - Introduction to Computer Systems"
+     },
+     "confidence": "high"
+    },
+    {
+     "id": "512f7445-6887-ef11-8474-000d3a37e3b6",
+     "group_title": "COMPUTER SCIENCE ELECTIVES",
+     "rule": "n_of",
+     "n": 1,
+     "receiving_course": "CS 49C - Programming in C or CS 49J - Programming in Java",
+     "status": "missing",
+     "satisfied_by": [],
+     "flags": [],
+     "citation": {
+      "source": "assist",
+      "label": "De Anza College → San Jose State University · Computer Science, B.S. (2026–2027)",
+      "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F41298989-8aac-45c6-3e9d-08dec89fcc4a",
+      "ref": "COMPUTER SCIENCE ELECTIVES › CS 49C - Programming in C or CS 49J - Programming in Java"
+     },
+     "confidence": "high"
+    }
+   ],
+   "summary": {
+    "satisfied": 1,
+    "partial": 0,
+    "missing": 10,
+    "at_university": 0
+   }
+  },
+  "headers": {}
+ },
+ {
+  "method": "GET",
+  "url": "/profiles/<AUDIT-P3-profile-id>/plan?majors=Computer+Science%2C+B.S.%2CData+Science%2C+B.S.",
+  "status": 404,
+  "body": {
+   "detail": "No curated requirements for ['Computer Science, B.S.,Data Science, B.S.'] at sjsu; available: ['Data Science, B.S.', 'Economics, B.S.']"
+  },
+  "headers": {}
+ },
+ {
+  "method": "GET",
+  "url": "/profiles/<AUDIT-P3-profile-id>/plan?majors=Computer+Science%2C+B.S.",
+  "status": 404,
+  "body": {
+   "detail": "No curated requirements for ['Computer Science, B.S.'] at sjsu; available: ['Data Science, B.S.', 'Economics, B.S.']"
+  },
+  "headers": {}
+ },
+ {
+  "method": "GET",
+  "url": "/profiles/<AUDIT-P3-profile-id>/plan?majors=Data+Science%2C+B.S.",
+  "status": 200,
+  "body": {
+   "semesters": [
+    {
+     "term": "Spring 2027",
+     "courses": [
+      {
+       "code": "CS 46A",
+       "title": "Introduction to Programming",
+       "units": 4.0,
+       "reason": "Major Requirements: Lower Division: pick 1 of 1 still needed toward 1 course (Data Science, B.S.); any listed elective works; Prerequisite for CS 46B",
+       "prereqs": []
+      },
+      {
+       "code": "MATH 42",
+       "title": "Discrete Mathematics",
+       "units": 3.0,
+       "reason": "Major Preparation (Data Science, B.S.); Prerequisite for CS 47; Prerequisite for CS 146",
+       "prereqs": []
+      },
+      {
+       "code": "MATH 31",
+       "title": "Calculus II",
+       "units": 4.0,
+       "reason": "Major Preparation (Data Science, B.S.); Prerequisite for MATH 32; Prerequisite for MATH 161A; Prerequisite for MATH 39",
+       "prereqs": [
+        "MATH 30"
+       ]
+      },
+      {
+       "code": "CS 100W",
+       "title": "Technical Writing Workshop",
+       "units": 3.0,
+       "reason": "Major Preparation (Data Science, B.S.); Prerequisite for CS 163",
+       "prereqs": []
+      }
+     ]
+    },
+    {
+     "term": "Fall 2027",
+     "courses": [
+      {
+       "code": "CS 46B",
+       "title": "Introduction to Data Structures",
+       "units": 4.0,
+       "reason": "Major Requirements: Lower Division (Data Science, B.S.); Prerequisite for CS 123A; Prerequisite for CS 47; Prerequisite for CS 146; Prerequisite for CS 131",
+       "prereqs": [
+        "CS 46A or CS 46AX"
+       ]
+      },
+      {
+       "code": "CS 22A",
+       "title": "Python for Everyone",
+       "units": 3.0,
+       "reason": "CS 22A or CS 122: pick 1 of 1 still needed toward 1 course (Data Science, B.S.); any listed elective works; Prerequisite for CS 22B",
+       "prereqs": []
+      },
+      {
+       "code": "MATH 161A",
+       "title": "Applied Probability and Statistics I",
+       "units": 3.0,
+       "reason": "Major Preparation (Data Science, B.S.); Prerequisite for MATH 161B; Prerequisite for MATH 167R",
+       "prereqs": [
+        "MATH 31"
+       ]
+      },
+      {
+       "code": "MATH 32",
+       "title": "Calculus III",
+       "units": 3.0,
+       "reason": "Major Electives: pick 2 of 5 still needed toward 15 units (Data Science, B.S.); any listed elective works",
+       "prereqs": [
+        "MATH 31"
+       ]
+      }
+     ]
+    },
+    {
+     "term": "Spring 2028",
+     "courses": [
+      {
+       "code": "CS 146",
+       "title": "Data Structures and Algorithms",
+       "units": 3.0,
+       "reason": "Major Requirements: Upper Division (Data Science, B.S.); Prerequisite for CS 171; Prerequisite for CS 157A; Prerequisite for CS 156; Prerequisite for CS 133",
+       "prereqs": [
+        "MATH 30",
+        "MATH 42",
+        "CS 46B"
+       ]
+      },
+      {
+       "code": "CS 131",
+       "title": "Processing Big Data - Tools and Techniques",
+       "units": 3.0,
+       "reason": "Major Requirements: Upper Division (Data Science, B.S.); Prerequisite for CS 163",
+       "prereqs": [
+        "CS 46B"
+       ]
+      },
+      {
+       "code": "CS 123A",
+       "title": "Bioinformatics I",
+       "units": 3.0,
+       "reason": "Major Electives: pick 4 of 5 still needed toward 15 units (Data Science, B.S.); any listed elective works",
+       "prereqs": [
+        "CS 46B or BIOL 31"
+       ]
+      },
+      {
+       "code": "CS 22B",
+       "title": "Python Programming for Data Analysis",
+       "units": 3.0,
+       "reason": "Major Electives: pick 1 of 5 still needed toward 15 units (Data Science, B.S.); any listed elective works",
+       "prereqs": [
+        "CS 22A"
+       ]
+      },
+      {
+       "code": "CS 47",
+       "title": "Introduction to Computer Systems",
+       "units": 3.0,
+       "reason": "Major Electives: pick 3 of 5 still needed toward 15 units (Data Science, B.S.); any listed elective works",
+       "prereqs": [
+        "MATH 42",
+        "CS 46B"
+       ]
+      }
+     ]
+    },
+    {
+     "term": "Fall 2028",
+     "courses": [
+      {
+       "code": "CS 156",
+       "title": "Introduction to Artificial Intelligence",
+       "units": 3.0,
+       "reason": "Major Requirements: Upper Division (Data Science, B.S.); Prerequisite for CS 163",
+       "prereqs": [
+        "CS 146"
+       ]
+      },
+      {
+       "code": "CS 133",
+       "title": "Introduction to Data Visualization",
+       "units": 3.0,
+       "reason": "Major Requirements: Upper Division (Data Science, B.S.)",
+       "prereqs": [
+        "CS 146"
+       ]
+      },
+      {
+       "code": "CS 157A",
+       "title": "Introduction to Database Management Systems",
+       "units": 3.0,
+       "reason": "Major Requirements: Upper Division (Data Science, B.S.)",
+       "prereqs": [
+        "CS 146"
+       ]
+      },
+      {
+       "code": "CS 171",
+       "title": "Introduction to Machine Learning",
+       "units": 3.0,
+       "reason": "Major Requirements: Upper Division (Data Science, B.S.)",
+       "prereqs": [
+        "CS 146"
+       ]
+      },
+      {
+       "code": "MATH 161B",
+       "title": "Applied Probability and Statistics II",
+       "units": 3.0,
+       "reason": "Major Electives: pick 5 of 5 still needed toward 15 units (Data Science, B.S.); any listed elective works",
+       "prereqs": [
+        "MATH 161A"
+       ]
+      }
+     ]
+    },
+    {
+     "term": "Spring 2029",
+     "courses": [
+      {
+       "code": "CS 163",
+       "title": "Data Science Senior Project",
+       "units": 3.0,
+       "reason": "Major Requirements: Upper Division (Data Science, B.S.)",
+       "prereqs": [
+        "CS 100W",
+        "CS 131",
+        "CS 156 or CS 171"
+       ]
+      },
+      {
+       "code": "MATH 167R",
+       "title": "Statistical Programming with R",
+       "units": 3.0,
+       "reason": "Major Preparation (Data Science, B.S.)",
+       "prereqs": [
+        "MATH 161A"
+       ]
+      },
+      {
+       "code": "MATH 39",
+       "title": "Linear Algebra I",
+       "units": 3.0,
+       "reason": "Major Preparation (Data Science, B.S.)",
+       "prereqs": [
+        "MATH 31"
+       ]
+      },
+      {
+       "code": "PHIL 133",
+       "title": "Ethics in Science",
+       "units": 3.0,
+       "reason": "Major Preparation (Data Science, B.S.)",
+       "prereqs": []
+      }
+     ]
+    }
+   ]
+  },
+  "headers": {}
+ }
+]

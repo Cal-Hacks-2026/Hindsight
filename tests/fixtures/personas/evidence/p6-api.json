@@ -1,0 +1,688 @@
+{
+ "upload": {
+  "status": 200,
+  "secs": 5.2,
+  "body": {
+   "courses": [
+    {
+     "prefix": "MAT",
+     "number": "003A",
+     "title": "Analytic Geometry and Calculus I",
+     "units": 5.0,
+     "grade": "A",
+     "term": "Fall 2024",
+     "academic_year_id": 75,
+     "confirmed": false
+    },
+    {
+     "prefix": "ENGL",
+     "number": "C1000",
+     "title": "Academic Reading and Writing",
+     "units": 4.0,
+     "grade": "B+",
+     "term": "Fall 2024",
+     "academic_year_id": 75,
+     "confirmed": false
+    },
+    {
+     "prefix": "CIS",
+     "number": "007",
+     "title": "Introduction to Programming with Python",
+     "units": 4.0,
+     "grade": "A",
+     "term": "Fall 2024",
+     "academic_year_id": 75,
+     "confirmed": false
+    },
+    {
+     "prefix": "MAT",
+     "number": "003B",
+     "title": "Analytic Geometry and Calculus II",
+     "units": 5.0,
+     "grade": "B",
+     "term": "Spring 2025",
+     "academic_year_id": 75,
+     "confirmed": false
+    },
+    {
+     "prefix": "CIS",
+     "number": "043",
+     "title": "Object-Oriented Programming in Java",
+     "units": 4.0,
+     "grade": "A-",
+     "term": "Spring 2025",
+     "academic_year_id": 75,
+     "confirmed": false
+    },
+    {
+     "prefix": "MAT",
+     "number": "020",
+     "title": "Discrete Mathematics",
+     "units": 4.0,
+     "grade": "B+",
+     "term": "Spring 2025",
+     "academic_year_id": 75,
+     "confirmed": false
+    },
+    {
+     "prefix": "MAT",
+     "number": "004C",
+     "title": "Linear Algebra",
+     "units": 4.0,
+     "grade": "B",
+     "term": "Fall 2025",
+     "academic_year_id": 76,
+     "confirmed": false
+    },
+    {
+     "prefix": "CIS",
+     "number": "044",
+     "title": "Data Structures in Java",
+     "units": 4.0,
+     "grade": "B+",
+     "term": "Fall 2025",
+     "academic_year_id": 76,
+     "confirmed": false
+    },
+    {
+     "prefix": "STAT",
+     "number": "C1000",
+     "title": "Introduction to Statistics",
+     "units": 4.0,
+     "grade": "A",
+     "term": "Fall 2025",
+     "academic_year_id": 76,
+     "confirmed": false
+    }
+   ]
+  },
+  "notes": "[{\"code\": \"MAT 003A\", \"term\": \"Fall 2024\", \"confidence\": \"high\", \"flags\": []}, {\"code\": \"ENGL C1000\", \"term\": \"Fall 2024\", \"confidence\": \"low\", \"flags\": [\"common_course_number\", \"ccn_before_rollout\"]}, {\"code\": \"CIS 007\", \"term\": \"Fall 2024\", \"confidence\": \"high\", \"flags\": []}, {\"code\": \"MAT 003B\", \"term\": \"Spring 2025\", \"confidence\": \"high\", \"flags\": []}, {\"code\": \"CIS 043\", \"term\": \"Spring 2025\", \"confidence\": \"high\", \"flags\": []}, {\"code\": \"MAT 020\", \"term\": \"Spring 2025\", \"confidence\": \"high\", \"flags\": []}, {\"code\": \"MAT 004C\", \"term\": \"Fall 2025\", \"confidence\": \"high\", \"flags\": []}, {\"code\": \"CIS 044\", \"term\": \"Fall 2025\", \"confidence\": \"high\", \"flags\": []}, {\"code\": \"STAT C1000\", \"term\": \"Fall 2025\", \"confidence\": \"high\", \"flags\": [\"common_course_number\"]}]"
+ },
+ "match_ds": {
+  "status": 200,
+  "body": {
+   "major_label": "Data Science, B.S.",
+   "agreement_key": "77/32/to/39/Major/0739dd42-491e-45c4-3e82-08dec89fcc4a",
+   "requirements": [
+    {
+     "id": "fbf17145-6887-ef11-8474-000d3a37e3b6",
+     "group_title": "SECOND COURSE IN ENGLISH COMPOSITION",
+     "rule": "n_of",
+     "n": 1,
+     "receiving_course": "ENGL 1B - Argument and Analysis or ENGL 2 - Critical Thinking and Writing",
+     "status": "missing",
+     "satisfied_by": [],
+     "flags": [],
+     "citation": {
+      "source": "assist",
+      "label": "Mission College → San Jose State University · Data Science, B.S. (2026–2027)",
+      "url": "https://assist.org/transfer/results?year=77&institution=32&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F32%2Fto%2F39%2FMajor%2F0739dd42-491e-45c4-3e82-08dec89fcc4a",
+      "ref": "SECOND COURSE IN ENGLISH COMPOSITION › ENGL 1B - Argument and Analysis or ENGL 2 - Critical Thinking and Writing"
+     },
+     "confidence": "high"
+    },
+    {
+     "id": "523a4697-b6f8-4ef6-4de7-08dec89fcd17",
+     "group_title": "PREPARATION FOR THE MAJOR",
+     "rule": "all",
+     "receiving_course": "MATH 30 - Calculus I",
+     "status": "satisfied",
+     "satisfied_by": [
+      "MAT 003A"
+     ],
+     "flags": [
+      "min_grade_C-"
+     ],
+     "citation": {
+      "source": "assist",
+      "label": "Mission College → San Jose State University · Data Science, B.S. (2026–2027)",
+      "url": "https://assist.org/transfer/results?year=77&institution=32&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F32%2Fto%2F39%2FMajor%2F0739dd42-491e-45c4-3e82-08dec89fcc4a",
+      "ref": "PREPARATION FOR THE MAJOR › MATH 30 - Calculus I"
+     },
+     "confidence": "high"
+    },
+    {
+     "id": "6eaed0c6-2858-49bc-4de9-08dec89fcd17",
+     "group_title": "PREPARATION FOR THE MAJOR",
+     "rule": "all",
+     "receiving_course": "MATH 31 - Calculus II",
+     "status": "satisfied",
+     "satisfied_by": [
+      "MAT 003B"
+     ],
+     "flags": [
+      "min_grade_C-"
+     ],
+     "citation": {
+      "source": "assist",
+      "label": "Mission College → San Jose State University · Data Science, B.S. (2026–2027)",
+      "url": "https://assist.org/transfer/results?year=77&institution=32&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F32%2Fto%2F39%2FMajor%2F0739dd42-491e-45c4-3e82-08dec89fcc4a",
+      "ref": "PREPARATION FOR THE MAJOR › MATH 31 - Calculus II"
+     },
+     "confidence": "high"
+    },
+    {
+     "id": "4c0e5348-fcec-4179-4de8-08dec89fcd17",
+     "group_title": "PREPARATION FOR THE MAJOR",
+     "rule": "all",
+     "receiving_course": "MATH 39 - Linear Algebra I",
+     "status": "satisfied",
+     "satisfied_by": [
+      "MAT 004C"
+     ],
+     "flags": [
+      "min_grade_C-"
+     ],
+     "citation": {
+      "source": "assist",
+      "label": "Mission College → San Jose State University · Data Science, B.S. (2026–2027)",
+      "url": "https://assist.org/transfer/results?year=77&institution=32&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F32%2Fto%2F39%2FMajor%2F0739dd42-491e-45c4-3e82-08dec89fcc4a",
+      "ref": "PREPARATION FOR THE MAJOR › MATH 39 - Linear Algebra I"
+     },
+     "confidence": "high"
+    },
+    {
+     "id": "91999e07-58b5-4e7c-4dea-08dec89fcd17",
+     "group_title": "PREPARATION FOR THE MAJOR",
+     "rule": "all",
+     "receiving_course": "MATH 42 - Discrete Mathematics",
+     "status": "satisfied",
+     "satisfied_by": [
+      "MAT 020"
+     ],
+     "flags": [
+      "min_grade_C-"
+     ],
+     "citation": {
+      "source": "assist",
+      "label": "Mission College → San Jose State University · Data Science, B.S. (2026–2027)",
+      "url": "https://assist.org/transfer/results?year=77&institution=32&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F32%2Fto%2F39%2FMajor%2F0739dd42-491e-45c4-3e82-08dec89fcc4a",
+      "ref": "PREPARATION FOR THE MAJOR › MATH 42 - Discrete Mathematics"
+     },
+     "confidence": "high"
+    },
+    {
+     "id": "73234f2d-6e59-4515-4de5-08dec89fcd17",
+     "group_title": "LOWER DIVISION CORE REQUIREMENTS OF THE MAJOR",
+     "rule": "all",
+     "receiving_course": "CS 46A - Introduction to Programming",
+     "status": "satisfied",
+     "satisfied_by": [
+      "CIS 043"
+     ],
+     "flags": [
+      "min_grade_C-"
+     ],
+     "citation": {
+      "source": "assist",
+      "label": "Mission College → San Jose State University · Data Science, B.S. (2026–2027)",
+      "url": "https://assist.org/transfer/results?year=77&institution=32&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F32%2Fto%2F39%2FMajor%2F0739dd42-491e-45c4-3e82-08dec89fcc4a",
+      "ref": "LOWER DIVISION CORE REQUIREMENTS OF THE MAJOR › CS 46A - Introduction to Programming"
+     },
+     "confidence": "high"
+    },
+    {
+     "id": "18f2152d-e965-4d73-4de4-08dec89fcd17",
+     "group_title": "LOWER DIVISION CORE REQUIREMENTS OF THE MAJOR",
+     "rule": "all",
+     "receiving_course": "CS 46B - Introduction to Data Structures",
+     "status": "satisfied",
+     "satisfied_by": [
+      "CIS 044"
+     ],
+     "flags": [
+      "min_grade_C-"
+     ],
+     "citation": {
+      "source": "assist",
+      "label": "Mission College → San Jose State University · Data Science, B.S. (2026–2027)",
+      "url": "https://assist.org/transfer/results?year=77&institution=32&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F32%2Fto%2F39%2FMajor%2F0739dd42-491e-45c4-3e82-08dec89fcc4a",
+      "ref": "LOWER DIVISION CORE REQUIREMENTS OF THE MAJOR › CS 46B - Introduction to Data Structures"
+     },
+     "confidence": "high"
+    },
+    {
+     "id": "09f27145-6887-ef11-8474-000d3a37e3b6",
+     "group_title": "MAJOR ELECTIVES",
+     "rule": "n_of",
+     "receiving_course": "Choose from: CS 22A - Python for Everyone; CS 47 - Introduction to Computer Systems; CS 48 - Applied Algorithms; CS 49J - Programming in Java; MATH 32 - Calculus III",
+     "status": "satisfied",
+     "satisfied_by": [
+      "CIS 007"
+     ],
+     "flags": [
+      "min_grade_C-",
+      "unspecified_rule"
+     ],
+     "citation": {
+      "source": "assist",
+      "label": "Mission College → San Jose State University · Data Science, B.S. (2026–2027)",
+      "url": "https://assist.org/transfer/results?year=77&institution=32&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F32%2Fto%2F39%2FMajor%2F0739dd42-491e-45c4-3e82-08dec89fcc4a",
+      "ref": "MAJOR ELECTIVES › Choose from: CS 22A - Python for Everyone; CS 47 - Introduction to Computer Systems; CS 48 - Applied Algorithms; CS 49J - Programming in Java; MATH 32 - Calculus III"
+     },
+     "confidence": "low"
+    }
+   ],
+   "summary": {
+    "satisfied": 7,
+    "partial": 0,
+    "missing": 1,
+    "at_university": 0
+   }
+  }
+ },
+ "match_ec": {
+  "status": 200,
+  "body": {
+   "major_label": "Economics, B.S.",
+   "agreement_key": "77/32/to/39/Major/18619712-eec7-4023-3ef3-08dec89fcc4a",
+   "requirements": [
+    {
+     "id": "bc347445-6887-ef11-8474-000d3a37e3b6",
+     "group_title": "Requirements",
+     "rule": "n_of",
+     "n": 1,
+     "receiving_course": "ENGL 1B - Argument and Analysis or ENGL 2 - Critical Thinking and Writing",
+     "status": "missing",
+     "satisfied_by": [],
+     "flags": [],
+     "citation": {
+      "source": "assist",
+      "label": "Mission College → San Jose State University · Economics, B.S. (2026–2027)",
+      "url": "https://assist.org/transfer/results?year=77&institution=32&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F32%2Fto%2F39%2FMajor%2F18619712-eec7-4023-3ef3-08dec89fcc4a",
+      "ref": "Requirements › ENGL 1B - Argument and Analysis or ENGL 2 - Critical Thinking and Writing"
+     },
+     "confidence": "high"
+    },
+    {
+     "id": "c6347445-6887-ef11-8474-000d3a37e3b6",
+     "group_title": "MAJOR PREPARATION COURSES",
+     "rule": "n_of",
+     "n": 1,
+     "receiving_course": "STAT 95 - Elementary Statistics or BUS2 90 - Business Statistics or SOCI 15 - Statistical Applications in the Social Sciences",
+     "status": "satisfied",
+     "satisfied_by": [
+      "STAT C1000"
+     ],
+     "flags": [
+      "min_grade_C"
+     ],
+     "citation": {
+      "source": "assist",
+      "label": "Mission College → San Jose State University · Economics, B.S. (2026–2027)",
+      "url": "https://assist.org/transfer/results?year=77&institution=32&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F32%2Fto%2F39%2FMajor%2F18619712-eec7-4023-3ef3-08dec89fcc4a",
+      "ref": "MAJOR PREPARATION COURSES › STAT 95 - Elementary Statistics or BUS2 90 - Business Statistics or SOCI 15 - Statistical Applications in the Social Sciences"
+     },
+     "confidence": "high"
+    },
+    {
+     "id": "90e22319-ba61-46de-5425-08dec89fcd17",
+     "group_title": "MAJOR PREPARATION COURSES",
+     "rule": "all",
+     "receiving_course": "MATH 30 - Calculus I",
+     "status": "satisfied",
+     "satisfied_by": [
+      "MAT 003A"
+     ],
+     "flags": [
+      "min_grade_C"
+     ],
+     "citation": {
+      "source": "assist",
+      "label": "Mission College → San Jose State University · Economics, B.S. (2026–2027)",
+      "url": "https://assist.org/transfer/results?year=77&institution=32&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F32%2Fto%2F39%2FMajor%2F18619712-eec7-4023-3ef3-08dec89fcc4a",
+      "ref": "MAJOR PREPARATION COURSES › MATH 30 - Calculus I"
+     },
+     "confidence": "high"
+    },
+    {
+     "id": "121b4b02-90be-4702-5426-08dec89fcd17",
+     "group_title": "MAJOR CORE COURSE REQUIREMENTS",
+     "rule": "all",
+     "receiving_course": "ECON 1A - Principles of Economics: Macroeconomics",
+     "status": "missing",
+     "satisfied_by": [],
+     "flags": [
+      "min_grade_C-"
+     ],
+     "citation": {
+      "source": "assist",
+      "label": "Mission College → San Jose State University · Economics, B.S. (2026–2027)",
+      "url": "https://assist.org/transfer/results?year=77&institution=32&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F32%2Fto%2F39%2FMajor%2F18619712-eec7-4023-3ef3-08dec89fcc4a",
+      "ref": "MAJOR CORE COURSE REQUIREMENTS › ECON 1A - Principles of Economics: Macroeconomics"
+     },
+     "confidence": "high"
+    },
+    {
+     "id": "ee549f7f-46d8-4656-5427-08dec89fcd17",
+     "group_title": "MAJOR CORE COURSE REQUIREMENTS",
+     "rule": "all",
+     "receiving_course": "ECON 1B - Principles of Economics: Microeconomics",
+     "status": "missing",
+     "satisfied_by": [],
+     "flags": [
+      "min_grade_C-"
+     ],
+     "citation": {
+      "source": "assist",
+      "label": "Mission College → San Jose State University · Economics, B.S. (2026–2027)",
+      "url": "https://assist.org/transfer/results?year=77&institution=32&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F32%2Fto%2F39%2FMajor%2F18619712-eec7-4023-3ef3-08dec89fcc4a",
+      "ref": "MAJOR CORE COURSE REQUIREMENTS › ECON 1B - Principles of Economics: Microeconomics"
+     },
+     "confidence": "high"
+    }
+   ],
+   "summary": {
+    "satisfied": 2,
+    "partial": 0,
+    "missing": 3,
+    "at_university": 0
+   }
+  }
+ },
+ "plan": {
+  "status": 200,
+  "body": {
+   "semesters": [
+    {
+     "term": "Spring 2027",
+     "courses": [
+      {
+       "code": "CS 146",
+       "title": "Data Structures and Algorithms",
+       "units": 3.0,
+       "reason": "Major Requirements: Upper Division (Data Science, B.S.); Prerequisite for CS 171; Prerequisite for CS 157A; Prerequisite for CS 156; Prerequisite for CS 133",
+       "prereqs": [
+        "MATH 30",
+        "MATH 42",
+        "CS 46B"
+       ]
+      },
+      {
+       "code": "ECON 1A",
+       "title": "Principles of Economics: Macroeconomics",
+       "units": 3.0,
+       "reason": "Core Courses (Economics, B.S.); Prerequisite for ECON 113A; Prerequisite for ECON 112; Prerequisite for ECON 104; Prerequisite for ECON 102; Prerequisite for ECON 100W",
+       "prereqs": []
+      },
+      {
+       "code": "ECON 1B",
+       "title": "Principles of Economics: Microeconomics",
+       "units": 3.0,
+       "reason": "Core Courses (Economics, B.S.); Prerequisite for ECON 113A; Prerequisite for ECON 112; Prerequisite for ECON 107; Prerequisite for ECON 106; Prerequisite for ECON 104; Prerequisite for ECON 101; Prerequisite for ECON 100W",
+       "prereqs": []
+      },
+      {
+       "code": "CS 100W",
+       "title": "Technical Writing Workshop",
+       "units": 3.0,
+       "reason": "Major Preparation (Data Science, B.S.); Prerequisite for CS 163",
+       "prereqs": []
+      },
+      {
+       "code": "CS 123A",
+       "title": "Bioinformatics I",
+       "units": 3.0,
+       "reason": "Major Electives: pick 3 of 5 still needed toward 15 units (Data Science, B.S.); any listed elective works; Prerequisite for CS 123B",
+       "prereqs": [
+        "CS 46B or BIOL 31"
+       ]
+      }
+     ]
+    },
+    {
+     "term": "Fall 2027",
+     "courses": [
+      {
+       "code": "CS 131",
+       "title": "Processing Big Data - Tools and Techniques",
+       "units": 3.0,
+       "reason": "Major Requirements: Upper Division (Data Science, B.S.); Prerequisite for CS 163",
+       "prereqs": [
+        "CS 46B"
+       ]
+      },
+      {
+       "code": "CS 156",
+       "title": "Introduction to Artificial Intelligence",
+       "units": 3.0,
+       "reason": "Major Requirements: Upper Division (Data Science, B.S.); Prerequisite for CS 163",
+       "prereqs": [
+        "CS 146"
+       ]
+      },
+      {
+       "code": "ECON 100W",
+       "title": "Writing Workshop: Economic Reports",
+       "units": 4.0,
+       "reason": "Core Courses (Economics, B.S.); Prerequisite for ECON 103B",
+       "prereqs": [
+        "ECON 1A",
+        "ECON 1B"
+       ]
+      },
+      {
+       "code": "ECON 103A",
+       "title": "Introduction to Econometrics and Research Methods",
+       "units": 4.0,
+       "reason": "Core Courses (Economics, B.S.); Prerequisite for ECON 103B",
+       "prereqs": [
+        "STAT 95 or SOCI 15 or UNVS 15"
+       ]
+      }
+     ]
+    },
+    {
+     "term": "Spring 2028",
+     "courses": [
+      {
+       "code": "MATH 161A",
+       "title": "Applied Probability and Statistics I",
+       "units": 3.0,
+       "reason": "Major Preparation (Data Science, B.S.); Prerequisite for MATH 167R",
+       "prereqs": [
+        "MATH 31"
+       ]
+      },
+      {
+       "code": "CS 123B",
+       "title": "Bioinformatics II",
+       "units": 3.0,
+       "reason": "Major Electives: pick 5 of 5 still needed toward 15 units (Data Science, B.S.); any listed elective works",
+       "prereqs": [
+        "CS 123A or BIOL 123A or SE 123A"
+       ]
+      },
+      {
+       "code": "CS 133",
+       "title": "Introduction to Data Visualization",
+       "units": 3.0,
+       "reason": "Major Requirements: Upper Division (Data Science, B.S.)",
+       "prereqs": [
+        "CS 146"
+       ]
+      },
+      {
+       "code": "CS 157A",
+       "title": "Introduction to Database Management Systems",
+       "units": 3.0,
+       "reason": "Major Requirements: Upper Division (Data Science, B.S.)",
+       "prereqs": [
+        "CS 146"
+       ]
+      },
+      {
+       "code": "CS 163",
+       "title": "Data Science Senior Project",
+       "units": 3.0,
+       "reason": "Major Requirements: Upper Division (Data Science, B.S.)",
+       "prereqs": [
+        "CS 100W",
+        "CS 131",
+        "CS 156 or CS 171"
+       ]
+      }
+     ]
+    },
+    {
+     "term": "Fall 2028",
+     "courses": [
+      {
+       "code": "CS 171",
+       "title": "Introduction to Machine Learning",
+       "units": 3.0,
+       "reason": "Major Requirements: Upper Division (Data Science, B.S.)",
+       "prereqs": [
+        "CS 146"
+       ]
+      },
+      {
+       "code": "CS 22B",
+       "title": "Python Programming for Data Analysis",
+       "units": 3.0,
+       "reason": "Major Electives: pick 1 of 5 still needed toward 15 units (Data Science, B.S.); any listed elective works",
+       "prereqs": [
+        "CS 22A"
+       ]
+      },
+      {
+       "code": "CS 47",
+       "title": "Introduction to Computer Systems",
+       "units": 3.0,
+       "reason": "Major Electives: pick 2 of 5 still needed toward 15 units (Data Science, B.S.); any listed elective works",
+       "prereqs": [
+        "MATH 42",
+        "CS 46B"
+       ]
+      },
+      {
+       "code": "ECON 101",
+       "title": "Microeconomic Analysis",
+       "units": 4.0,
+       "reason": "Core Courses (Economics, B.S.)",
+       "prereqs": [
+        "ECON 1B",
+        "MATH 30 or MATH 71"
+       ]
+      }
+     ]
+    },
+    {
+     "term": "Spring 2029",
+     "courses": [
+      {
+       "code": "ECON 102",
+       "title": "Macroeconomic Analysis",
+       "units": 4.0,
+       "reason": "Core Courses (Economics, B.S.)",
+       "prereqs": [
+        "ECON 1A"
+       ]
+      },
+      {
+       "code": "ECON 103B",
+       "title": "Econometric Methods",
+       "units": 4.0,
+       "reason": "Core Courses (Economics, B.S.)",
+       "prereqs": [
+        "ECON 100W",
+        "ECON 103A"
+       ]
+      },
+      {
+       "code": "ECON 104",
+       "title": "Mathematical Methods for Economics",
+       "units": 4.0,
+       "reason": "Core Courses (Economics, B.S.)",
+       "prereqs": [
+        "ECON 1A",
+        "ECON 1B",
+        "MATH 30 or MATH 71"
+       ]
+      },
+      {
+       "code": "MATH 167R",
+       "title": "Statistical Programming with R",
+       "units": 3.0,
+       "reason": "Major Preparation (Data Science, B.S.)",
+       "prereqs": [
+        "MATH 161A"
+       ]
+      }
+     ]
+    },
+    {
+     "term": "Fall 2029",
+     "courses": [
+      {
+       "code": "ECON 106",
+       "title": "Managerial Economics",
+       "units": 4.0,
+       "reason": "Upper Division Economics Electives: pick 2 of 5 still needed toward 20 units (Economics, B.S.); any listed elective works",
+       "prereqs": [
+        "ECON 1B"
+       ]
+      },
+      {
+       "code": "ECON 107",
+       "title": "Introduction to Environmental Economics and Policy",
+       "units": 4.0,
+       "reason": "Upper Division Economics Electives: pick 3 of 5 still needed toward 20 units (Economics, B.S.); any listed elective works",
+       "prereqs": [
+        "ECON 1B"
+       ]
+      },
+      {
+       "code": "ECON 112",
+       "title": "Economic Development",
+       "units": 4.0,
+       "reason": "Upper Division Economics Electives: pick 4 of 5 still needed toward 20 units (Economics, B.S.); any listed elective works",
+       "prereqs": [
+        "ECON 1A",
+        "ECON 1B"
+       ]
+      },
+      {
+       "code": "MATH 32",
+       "title": "Calculus III",
+       "units": 3.0,
+       "reason": "Major Electives: pick 4 of 5 still needed toward 15 units (Data Science, B.S.); any listed elective works",
+       "prereqs": [
+        "MATH 31"
+       ]
+      }
+     ]
+    },
+    {
+     "term": "Spring 2030",
+     "courses": [
+      {
+       "code": "ECON 113A",
+       "title": "Economic History of the United States",
+       "units": 4.0,
+       "reason": "Upper Division Economics Electives: pick 5 of 5 still needed toward 20 units (Economics, B.S.); any listed elective works",
+       "prereqs": [
+        "ECON 1A",
+        "ECON 1B"
+       ]
+      },
+      {
+       "code": "ECON 113B",
+       "title": "Economic History of Europe",
+       "units": 4.0,
+       "reason": "Upper Division Economics Electives: pick 1 of 5 still needed toward 20 units (Economics, B.S.); any listed elective works",
+       "prereqs": []
+      },
+      {
+       "code": "PHIL 133",
+       "title": "Ethics in Science",
+       "units": 3.0,
+       "reason": "Major Preparation (Data Science, B.S.)",
+       "prereqs": []
+      }
+     ]
+    }
+   ]
+  }
+ }
+}

@@ -1,0 +1,423 @@
+{
+ "events": [
+  {
+   "run_id": "985a3e2c-9941-4bdf-a856-e4d7acba876a",
+   "kind": "step",
+   "message": "Run started: manual scan for sjsu",
+   "payload": {
+    "campus": "sjsu",
+    "trigger": "manual"
+   },
+   "created_at": "2026-10-24T21:20:49.230901+00:00"
+  },
+  {
+   "run_id": "985a3e2c-9941-4bdf-a856-e4d7acba876a",
+   "kind": "step",
+   "message": "Droid used Script",
+   "created_at": "2026-10-24T21:20:54.39452+00:00"
+  },
+  {
+   "run_id": "985a3e2c-9941-4bdf-a856-e4d7acba876a",
+   "kind": "plan",
+   "message": "1. [in_progress] Scan SJSU campus sources for run 985a3e2c-9941-4bdf-a856-e4d7acba876a.\n2. [pending] Inspect failing sources, minimally repair eligible extractors, and confirm repairs with rescan.\n3. [pending] Rank profiles and write alerts.\n4. [pending] Report repaired sources, remaining failures, and alerts written.",
+   "payload": {
+    "todos": {
+     "todos": "1. [in_progress] Scan SJSU campus sources for run 985a3e2c-9941-4bdf-a856-e4d7acba876a.\n2. [pending] Inspect failing sources, minimally repair eligible extractors, and confirm repairs with rescan.\n3. [pending] Rank profiles and write alerts.\n4. [pending] Report repaired sources, remaining failures, and alerts written."
+    }
+   },
+   "created_at": "2026-10-24T21:20:54.713123+00:00"
+  },
+  {
+   "run_id": "985a3e2c-9941-4bdf-a856-e4d7acba876a",
+   "kind": "step",
+   "message": "Droid used ToolSearch",
+   "created_at": "2026-10-24T21:20:55.032079+00:00"
+  },
+  {
+   "run_id": "985a3e2c-9941-4bdf-a856-e4d7acba876a",
+   "kind": "step",
+   "message": "Droid used Script",
+   "created_at": "2026-10-24T21:20:56.38852+00:00"
+  },
+  {
+   "run_id": "985a3e2c-9941-4bdf-a856-e4d7acba876a",
+   "kind": "step",
+   "message": "Droid: I’ll scan SJSU’s sources, repair eligible extractor failures, then rank profiles and write alerts.",
+   "created_at": "2026-10-24T21:20:56.670738+00:00"
+  },
+  {
+   "run_id": "985a3e2c-9941-4bdf-a856-e4d7acba876a",
+   "kind": "step",
+   "message": "Scanned sjsu (Apify run orLMpZe13qUt5YVs4): 197 items stored; sjsu-events-ai-tech=ok(6), sjsu-events-workshops=ok(41), sjsu-events-career=ok(30), sjsu-club-events=ok(115), sjsu-devpost=ok(2), mlh-2027-california=ok(3)",
+   "payload": {
+    "stored": 197,
+    "skipped": {
+     "duplicate_url": 28
+    },
+    "sources": [
+     {
+      "kept": 6,
+      "kind": "localist",
+      "error": null,
+      "parsed": 6,
+      "status": "ok",
+      "extractor": "localist.py",
+      "source_id": "sjsu-events-ai-tech"
+     },
+     {
+      "kept": 41,
+      "kind": "localist",
+      "error": null,
+      "parsed": 44,
+      "status": "ok",
+      "extractor": "localist.py",
+      "source_id": "sjsu-events-workshops"
+     },
+     {
+      "kept": 30,
+      "kind": "localist",
+      "error": null,
+      "parsed": 55,
+      "status": "ok",
+      "extractor": "localist.py",
+      "source_id": "sjsu-events-career"
+     },
+     {
+      "kept": 115,
+      "kind": "campusgroups_rss",
+      "error": null,
+      "parsed": 115,
+      "status": "ok",
+      "extractor": "campusgroups_rss.py",
+      "source_id": "sjsu-club-events"
+     },
+     {
+      "kept": 2,
+      "kind": "devpost",
+      "error": null,
+      "parsed": 2,
+      "status": "ok",
+      "extractor": "devpost.py",
+      "source_id": "sjsu-devpost"
+     },
+     {
+      "kept": 3,
+      "kind": "mlh_season",
+      "error": null,
+      "parsed": 3,
+      "status": "ok",
+      "extractor": "mlh_season.py",
+      "source_id": "mlh-2027-california"
+     }
+    ],
+    "apify_run_id": "orLMpZe13qUt5YVs4"
+   },
+   "created_at": "2026-10-24T21:21:21.190013+00:00"
+  },
+  {
+   "run_id": "985a3e2c-9941-4bdf-a856-e4d7acba876a",
+   "kind": "step",
+   "message": "Droid used Script",
+   "created_at": "2026-10-24T21:21:25.223857+00:00"
+  },
+  {
+   "run_id": "985a3e2c-9941-4bdf-a856-e4d7acba876a",
+   "kind": "plan",
+   "message": "1. [completed] Scan SJSU campus sources for run 985a3e2c-9941-4bdf-a856-e4d7acba876a.\n2. [completed] Inspect failing sources, minimally repair eligible extractors, and confirm repairs with rescan. All six sources are ok; no repairs needed.\n3. [in_progress] Rank profiles and write alerts.\n4. [pending] Report repaired sources, remaining failures, and alerts written.",
+   "payload": {
+    "todos": {
+     "todos": "1. [completed] Scan SJSU campus sources for run 985a3e2c-9941-4bdf-a856-e4d7acba876a.\n2. [completed] Inspect failing sources, minimally repair eligible extractors, and confirm repairs with rescan. All six sources are ok; no repairs needed.\n3. [in_progress] Rank profiles and write alerts.\n4. [pending] Report repaired sources, remaining failures, and alerts written."
+    }
+   },
+   "created_at": "2026-10-24T21:21:25.502737+00:00"
+  },
+  {
+   "run_id": "985a3e2c-9941-4bdf-a856-e4d7acba876a",
+   "kind": "step",
+   "message": "Ranked opportunities for 6 profile(s)",
+   "payload": {
+    "profiles": [
+     {
+      "top": [
+       {
+        "score": 0.84,
+        "title": "Open Lab Hours at AI Center for Civic and Social Good",
+        "deadline": null,
+        "starts_at": "2026-10-26T16:00:00+00:00"
+       },
+       {
+        "score": 0.82,
+        "title": "What Makes AI Scary? A dialogue event for SJSU students",
+        "deadline": null,
+        "starts_at": "2026-10-29T22:00:00+00:00"
+       },
+       {
+        "score": 0.8,
+        "title": "Sparthill Hackathon 2026 Day #2",
+        "deadline": null,
+        "starts_at": "2026-10-24T14:00:00+00:00"
+       }
+      ],
+      "ranked": 20
+     },
+     {
+      "top": [
+       {
+        "score": 0.49,
+        "title": "Open Lab Hours at AI Center for Civic and Social Good",
+        "deadline": null,
+        "starts_at": "2026-10-26T16:00:00+00:00"
+       },
+       {
+        "score": 0.47,
+        "title": "SPSS Data Analysis: T-Tests",
+        "deadline": null,
+        "starts_at": "2026-10-29T19:00:00+00:00"
+       },
+       {
+        "score": 0.47,
+        "title": "What Makes AI Scary? A dialogue event for SJSU students",
+        "deadline": null,
+        "starts_at": "2026-10-29T22:00:00+00:00"
+       }
+      ],
+      "ranked": 20
+     },
+     {
+      "top": [
+       {
+        "score": 0.84,
+        "title": "Open Lab Hours at AI Center for Civic and Social Good",
+        "deadline": null,
+        "starts_at": "2026-10-26T16:00:00+00:00"
+       },
+       {
+        "score": 0.82,
+        "title": "What Makes AI Scary? A dialogue event for SJSU students",
+        "deadline": null,
+        "starts_at": "2026-10-29T22:00:00+00:00"
+       },
+       {
+        "score": 0.8,
+        "title": "Sparthill Hackathon 2026 Day #2",
+        "deadline": null,
+        "starts_at": "2026-10-24T14:00:00+00:00"
+       }
+      ],
+      "ranked": 20
+     },
+     {
+      "top": [
+       {
+        "score": 0.84,
+        "title": "Open Lab Hours at AI Center for Civic and Social Good",
+        "deadline": null,
+        "starts_at": "2026-10-26T16:00:00+00:00"
+       },
+       {
+        "score": 0.82,
+        "title": "What Makes AI Scary? A dialogue event for SJSU students",
+        "deadline": null,
+        "starts_at": "2026-10-29T22:00:00+00:00"
+       },
+       {
+        "score": 0.76,
+        "title": "Navigating AI Resources",
+        "deadline": null,
+        "starts_at": "2026-11-04T22:00:00+00:00"
+       }
+      ],
+      "ranked": 20
+     },
+     {
+      "top": [
+       {
+        "score": 0.84,
+        "title": "Open Lab Hours at AI Center for Civic and Social Good",
+        "deadline": null,
+        "starts_at": "2026-10-26T16:00:00+00:00"
+       },
+       {
+        "score": 0.82,
+        "title": "What Makes AI Scary? A dialogue event for SJSU students",
+        "deadline": null,
+        "starts_at": "2026-10-29T22:00:00+00:00"
+       },
+       {
+        "score": 0.8,
+        "title": "Sparthill Hackathon 2026 Day #2",
+        "deadline": null,
+        "starts_at": "2026-10-24T14:00:00+00:00"
+       }
+      ],
+      "ranked": 20
+     },
+     {
+      "top": [
+       {
+        "score": 0.84,
+        "title": "Open Lab Hours at AI Center for Civic and Social Good",
+        "deadline": null,
+        "starts_at": "2026-10-26T16:00:00+00:00"
+       },
+       {
+        "score": 0.82,
+        "title": "What Makes AI Scary? A dialogue event for SJSU students",
+        "deadline": null,
+        "starts_at": "2026-10-29T22:00:00+00:00"
+       },
+       {
+        "score": 0.8,
+        "title": "Sparthill Hackathon 2026 Day #2",
+        "deadline": null,
+        "starts_at": "2026-10-24T14:00:00+00:00"
+       }
+      ],
+      "ranked": 20
+     }
+    ]
+   },
+   "created_at": "2026-10-24T21:21:27.585716+00:00"
+  },
+  {
+   "run_id": "985a3e2c-9941-4bdf-a856-e4d7acba876a",
+   "kind": "step",
+   "message": "Wrote 0 new alert(s) (13 due in total; rule: top 5 ranked, deadline or start within 7 days)",
+   "payload": {
+    "new": 0,
+    "rule": "top 5 ranked, deadline or start within 7 days",
+    "alerts": [
+     {
+      "new": false,
+      "url": "https://events.sjsu.edu/event/open-lab-ai-center",
+      "when": "2026-10-26T16:00:00+00:00",
+      "title": "Open Lab Hours at AI Center for Civic and Social Good",
+      "opportunity_id": "74182d8e-e99b-4d56-b517-12a4b7f985d5"
+     },
+     {
+      "new": false,
+      "url": "https://events.sjsu.edu/event/what-makes-ai-scary-a-dialogue-event-for-ai-students",
+      "when": "2026-10-29T22:00:00+00:00",
+      "title": "What Makes AI Scary? A dialogue event for SJSU students",
+      "opportunity_id": "aa1d1744-8fd1-4ed8-af98-645130151bad"
+     },
+     {
+      "new": false,
+      "url": "https://events.sjsu.edu/event/open-lab-ai-center",
+      "when": "2026-10-26T16:00:00+00:00",
+      "title": "Open Lab Hours at AI Center for Civic and Social Good",
+      "opportunity_id": "74182d8e-e99b-4d56-b517-12a4b7f985d5"
+     },
+     {
+      "new": false,
+      "url": "https://events.sjsu.edu/event/what-makes-ai-scary-a-dialogue-event-for-ai-students",
+      "when": "2026-10-29T22:00:00+00:00",
+      "title": "What Makes AI Scary? A dialogue event for SJSU students",
+      "opportunity_id": "aa1d1744-8fd1-4ed8-af98-645130151bad"
+     },
+     {
+      "new": false,
+      "url": "https://events.sjsu.edu/event/spss-data-analysis-t-tests",
+      "when": "2026-10-29T19:00:00+00:00",
+      "title": "SPSS Data Analysis: T-Tests",
+      "opportunity_id": "a7ea5cb8-3873-4cc8-93d6-1748c2a1c3ff"
+     },
+     {
+      "new": false,
+      "url": "https://events.sjsu.edu/event/open-lab-ai-center",
+      "when": "2026-10-26T16:00:00+00:00",
+      "title": "Open Lab Hours at AI Center for Civic and Social Good",
+      "opportunity_id": "74182d8e-e99b-4d56-b517-12a4b7f985d5"
+     },
+     {
+      "new": false,
+      "url": "https://events.sjsu.edu/event/what-makes-ai-scary-a-dialogue-event-for-ai-students",
+      "when": "2026-10-29T22:00:00+00:00",
+      "title": "What Makes AI Scary? A dialogue event for SJSU students",
+      "opportunity_id": "aa1d1744-8fd1-4ed8-af98-645130151bad"
+     },
+     {
+      "new": false,
+      "url": "https://events.sjsu.edu/event/open-lab-ai-center",
+      "when": "2026-10-26T16:00:00+00:00",
+      "title": "Open Lab Hours at AI Center for Civic and Social Good",
+      "opportunity_id": "74182d8e-e99b-4d56-b517-12a4b7f985d5"
+     },
+     {
+      "new": false,
+      "url": "https://events.sjsu.edu/event/what-makes-ai-scary-a-dialogue-event-for-ai-students",
+      "when": "2026-10-29T22:00:00+00:00",
+      "title": "What Makes AI Scary? A dialogue event for SJSU students",
+      "opportunity_id": "aa1d1744-8fd1-4ed8-af98-645130151bad"
+     },
+     {
+      "new": false,
+      "url": "https://events.sjsu.edu/event/open-lab-ai-center",
+      "when": "2026-10-26T16:00:00+00:00",
+      "title": "Open Lab Hours at AI Center for Civic and Social Good",
+      "opportunity_id": "74182d8e-e99b-4d56-b517-12a4b7f985d5"
+     },
+     {
+      "new": false,
+      "url": "https://events.sjsu.edu/event/what-makes-ai-scary-a-dialogue-event-for-ai-students",
+      "when": "2026-10-29T22:00:00+00:00",
+      "title": "What Makes AI Scary? A dialogue event for SJSU students",
+      "opportunity_id": "aa1d1744-8fd1-4ed8-af98-645130151bad"
+     },
+     {
+      "new": false,
+      "url": "https://events.sjsu.edu/event/open-lab-ai-center",
+      "when": "2026-10-26T16:00:00+00:00",
+      "title": "Open Lab Hours at AI Center for Civic and Social Good",
+      "opportunity_id": "74182d8e-e99b-4d56-b517-12a4b7f985d5"
+     },
+     {
+      "new": false,
+      "url": "https://events.sjsu.edu/event/what-makes-ai-scary-a-dialogue-event-for-ai-students",
+      "when": "2026-10-29T22:00:00+00:00",
+      "title": "What Makes AI Scary? A dialogue event for SJSU students",
+      "opportunity_id": "aa1d1744-8fd1-4ed8-af98-645130151bad"
+     }
+    ]
+   },
+   "created_at": "2026-10-24T21:21:29.851316+00:00"
+  },
+  {
+   "run_id": "985a3e2c-9941-4bdf-a856-e4d7acba876a",
+   "kind": "plan",
+   "message": "1. [completed] Scan SJSU campus sources for run 985a3e2c-9941-4bdf-a856-e4d7acba876a.\n2. [completed] Inspect failing sources, minimally repair eligible extractors, and confirm repairs with rescan. All six sources are ok; no repairs needed.\n3. [completed] Rank profiles and write alerts.\n4. [completed] Report repaired sources, remaining failures, and alerts written.",
+   "payload": {
+    "todos": {
+     "todos": "1. [completed] Scan SJSU campus sources for run 985a3e2c-9941-4bdf-a856-e4d7acba876a.\n2. [completed] Inspect failing sources, minimally repair eligible extractors, and confirm repairs with rescan. All six sources are ok; no repairs needed.\n3. [completed] Rank profiles and write alerts.\n4. [completed] Report repaired sources, remaining failures, and alerts written."
+    }
+   },
+   "created_at": "2026-10-24T21:21:30.157113+00:00"
+  },
+  {
+   "run_id": "985a3e2c-9941-4bdf-a856-e4d7acba876a",
+   "kind": "result",
+   "message": "Scanned SJSU and stored 197 opportunities; all six sources were healthy, so no extractor repairs were needed. Ranked six profiles and ran alert writing, which created no new alerts.",
+   "payload": {
+    "output": {
+     "summary": "Scanned SJSU and stored 197 opportunities; all six sources were healthy, so no extractor repairs were needed. Ranked six profiles and ran alert writing, which created no new alerts.",
+     "alerts_written": 0,
+     "sources_repaired": [],
+     "sources_still_failing": []
+    },
+    "patched": [],
+    "editable": [],
+    "alerts_new": 0,
+    "duration_ms": 42701,
+    "token_usage": {
+     "inputTokens": 812,
+     "outputTokens": 542,
+     "factoryCredits": 20126,
+     "thinkingTokens": 0,
+     "cacheReadTokens": 39328,
+     "cacheCreationTokens": 16117
+    }
+   },
+   "created_at": "2026-10-24T21:21:33.191072+00:00"
+  }
+ ]
+}

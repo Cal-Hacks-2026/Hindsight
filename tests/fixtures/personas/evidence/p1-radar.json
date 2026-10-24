@@ -1,0 +1,430 @@
+[
+ {
+  "method": "GET",
+  "url": "/profiles/<AUDIT-P1-profile-id>/opportunities",
+  "status": 200,
+  "body": {
+   "items": [
+    {
+     "id": "74182d8e-e99b-4d56-b517-12a4b7f985d5",
+     "title": "Open Lab Hours at AI Center for Civic and Social Good",
+     "type": "event",
+     "org": "Dr. Martin Luther King Jr. Library",
+     "url": "https://events.sjsu.edu/event/open-lab-ai-center",
+     "starts_at": "2026-10-26T16:00:00+00:00",
+     "score": 0.84,
+     "reason": "You get hands-on access to AI software and workspaces, which suits your Data Science major and interest in AI projects."
+    },
+    {
+     "id": "aa1d1744-8fd1-4ed8-af98-645130151bad",
+     "title": "What Makes AI Scary? A dialogue event for SJSU students",
+     "type": "workshop",
+     "org": "Future of Humanity and Civic Engagement",
+     "url": "https://events.sjsu.edu/event/what-makes-ai-scary-a-dialogue-event-for-ai-students",
+     "starts_at": "2026-10-29T22:00:00+00:00",
+     "score": 0.82,
+     "reason": "This dialogue with other SJSU students about AI concerns connects to your AI interest, though it is discussion rather than technical work."
+    },
+    {
+     "id": "1050f2ea-57db-4ff5-a66c-b90211f01b63",
+     "title": "Sparthill Hackathon 2026 Day #2",
+     "type": "hackathon",
+     "org": "Network Engineering Technology Society",
+     "url": "https://sammyapp.sjsu.edu/NETS/rsvp?id=379796",
+     "starts_at": "2026-10-24T14:00:00+00:00",
+     "score": 0.8,
+     "reason": "This AI-focused hackathon with mentors and industry contacts matches your interests in hackathons and AI, and your ML internship goal."
+    },
+    {
+     "id": "794ce263-7fcc-456f-8c74-0b74dfbe5abf",
+     "title": "Navigating AI Resources",
+     "type": "workshop",
+     "org": "Peer Connections",
+     "url": "https://events.sjsu.edu/event/navigating-ai-resources-8303",
+     "starts_at": "2026-11-04T22:00:00+00:00",
+     "score": 0.76,
+     "reason": "This workshop on using AI resources in classes and career pathways fits your AI interest and Data Science studies."
+    },
+    {
+     "id": "cae33fe1-a72c-415b-af68-3b2ebfe00ed2",
+     "title": "Rage Baiting and Border Crossing: How AI/LLMs Complicate Translation",
+     "type": "event",
+     "org": "Future of Humanity and Civic Engagement",
+     "url": "https://events.sjsu.edu/event/ai-et-speaker-series-torsa-ghosal",
+     "starts_at": "2026-11-04T00:00:00+00:00",
+     "score": 0.72,
+     "reason": "This talk on how large language models mistranslate languages touches your AI interest, though its focus is culture and translation, not technical."
+    },
+    {
+     "id": "186a1054-fb94-4e69-a4b8-498938a0c7cb",
+     "title": "Career Ready in 30: Hiration for customized AI Interview practice",
+     "type": "workshop",
+     "org": "Career Center",
+     "url": "https://events.sjsu.edu/event/career-ready-in-30-hiration-for-customized-ai-interview-practice",
+     "starts_at": "2026-11-10T20:00:00+00:00",
+     "score": 0.7,
+     "reason": "You can practice interviews with AI feedback tailored to your resume, which supports your goal of landing an ML internship."
+    },
+    {
+     "id": "0286bf53-5476-4aec-b6ff-9e1f05b61420",
+     "title": "Writing and Generative AI",
+     "type": "event",
+     "org": "Writing Center",
+     "url": "https://events.sjsu.edu/event/writing-and-generative-ai-nov-2026",
+     "starts_at": "2026-11-12T20:00:00+00:00",
+     "score": 0.66,
+     "reason": "This session covers responsible generative AI use in writing, so it relates to your AI interest but centers on writing skills."
+    },
+    {
+     "id": "cb831991-f60c-46eb-88e8-25e355bc83a1",
+     "title": "Fall 2026 University Scholar Series: Breaking Through the Noise",
+     "type": "event",
+     "org": "Design",
+     "url": "https://events.sjsu.edu/event/fall-2026-university-scholar-series-breaking-through-the-noise",
+     "starts_at": "2026-11-18T20:00:00+00:00",
+     "score": 0.66,
+     "reason": "This faculty talk is about design and health communication, so its link to your majors is weak despite the AI tag."
+    },
+    {
+     "id": "087f3fe8-7f99-4696-a313-fe10594bfb83",
+     "title": "Cal Hacks 13.0",
+     "type": "hackathon",
+     "org": "Fung Institute for Engineering Leadership",
+     "url": "https://events.berkeley.edu/fung/event/333479-cal-hacks-130",
+     "starts_at": "2026-10-24T07:00:00+00:00",
+     "score": 0.65,
+     "reason": "This large collegiate hackathon in San Francisco fits your interest in hackathons and could help you build ML project experience."
+    },
+    {
+     "id": "b04f3e35-876b-494a-a600-b9037f719fbd",
+     "title": "MS Financial Analytics Information Session",
+     "type": "event",
+     "org": "Accounting and Finance",
+     "url": "https://events.sjsu.edu/event/ms-financial-analytics-information-sessions",
+     "starts_at": "2026-11-06T02:00:00+00:00",
+     "score": 0.58,
+     "reason": "This info session covers a financial analytics master's program, which connects your finance interest with your Economics and Data Science majors."
+    },
+    {
+     "id": "a4b6caf8-8317-4203-9d26-49c857b55c17",
+     "title": "Dinner with the Executives",
+     "type": "event",
+     "org": "Career Center",
+     "url": "https://events.sjsu.edu/event/dinner-with-the-executives",
+     "starts_at": "2026-11-03T00:30:00+00:00",
+     "score": 0.48,
+     "reason": "You can hear corporate executives discuss careers and network, which is broadly useful for your internship goal, though not finance-specific."
+    },
+    {
+     "id": "a7ea5cb8-3873-4cc8-93d6-1748c2a1c3ff",
+     "title": "SPSS Data Analysis: T-Tests",
+     "type": "workshop",
+     "org": "Dr. Martin Luther King Jr. Library",
+     "url": "https://events.sjsu.edu/event/spss-data-analysis-t-tests",
+     "starts_at": "2026-10-29T19:00:00+00:00",
+     "score": 0.47,
+     "reason": "This workshop teaches t-tests in SPSS, a statistics skill that is relevant to your Data Science and Economics coursework."
+    },
+    {
+     "id": "beb71acd-ea80-4e43-b7db-d52c6ec36c2f",
+     "title": "HackStorm 3.0: Sense, Think and Act",
+     "type": "hackathon",
+     "org": "HackStorm",
+     "url": "https://hackstorm3.devpost.com/",
+     "starts_at": "2027-01-15T08:00:00+00:00",
+     "deadline": "2027-01-17T08:00:00+00:00",
+     "score": 0.47,
+     "reason": "This San Francisco hackathon is themed on DevOps, IoT, and automation, so it suits your hackathon interest but is not AI-focused."
+    },
+    {
+     "id": "df036b3d-2455-4915-b23c-9d626f8d822d",
+     "title": "MEGA Hackathon 2027",
+     "type": "hackathon",
+     "org": "MegaHackathonLeague",
+     "url": "https://megahackathon-27.devpost.com/",
+     "starts_at": "2027-02-14T08:00:00+00:00",
+     "deadline": "2027-02-21T08:00:00+00:00",
+     "score": 0.47,
+     "reason": "This online, beginner-friendly hackathon on health themes matches your hackathon interest, though it is not AI-specific."
+    },
+    {
+     "id": "165c64f5-2ead-4940-9124-2f1491efd3ea",
+     "title": "Tech to Treasure Hackathon",
+     "type": "hackathon",
+     "org": "bin to better",
+     "url": "https://techtotreasure.devpost.com/",
+     "starts_at": "2027-03-03T08:00:00+00:00",
+     "deadline": "2027-03-10T08:00:00+00:00",
+     "score": 0.47,
+     "reason": "This beginner-friendly hackathon with education and social good themes is nearby and fits your interest in hackathons."
+    },
+    {
+     "id": "2dbf7751-8bc2-40c7-a9d1-89864584ab36",
+     "title": "BISV Hacks 2027",
+     "type": "hackathon",
+     "org": "BASIS Independent Silicon Valley",
+     "url": "https://bisv-hacks-2027.devpost.com/",
+     "starts_at": "2027-03-27T07:00:00+00:00",
+     "deadline": "2027-03-27T07:00:00+00:00",
+     "score": 0.47,
+     "reason": "This open-ended, beginner-friendly hackathon at a Silicon Valley school fits your hackathon interest, though it has no AI or finance focus."
+    },
+    {
+     "id": "496c89a9-80d4-4f5e-8049-4a997018215b",
+     "title": "Diamondhacks",
+     "type": "hackathon",
+     "org": "Major League Hacking",
+     "url": "https://diamondhacks.acmucsd.com/",
+     "starts_at": "2027-04-04T01:11:11+00:00",
+     "score": 0.47,
+     "reason": "This is an in-person MLH hackathon in La Jolla, so it fits your hackathon interest but requires travel."
+    },
+    {
+     "id": "9b79e404-5aff-460d-a5e6-6666496cc76c",
+     "title": "LA Hacks 27",
+     "type": "hackathon",
+     "org": "Major League Hacking",
+     "url": "https://lahacks.com",
+     "starts_at": "2027-04-16T01:11:11+00:00",
+     "score": 0.47,
+     "reason": "This is an in-person MLH hackathon in Los Angeles, so it fits your hackathon interest but requires travel."
+    },
+    {
+     "id": "c92047cb-cff1-4e5e-9c0e-f66ac1d84e6b",
+     "title": "Advanced Tax Practice Certificate Information Session",
+     "type": "event",
+     "org": "Accounting and Finance",
+     "url": "https://events.sjsu.edu/event/tax-practice-certificate-information-session-1220",
+     "starts_at": "2026-11-13T02:00:00+00:00",
+     "score": 0.42,
+     "reason": "This certificate session is for students with accounting degrees and focuses on tax and CPA preparation, so it is a weak fit for you."
+    },
+    {
+     "id": "43df1348-e58d-4e9d-9da6-cc5e6c5dfe88",
+     "title": "AdoptAI Drop-In - Build Your First AI Chief of Staff: A Personalized Morning Briefing",
+     "type": "event",
+     "org": "San José State University",
+     "url": "https://events.sjsu.edu/event/adoptai-drop-in-build-your-first-ai-chief-of-staff-a-personalized-morning-briefing",
+     "starts_at": "2026-11-12T21:30:00+00:00",
+     "score": 0.41,
+     "reason": "This drop-in shows how to build a personal AI assistant, which touches your AI interest, though it is tagged for SJSU staff."
+    }
+   ]
+  },
+  "headers": {}
+ },
+ {
+  "method": "GET",
+  "url": "/profiles/<AUDIT-P1-profile-id>/opportunities",
+  "status": 200,
+  "body": {
+   "items": [
+    {
+     "id": "74182d8e-e99b-4d56-b517-12a4b7f985d5",
+     "title": "Open Lab Hours at AI Center for Civic and Social Good",
+     "type": "event",
+     "org": "Dr. Martin Luther King Jr. Library",
+     "url": "https://events.sjsu.edu/event/open-lab-ai-center",
+     "starts_at": "2026-10-26T16:00:00+00:00",
+     "score": 0.84,
+     "reason": "You get hands-on access to AI software and workspaces, which suits your Data Science major and interest in AI projects."
+    },
+    {
+     "id": "aa1d1744-8fd1-4ed8-af98-645130151bad",
+     "title": "What Makes AI Scary? A dialogue event for SJSU students",
+     "type": "workshop",
+     "org": "Future of Humanity and Civic Engagement",
+     "url": "https://events.sjsu.edu/event/what-makes-ai-scary-a-dialogue-event-for-ai-students",
+     "starts_at": "2026-10-29T22:00:00+00:00",
+     "score": 0.82,
+     "reason": "This dialogue with other SJSU students about AI concerns connects to your AI interest, though it is discussion rather than technical work."
+    },
+    {
+     "id": "1050f2ea-57db-4ff5-a66c-b90211f01b63",
+     "title": "Sparthill Hackathon 2026 Day #2",
+     "type": "hackathon",
+     "org": "Network Engineering Technology Society",
+     "url": "https://sammyapp.sjsu.edu/NETS/rsvp?id=379796",
+     "starts_at": "2026-10-24T14:00:00+00:00",
+     "score": 0.8,
+     "reason": "This AI-focused hackathon with mentors and industry contacts matches your interests in hackathons and AI, and your ML internship goal."
+    },
+    {
+     "id": "794ce263-7fcc-456f-8c74-0b74dfbe5abf",
+     "title": "Navigating AI Resources",
+     "type": "workshop",
+     "org": "Peer Connections",
+     "url": "https://events.sjsu.edu/event/navigating-ai-resources-8303",
+     "starts_at": "2026-11-04T22:00:00+00:00",
+     "score": 0.76,
+     "reason": "This workshop on using AI resources in classes and career pathways fits your AI interest and Data Science studies."
+    },
+    {
+     "id": "cae33fe1-a72c-415b-af68-3b2ebfe00ed2",
+     "title": "Rage Baiting and Border Crossing: How AI/LLMs Complicate Translation",
+     "type": "event",
+     "org": "Future of Humanity and Civic Engagement",
+     "url": "https://events.sjsu.edu/event/ai-et-speaker-series-torsa-ghosal",
+     "starts_at": "2026-11-04T00:00:00+00:00",
+     "score": 0.72,
+     "reason": "This talk on how large language models mistranslate languages touches your AI interest, though its focus is culture and translation, not technical."
+    },
+    {
+     "id": "186a1054-fb94-4e69-a4b8-498938a0c7cb",
+     "title": "Career Ready in 30: Hiration for customized AI Interview practice",
+     "type": "workshop",
+     "org": "Career Center",
+     "url": "https://events.sjsu.edu/event/career-ready-in-30-hiration-for-customized-ai-interview-practice",
+     "starts_at": "2026-11-10T20:00:00+00:00",
+     "score": 0.7,
+     "reason": "You can practice interviews with AI feedback tailored to your resume, which supports your goal of landing an ML internship."
+    },
+    {
+     "id": "0286bf53-5476-4aec-b6ff-9e1f05b61420",
+     "title": "Writing and Generative AI",
+     "type": "event",
+     "org": "Writing Center",
+     "url": "https://events.sjsu.edu/event/writing-and-generative-ai-nov-2026",
+     "starts_at": "2026-11-12T20:00:00+00:00",
+     "score": 0.66,
+     "reason": "This session covers responsible generative AI use in writing, so it relates to your AI interest but centers on writing skills."
+    },
+    {
+     "id": "cb831991-f60c-46eb-88e8-25e355bc83a1",
+     "title": "Fall 2026 University Scholar Series: Breaking Through the Noise",
+     "type": "event",
+     "org": "Design",
+     "url": "https://events.sjsu.edu/event/fall-2026-university-scholar-series-breaking-through-the-noise",
+     "starts_at": "2026-11-18T20:00:00+00:00",
+     "score": 0.66,
+     "reason": "This faculty talk is about design and health communication, so its link to your majors is weak despite the AI tag."
+    },
+    {
+     "id": "087f3fe8-7f99-4696-a313-fe10594bfb83",
+     "title": "Cal Hacks 13.0",
+     "type": "hackathon",
+     "org": "Fung Institute for Engineering Leadership",
+     "url": "https://events.berkeley.edu/fung/event/333479-cal-hacks-130",
+     "starts_at": "2026-10-24T07:00:00+00:00",
+     "score": 0.65,
+     "reason": "This large collegiate hackathon in San Francisco fits your interest in hackathons and could help you build ML project experience."
+    },
+    {
+     "id": "b04f3e35-876b-494a-a600-b9037f719fbd",
+     "title": "MS Financial Analytics Information Session",
+     "type": "event",
+     "org": "Accounting and Finance",
+     "url": "https://events.sjsu.edu/event/ms-financial-analytics-information-sessions",
+     "starts_at": "2026-11-06T02:00:00+00:00",
+     "score": 0.58,
+     "reason": "This info session covers a financial analytics master's program, which connects your finance interest with your Economics and Data Science majors."
+    },
+    {
+     "id": "a4b6caf8-8317-4203-9d26-49c857b55c17",
+     "title": "Dinner with the Executives",
+     "type": "event",
+     "org": "Career Center",
+     "url": "https://events.sjsu.edu/event/dinner-with-the-executives",
+     "starts_at": "2026-11-03T00:30:00+00:00",
+     "score": 0.48,
+     "reason": "You can hear corporate executives discuss careers and network, which is broadly useful for your internship goal, though not finance-specific."
+    },
+    {
+     "id": "a7ea5cb8-3873-4cc8-93d6-1748c2a1c3ff",
+     "title": "SPSS Data Analysis: T-Tests",
+     "type": "workshop",
+     "org": "Dr. Martin Luther King Jr. Library",
+     "url": "https://events.sjsu.edu/event/spss-data-analysis-t-tests",
+     "starts_at": "2026-10-29T19:00:00+00:00",
+     "score": 0.47,
+     "reason": "This workshop teaches t-tests in SPSS, a statistics skill that is relevant to your Data Science and Economics coursework."
+    },
+    {
+     "id": "beb71acd-ea80-4e43-b7db-d52c6ec36c2f",
+     "title": "HackStorm 3.0: Sense, Think and Act",
+     "type": "hackathon",
+     "org": "HackStorm",
+     "url": "https://hackstorm3.devpost.com/",
+     "starts_at": "2027-01-15T08:00:00+00:00",
+     "deadline": "2027-01-17T08:00:00+00:00",
+     "score": 0.47,
+     "reason": "This San Francisco hackathon is themed on DevOps, IoT, and automation, so it suits your hackathon interest but is not AI-focused."
+    },
+    {
+     "id": "df036b3d-2455-4915-b23c-9d626f8d822d",
+     "title": "MEGA Hackathon 2027",
+     "type": "hackathon",
+     "org": "MegaHackathonLeague",
+     "url": "https://megahackathon-27.devpost.com/",
+     "starts_at": "2027-02-14T08:00:00+00:00",
+     "deadline": "2027-02-21T08:00:00+00:00",
+     "score": 0.47,
+     "reason": "This online, beginner-friendly hackathon on health themes matches your hackathon interest, though it is not AI-specific."
+    },
+    {
+     "id": "165c64f5-2ead-4940-9124-2f1491efd3ea",
+     "title": "Tech to Treasure Hackathon",
+     "type": "hackathon",
+     "org": "bin to better",
+     "url": "https://techtotreasure.devpost.com/",
+     "starts_at": "2027-03-03T08:00:00+00:00",
+     "deadline": "2027-03-10T08:00:00+00:00",
+     "score": 0.47,
+     "reason": "This beginner-friendly hackathon with education and social good themes is nearby and fits your interest in hackathons."
+    },
+    {
+     "id": "2dbf7751-8bc2-40c7-a9d1-89864584ab36",
+     "title": "BISV Hacks 2027",
+     "type": "hackathon",
+     "org": "BASIS Independent Silicon Valley",
+     "url": "https://bisv-hacks-2027.devpost.com/",
+     "starts_at": "2027-03-27T07:00:00+00:00",
+     "deadline": "2027-03-27T07:00:00+00:00",
+     "score": 0.47,
+     "reason": "This open-ended, beginner-friendly hackathon at a Silicon Valley school fits your hackathon interest, though it has no AI or finance focus."
+    },
+    {
+     "id": "496c89a9-80d4-4f5e-8049-4a997018215b",
+     "title": "Diamondhacks",
+     "type": "hackathon",
+     "org": "Major League Hacking",
+     "url": "https://diamondhacks.acmucsd.com/",
+     "starts_at": "2027-04-04T01:11:11+00:00",
+     "score": 0.47,
+     "reason": "This is an in-person MLH hackathon in La Jolla, so it fits your hackathon interest but requires travel."
+    },
+    {
+     "id": "9b79e404-5aff-460d-a5e6-6666496cc76c",
+     "title": "LA Hacks 27",
+     "type": "hackathon",
+     "org": "Major League Hacking",
+     "url": "https://lahacks.com",
+     "starts_at": "2027-04-16T01:11:11+00:00",
+     "score": 0.47,
+     "reason": "This is an in-person MLH hackathon in Los Angeles, so it fits your hackathon interest but requires travel."
+    },
+    {
+     "id": "c92047cb-cff1-4e5e-9c0e-f66ac1d84e6b",
+     "title": "Advanced Tax Practice Certificate Information Session",
+     "type": "event",
+     "org": "Accounting and Finance",
+     "url": "https://events.sjsu.edu/event/tax-practice-certificate-information-session-1220",
+     "starts_at": "2026-11-13T02:00:00+00:00",
+     "score": 0.42,
+     "reason": "This certificate session is for students with accounting degrees and focuses on tax and CPA preparation, so it is a weak fit for you."
+    },
+    {
+     "id": "43df1348-e58d-4e9d-9da6-cc5e6c5dfe88",
+     "title": "AdoptAI Drop-In - Build Your First AI Chief of Staff: A Personalized Morning Briefing",
+     "type": "event",
+     "org": "San José State University",
+     "url": "https://events.sjsu.edu/event/adoptai-drop-in-build-your-first-ai-chief-of-staff-a-personalized-morning-briefing",
+     "starts_at": "2026-11-12T21:30:00+00:00",
+     "score": 0.41,
+     "reason": "This drop-in shows how to build a personal AI assistant, which touches your AI interest, though it is tagged for SJSU staff."
+    }
+   ]
+  },
+  "headers": {}
+ }
+]

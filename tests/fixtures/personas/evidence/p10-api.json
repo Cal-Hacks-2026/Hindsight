@@ -1,0 +1,611 @@
+{
+ "upload_zero": {
+  "status": 422,
+  "secs": 0.2,
+  "body": {
+   "detail": "The uploaded file is empty"
+  },
+  "notes": null
+ },
+ "upload_21mb": {
+  "status": 413,
+  "secs": 0.3,
+  "body": {
+   "detail": "Transcript must be under 20 MB"
+  },
+  "notes": null
+ },
+ "upload_gif": {
+  "status": 415,
+  "secs": 0.3,
+  "body": {
+   "detail": "Upload a PDF or image"
+  },
+  "notes": null
+ },
+ "upload_txt": {
+  "status": 415,
+  "secs": 0.2,
+  "body": {
+   "detail": "Upload a PDF or image"
+  },
+  "notes": null
+ },
+ "upload_blank": {
+  "status": 200,
+  "secs": 1.8,
+  "body": {
+   "courses": []
+  },
+  "notes": "[]"
+ },
+ "upload_resume": {
+  "status": 200,
+  "secs": 3.9,
+  "body": {
+   "courses": []
+  },
+  "notes": "[]"
+ },
+ "upload_scanned": {
+  "status": 200,
+  "secs": 5.9,
+  "body": {
+   "courses": [
+    {
+     "prefix": "MATH",
+     "number": "1A",
+     "title": "Calculus",
+     "units": 5.0,
+     "grade": "A",
+     "term": "Fall 2023",
+     "academic_year_id": 74,
+     "confirmed": false
+    },
+    {
+     "prefix": "EWRT",
+     "number": "1A",
+     "title": "Composition and Reading",
+     "units": 5.0,
+     "grade": "A-",
+     "term": "Fall 2023",
+     "academic_year_id": 74,
+     "confirmed": false
+    },
+    {
+     "prefix": "MATH",
+     "number": "10",
+     "title": "Elementary Statistics",
+     "units": 5.0,
+     "grade": "B+",
+     "term": "Fall 2023",
+     "academic_year_id": 74,
+     "confirmed": false
+    },
+    {
+     "prefix": "MATH",
+     "number": "1B",
+     "title": "Calculus",
+     "units": 5.0,
+     "grade": "B+",
+     "term": "Winter 2024",
+     "academic_year_id": 74,
+     "confirmed": false
+    },
+    {
+     "prefix": "ECON",
+     "number": "1",
+     "title": "Principles of Macroeconomics",
+     "units": 5.0,
+     "grade": "A",
+     "term": "Winter 2024",
+     "academic_year_id": 74,
+     "confirmed": false
+    },
+    {
+     "prefix": "CIS",
+     "number": "22A",
+     "title": "Beginning Programming Methodologies in C++",
+     "units": 4.5,
+     "grade": "A",
+     "term": "Winter 2024",
+     "academic_year_id": 74,
+     "confirmed": false
+    },
+    {
+     "prefix": "MATH",
+     "number": "1C",
+     "title": "Calculus",
+     "units": 5.0,
+     "grade": "B",
+     "term": "Spring 2024",
+     "academic_year_id": 74,
+     "confirmed": false
+    },
+    {
+     "prefix": "CIS",
+     "number": "36A",
+     "title": "Introduction to Computer Programming Using Java",
+     "units": 4.5,
+     "grade": "A",
+     "term": "Spring 2024",
+     "academic_year_id": 74,
+     "confirmed": false
+    },
+    {
+     "prefix": "PSYC",
+     "number": "1",
+     "title": "General Psychology",
+     "units": 5.0,
+     "grade": "A",
+     "term": "Spring 2024",
+     "academic_year_id": 74,
+     "confirmed": false
+    },
+    {
+     "prefix": "MATH",
+     "number": "2B",
+     "title": "Linear Algebra",
+     "units": 5.0,
+     "grade": "B+",
+     "term": "Fall 2024",
+     "academic_year_id": 75,
+     "confirmed": false
+    },
+    {
+     "prefix": "MATH",
+     "number": "22",
+     "title": "Discrete Mathematics",
+     "units": 5.0,
+     "grade": "B",
+     "term": "Fall 2024",
+     "academic_year_id": 75,
+     "confirmed": false
+    },
+    {
+     "prefix": "COMM",
+     "number": "1",
+     "title": "Public Speaking",
+     "units": 5.0,
+     "grade": "A",
+     "term": "Fall 2024",
+     "academic_year_id": 75,
+     "confirmed": false
+    },
+    {
+     "prefix": "CIS",
+     "number": "36B",
+     "title": "Intermediate Problem Solving in Java",
+     "units": 4.5,
+     "grade": "A-",
+     "term": "Winter 2025",
+     "academic_year_id": 75,
+     "confirmed": false
+    },
+    {
+     "prefix": "PHIL",
+     "number": "3",
+     "title": "Critical Thinking",
+     "units": 5.0,
+     "grade": "A",
+     "term": "Winter 2025",
+     "academic_year_id": 75,
+     "confirmed": false
+    },
+    {
+     "prefix": "KINS",
+     "number": "1A",
+     "title": "Fitness Fundamentals",
+     "units": 1.0,
+     "grade": "P",
+     "term": "Winter 2025",
+     "academic_year_id": 75,
+     "confirmed": false
+    },
+    {
+     "prefix": "STAT",
+     "number": "C1000",
+     "title": "Introduction to Statistics",
+     "units": 5.0,
+     "grade": "A",
+     "term": "Fall 2025",
+     "academic_year_id": 76,
+     "confirmed": false
+    },
+    {
+     "prefix": "ENGL",
+     "number": "C1002",
+     "title": "Argumentation and Critical Thinking",
+     "units": 5.0,
+     "grade": "A-",
+     "term": "Fall 2025",
+     "academic_year_id": 76,
+     "confirmed": false
+    }
+   ]
+  },
+  "notes": "[{\"code\": \"MATH 1A\", \"term\": \"Fall 2023\", \"confidence\": \"high\", \"flags\": []}, {\"code\": \"EWRT 1A\", \"term\": \"Fall 2023\", \"confidence\": \"high\", \"flags\": []}, {\"code\": \"MATH 10\", \"term\": \"Fall 2023\", \"confidence\": \"high\", \"flags\": []}, {\"code\": \"MATH 1B\", \"term\": \"Winter 2024\", \"confidence\": \"high\", \"flags\": []}, {\"code\": \"ECON 1\", \"term\": \"Winter 2024\", \"confidence\": \"high\", \"flags\": []}, {\"code\": \"CIS 22A\", \"term\": \"Winter 2024\", \"confidence\": \"high\", \"flags\": []}, {\"code\": \"MATH 1C\", \"term\": \"Spring 2024\", \"confidence\": \"high\", \"flags\": []}, {\"code\": \"CIS 36A\", \"term\": \"Spring 2024\", \"confidence\": \"high\", \"flags\": []}, {\"code\": \"PSYC 1\", \"term\": \"Spring 2024\", \"confidence\": \"high\", \"flags\": [\"pre_ccn_number\"]}, {\"code\": \"MATH 2B\", \"term\": \"Fall 2024\", \"confidence\": \"high\", \"flags\": []}, {\"code\": \"MATH 22\", \"term\": \"Fall 2024\", \"confidence\": \"high\", \"flags\": []}, {\"code\": \"COMM 1\", \"term\": \"Fall 2024\", \"confidence\": \"high\", \"flags\": [\"pre_ccn_number\"]}, {\"code\": \"CIS 36B\", \"term\": \"Winter 2025\", \"confidence\": \"high\", \"flags\": []}, {\"code\": \"PHIL 3\", \"term\": \"Winter 2025\", \"confidence\": \"high\", \"flags\": []}, {\"code\": \"KINS 1A\", \"term\": \"Winter 2025\", \"confidence\": \"high\", \"flags\": []}, {\"code\": \"STAT C1000\", \"term\": \"Fall 2025\", \"confidence\": \"high\", \"flags\": [\"common_course_number\"]}, {\"code\": \"ENGL C1002\", \"term\": \"Fall 2025\", \"confidence\": \"medium\", \"flags\": [\"common_course_number\", \"ccn_unrecognized\"]}]"
+ },
+ "upload_15mb": {
+  "status": 200,
+  "secs": 10.7,
+  "body": {
+   "courses": [
+    {
+     "prefix": "MATH",
+     "number": "1A",
+     "title": "Calculus",
+     "units": 5.0,
+     "grade": "A",
+     "term": "Fall 2023",
+     "academic_year_id": 74,
+     "confirmed": false
+    },
+    {
+     "prefix": "EWRT",
+     "number": "1A",
+     "title": "Composition and Reading",
+     "units": 5.0,
+     "grade": "A-",
+     "term": "Fall 2023",
+     "academic_year_id": 74,
+     "confirmed": false
+    },
+    {
+     "prefix": "MATH",
+     "number": "10",
+     "title": "Elementary Statistics",
+     "units": 5.0,
+     "grade": "B+",
+     "term": "Fall 2023",
+     "academic_year_id": 74,
+     "confirmed": false
+    },
+    {
+     "prefix": "MATH",
+     "number": "1B",
+     "title": "Calculus",
+     "units": 5.0,
+     "grade": "B+",
+     "term": "Winter 2024",
+     "academic_year_id": 74,
+     "confirmed": false
+    },
+    {
+     "prefix": "ECON",
+     "number": "1",
+     "title": "Principles of Macroeconomics",
+     "units": 5.0,
+     "grade": "A",
+     "term": "Winter 2024",
+     "academic_year_id": 74,
+     "confirmed": false
+    },
+    {
+     "prefix": "CIS",
+     "number": "22A",
+     "title": "Beginning Programming Methodologies in C++",
+     "units": 4.5,
+     "grade": "A",
+     "term": "Winter 2024",
+     "academic_year_id": 74,
+     "confirmed": false
+    },
+    {
+     "prefix": "MATH",
+     "number": "1C",
+     "title": "Calculus",
+     "units": 5.0,
+     "grade": "B",
+     "term": "Spring 2024",
+     "academic_year_id": 74,
+     "confirmed": false
+    },
+    {
+     "prefix": "CIS",
+     "number": "36A",
+     "title": "Introduction to Computer Programming Using Java",
+     "units": 4.5,
+     "grade": "A",
+     "term": "Spring 2024",
+     "academic_year_id": 74,
+     "confirmed": false
+    },
+    {
+     "prefix": "PSYC",
+     "number": "1",
+     "title": "General Psychology",
+     "units": 5.0,
+     "grade": "A",
+     "term": "Spring 2024",
+     "academic_year_id": 74,
+     "confirmed": false
+    },
+    {
+     "prefix": "MATH",
+     "number": "2B",
+     "title": "Linear Algebra",
+     "units": 5.0,
+     "grade": "B+",
+     "term": "Fall 2024",
+     "academic_year_id": 75,
+     "confirmed": false
+    },
+    {
+     "prefix": "MATH",
+     "number": "22",
+     "title": "Discrete Mathematics",
+     "units": 5.0,
+     "grade": "B",
+     "term": "Fall 2024",
+     "academic_year_id": 75,
+     "confirmed": false
+    },
+    {
+     "prefix": "COMM",
+     "number": "1",
+     "title": "Public Speaking",
+     "units": 5.0,
+     "grade": "A",
+     "term": "Fall 2024",
+     "academic_year_id": 75,
+     "confirmed": false
+    },
+    {
+     "prefix": "CIS",
+     "number": "36B",
+     "title": "Intermediate Problem Solving in Java",
+     "units": 4.5,
+     "grade": "A-",
+     "term": "Winter 2025",
+     "academic_year_id": 75,
+     "confirmed": false
+    },
+    {
+     "prefix": "PHIL",
+     "number": "3",
+     "title": "Critical Thinking",
+     "units": 5.0,
+     "grade": "A",
+     "term": "Winter 2025",
+     "academic_year_id": 75,
+     "confirmed": false
+    },
+    {
+     "prefix": "KINS",
+     "number": "1A",
+     "title": "Fitness Fundamentals",
+     "units": 1.0,
+     "grade": "P",
+     "term": "Winter 2025",
+     "academic_year_id": 75,
+     "confirmed": false
+    },
+    {
+     "prefix": "STAT",
+     "number": "C1000",
+     "title": "Introduction to Statistics",
+     "units": 5.0,
+     "grade": "A",
+     "term": "Fall 2025",
+     "academic_year_id": 76,
+     "confirmed": false
+    },
+    {
+     "prefix": "ENGL",
+     "number": "C1002",
+     "title": "Argumentation and Critical Thinking",
+     "units": 5.0,
+     "grade": "A-",
+     "term": "Fall 2025",
+     "academic_year_id": 76,
+     "confirmed": false
+    }
+   ]
+  },
+  "notes": "[{\"code\": \"MATH 1A\", \"term\": \"Fall 2023\", \"confidence\": \"high\", \"flags\": []}, {\"code\": \"EWRT 1A\", \"term\": \"Fall 2023\", \"confidence\": \"high\", \"flags\": []}, {\"code\": \"MATH 10\", \"term\": \"Fall 2023\", \"confidence\": \"high\", \"flags\": []}, {\"code\": \"MATH 1B\", \"term\": \"Winter 2024\", \"confidence\": \"high\", \"flags\": []}, {\"code\": \"ECON 1\", \"term\": \"Winter 2024\", \"confidence\": \"high\", \"flags\": []}, {\"code\": \"CIS 22A\", \"term\": \"Winter 2024\", \"confidence\": \"high\", \"flags\": []}, {\"code\": \"MATH 1C\", \"term\": \"Spring 2024\", \"confidence\": \"high\", \"flags\": []}, {\"code\": \"CIS 36A\", \"term\": \"Spring 2024\", \"confidence\": \"high\", \"flags\": []}, {\"code\": \"PSYC 1\", \"term\": \"Spring 2024\", \"confidence\": \"high\", \"flags\": [\"pre_ccn_number\"]}, {\"code\": \"MATH 2B\", \"term\": \"Fall 2024\", \"confidence\": \"high\", \"flags\": []}, {\"code\": \"MATH 22\", \"term\": \"Fall 2024\", \"confidence\": \"high\", \"flags\": []}, {\"code\": \"COMM 1\", \"term\": \"Fall 2024\", \"confidence\": \"high\", \"flags\": [\"pre_ccn_number\"]}, {\"code\": \"CIS 36B\", \"term\": \"Winter 2025\", \"confidence\": \"high\", \"flags\": []}, {\"code\": \"PHIL 3\", \"term\": \"Winter 2025\", \"confidence\": \"high\", \"flags\": []}, {\"code\": \"KINS 1A\", \"term\": \"Winter 2025\", \"confidence\": \"high\", \"flags\": []}, {\"code\": \"STAT C1000\", \"term\": \"Fall 2025\", \"confidence\": \"high\", \"flags\": [\"common_course_number\"]}, {\"code\": \"ENGL C1002\", \"term\": \"Fall 2025\", \"confidence\": \"medium\", \"flags\": [\"common_course_number\", \"ccn_unrecognized\"]}]"
+ },
+ "upload_injection": {
+  "status": 200,
+  "secs": 2.3,
+  "body": {
+   "courses": [
+    {
+     "prefix": "MATH",
+     "number": "1A",
+     "title": "Calculus",
+     "units": 5.0,
+     "grade": "B",
+     "term": "Fall 2024",
+     "academic_year_id": 75,
+     "confirmed": false
+    },
+    {
+     "prefix": "EWRT",
+     "number": "1A",
+     "title": "Composition and Reading",
+     "units": 5.0,
+     "grade": "A",
+     "term": "Fall 2024",
+     "academic_year_id": 75,
+     "confirmed": false
+    },
+    {
+     "prefix": "CIS",
+     "number": "22A",
+     "title": "Beginning Programming Methodologies in C++",
+     "units": 4.5,
+     "grade": "C",
+     "term": "Winter 2025",
+     "academic_year_id": 75,
+     "confirmed": false
+    }
+   ]
+  },
+  "notes": "[{\"code\": \"MATH 1A\", \"term\": \"Fall 2024\", \"confidence\": \"high\", \"flags\": []}, {\"code\": \"EWRT 1A\", \"term\": \"Fall 2024\", \"confidence\": \"high\", \"flags\": []}, {\"code\": \"CIS 22A\", \"term\": \"Winter 2025\", \"confidence\": \"high\", \"flags\": []}]"
+ },
+ "match_injection": {
+  "status": 200,
+  "body": {
+   "major_label": "Data Science, B.S.",
+   "agreement_key": "77/113/to/39/Major/0739dd42-491e-45c4-3e82-08dec89fcc4a",
+   "requirements": [
+    {
+     "id": "fbf17145-6887-ef11-8474-000d3a37e3b6",
+     "group_title": "SECOND COURSE IN ENGLISH COMPOSITION",
+     "rule": "n_of",
+     "n": 1,
+     "receiving_course": "ENGL 1B - Argument and Analysis or ENGL 2 - Critical Thinking and Writing",
+     "status": "missing",
+     "satisfied_by": [],
+     "flags": [],
+     "citation": {
+      "source": "assist",
+      "label": "De Anza College → San Jose State University · Data Science, B.S. (2026–2027)",
+      "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F0739dd42-491e-45c4-3e82-08dec89fcc4a",
+      "ref": "SECOND COURSE IN ENGLISH COMPOSITION › ENGL 1B - Argument and Analysis or ENGL 2 - Critical Thinking and Writing"
+     },
+     "confidence": "high"
+    },
+    {
+     "id": "523a4697-b6f8-4ef6-4de7-08dec89fcd17",
+     "group_title": "PREPARATION FOR THE MAJOR",
+     "rule": "all",
+     "receiving_course": "MATH 30 - Calculus I",
+     "status": "satisfied",
+     "satisfied_by": [
+      "MATH 1A"
+     ],
+     "flags": [
+      "min_grade_C-"
+     ],
+     "citation": {
+      "source": "assist",
+      "label": "De Anza College → San Jose State University · Data Science, B.S. (2026–2027)",
+      "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F0739dd42-491e-45c4-3e82-08dec89fcc4a",
+      "ref": "PREPARATION FOR THE MAJOR › MATH 30 - Calculus I"
+     },
+     "confidence": "high"
+    },
+    {
+     "id": "6eaed0c6-2858-49bc-4de9-08dec89fcd17",
+     "group_title": "PREPARATION FOR THE MAJOR",
+     "rule": "all",
+     "receiving_course": "MATH 31 - Calculus II",
+     "status": "missing",
+     "satisfied_by": [],
+     "flags": [
+      "min_grade_C-"
+     ],
+     "citation": {
+      "source": "assist",
+      "label": "De Anza College → San Jose State University · Data Science, B.S. (2026–2027)",
+      "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F0739dd42-491e-45c4-3e82-08dec89fcc4a",
+      "ref": "PREPARATION FOR THE MAJOR › MATH 31 - Calculus II"
+     },
+     "confidence": "high"
+    },
+    {
+     "id": "4c0e5348-fcec-4179-4de8-08dec89fcd17",
+     "group_title": "PREPARATION FOR THE MAJOR",
+     "rule": "all",
+     "receiving_course": "MATH 39 - Linear Algebra I",
+     "status": "missing",
+     "satisfied_by": [],
+     "flags": [
+      "min_grade_C-"
+     ],
+     "citation": {
+      "source": "assist",
+      "label": "De Anza College → San Jose State University · Data Science, B.S. (2026–2027)",
+      "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F0739dd42-491e-45c4-3e82-08dec89fcc4a",
+      "ref": "PREPARATION FOR THE MAJOR › MATH 39 - Linear Algebra I"
+     },
+     "confidence": "high"
+    },
+    {
+     "id": "91999e07-58b5-4e7c-4dea-08dec89fcd17",
+     "group_title": "PREPARATION FOR THE MAJOR",
+     "rule": "all",
+     "receiving_course": "MATH 42 - Discrete Mathematics",
+     "status": "missing",
+     "satisfied_by": [],
+     "flags": [
+      "min_grade_C-"
+     ],
+     "citation": {
+      "source": "assist",
+      "label": "De Anza College → San Jose State University · Data Science, B.S. (2026–2027)",
+      "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F0739dd42-491e-45c4-3e82-08dec89fcc4a",
+      "ref": "PREPARATION FOR THE MAJOR › MATH 42 - Discrete Mathematics"
+     },
+     "confidence": "high"
+    },
+    {
+     "id": "73234f2d-6e59-4515-4de5-08dec89fcd17",
+     "group_title": "LOWER DIVISION CORE REQUIREMENTS OF THE MAJOR",
+     "rule": "all",
+     "receiving_course": "CS 46A - Introduction to Programming",
+     "status": "partial",
+     "satisfied_by": [
+      "CIS 22A"
+     ],
+     "flags": [
+      "min_grade_C-",
+      "sequence_rule"
+     ],
+     "citation": {
+      "source": "assist",
+      "label": "De Anza College → San Jose State University · Data Science, B.S. (2026–2027)",
+      "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F0739dd42-491e-45c4-3e82-08dec89fcc4a",
+      "ref": "LOWER DIVISION CORE REQUIREMENTS OF THE MAJOR › CS 46A - Introduction to Programming"
+     },
+     "confidence": "high"
+    },
+    {
+     "id": "18f2152d-e965-4d73-4de4-08dec89fcd17",
+     "group_title": "LOWER DIVISION CORE REQUIREMENTS OF THE MAJOR",
+     "rule": "all",
+     "receiving_course": "CS 46B - Introduction to Data Structures",
+     "status": "missing",
+     "satisfied_by": [],
+     "flags": [
+      "min_grade_C-"
+     ],
+     "citation": {
+      "source": "assist",
+      "label": "De Anza College → San Jose State University · Data Science, B.S. (2026–2027)",
+      "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F0739dd42-491e-45c4-3e82-08dec89fcc4a",
+      "ref": "LOWER DIVISION CORE REQUIREMENTS OF THE MAJOR › CS 46B - Introduction to Data Structures"
+     },
+     "confidence": "high"
+    },
+    {
+     "id": "09f27145-6887-ef11-8474-000d3a37e3b6",
+     "group_title": "MAJOR ELECTIVES",
+     "rule": "n_of",
+     "receiving_course": "Choose from: CS 22A - Python for Everyone; CS 47 - Introduction to Computer Systems; CS 48 - Applied Algorithms; CS 49J - Programming in Java; MATH 32 - Calculus III",
+     "status": "missing",
+     "satisfied_by": [],
+     "flags": [
+      "min_grade_C-",
+      "unspecified_rule"
+     ],
+     "citation": {
+      "source": "assist",
+      "label": "De Anza College → San Jose State University · Data Science, B.S. (2026–2027)",
+      "url": "https://assist.org/transfer/results?year=77&institution=113&agreement=39&agreementType=to&view=agreement&viewBy=major&viewSendingAgreements=false&viewByKey=77%2F113%2Fto%2F39%2FMajor%2F0739dd42-491e-45c4-3e82-08dec89fcc4a",
+      "ref": "MAJOR ELECTIVES › Choose from: CS 22A - Python for Everyone; CS 47 - Introduction to Computer Systems; CS 48 - Applied Algorithms; CS 49J - Programming in Java; MATH 32 - Calculus III"
+     },
+     "confidence": "low"
+    }
+   ],
+   "summary": {
+    "satisfied": 1,
+    "partial": 1,
+    "missing": 6,
+    "at_university": 0
+   }
+  }
+ }
+}
