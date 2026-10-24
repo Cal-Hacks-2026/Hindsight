@@ -286,51 +286,57 @@ function Abstract({
   const counted = new Set(done.flatMap((r) => r.req.satisfied_by));
   const older = done.filter((r) => r.older);
 
-  const parts: ReactNode[] = [];
+  const counts: ReactNode[] = [];
   if (done.length) {
-    parts.push(
+    counts.push(
       <Fragment key="done">
         {countWord(counted.size, true)} of your De Anza courses already satisfy {countWord(done.length)} {campus}{" "}
         {plural(done.length, "requirement")}
         {older.length > 0 &&
-          `, ${older.length === done.length ? "all" : countWord(older.length)} of them through the agreement in effect when you took the course`}
-        .<Refs ns={done.flatMap((r) => r.refs)} />{" "}
+          `, ${older.length === done.length ? "all" : countWord(older.length)} of them through an older agreement`}
+        .{" "}
       </Fragment>,
     );
   } else {
-    parts.push(<Fragment key="done">None of your De Anza courses satisfy a {campus} requirement yet. </Fragment>);
+    counts.push(<Fragment key="done">None of your De Anza courses satisfy a {campus} requirement yet. </Fragment>);
   }
   if (open.length) {
     const codes = open.map(rowCode);
-    parts.push(
+    counts.push(
       <Fragment key="open">
         {countWord(open.length, true)} {plural(open.length, "requirement")} still {open.length === 1 ? "needs" : "need"} a
-        course{codes.length <= 5 ? `: ${listing(codes)}` : ""}.<Refs ns={open.flatMap((r) => r.refs)} />{" "}
+        course{codes.length <= 5 ? `: ${listing(codes)}` : ""}.{" "}
       </Fragment>,
     );
   }
   if (partial.length) {
-    parts.push(
+    counts.push(
       <Fragment key="partial">
-        {countWord(partial.length, true)} more {partial.length === 1 ? "is" : "are"} partly done.{" "}
+        {countWord(partial.length, true)} more {partial.length === 1 ? "is" : "are"} partly done.
       </Fragment>,
     );
   }
+
   const combined = plans && lastTerm(plans.combined);
+  let finish: ReactNode = null;
   if (combined) {
     const [first, ...others] = majors;
     const alone = first ? plans.single[first] && lastTerm(plans.single[first]!) : undefined;
-    parts.push(
-      <Fragment key="plan">
-        At {UNIT_CAP} units per term, your earliest finish is{" "}
+    finish = (
+      <p className="lede">
         {alone && others.length
-          ? `${alone} for ${shortMajor(first!)} alone, or ${combined} with ${majorsLine(others)}`
-          : combined}
-        .<Refs ns={catalogRefs} />
-      </Fragment>,
+          ? `You can finish in ${alone} with ${shortMajor(first!)} only, or ${combined} with ${majorsLine(others)} added.`
+          : `Your earliest finish is ${combined}.`}
+        <Refs ns={catalogRefs} />
+      </p>
     );
   }
-  return <p className="lede">{parts}</p>;
+  return (
+    <>
+      {finish}
+      <p className={finish ? "lede-sub" : "lede"}>{counts}</p>
+    </>
+  );
 }
 
 // ---- 01 Credits ----
