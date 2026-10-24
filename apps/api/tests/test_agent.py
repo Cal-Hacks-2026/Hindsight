@@ -190,6 +190,7 @@ def test_rank_and_alerts_for_one_profile(monkeypatch, agent_env, radar_fake, pro
     monkeypatch.setattr(rank, "ask_claude", lambda profile, items: {})
     ranked = client.post("/internal/agent/rank", json={"campus": "sjsu", "profile_id": pid}, headers=SECRET).json()
     assert ranked["profiles"][0]["ranked"] == 1 and len(radar_fake.ranked[pid]) == 1
+    assert pid not in json.dumps(ranked)  # profile ids are bearer tokens; this reaches the public log
 
     marked = []
     monkeypatch.setattr(store, "top_ranked", lambda profile_id, limit: [
@@ -198,6 +199,7 @@ def test_rank_and_alerts_for_one_profile(monkeypatch, agent_env, radar_fake, pro
     monkeypatch.setattr(store, "mark_notified", lambda profile_id, ids: marked.append(ids) or len(ids))
     res = client.post("/internal/agent/alerts", json={"campus": "sjsu", "profile_id": pid}, headers=SECRET).json()
     assert res["new"] == 1 and marked == [[radar_fake.rows[0]["id"]]]
+    assert pid not in json.dumps(res)
     assert "within 7 days" in res["rule"]
 
 

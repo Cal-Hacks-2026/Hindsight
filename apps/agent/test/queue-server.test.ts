@@ -1,10 +1,13 @@
 import assert from 'node:assert/strict';
+import { existsSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 import type { AddressInfo } from 'node:net';
 import { test } from 'node:test';
 
 import { loadConfig, scrubEnv } from '../src/config.ts';
 import type { Job } from '../src/prompt.ts';
-import { QueueFull, RunQueue } from '../src/queue.ts';
+import { HourlyBudget, QueueFull, RunQueue } from '../src/queue.ts';
 import { createAgentServer } from '../src/server.ts';
 
 const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
@@ -119,6 +122,13 @@ test('config defaults and validation', () => {
   assert.throws(() => loadConfig({ FACTORY_API_KEY: 'fk' }), /AGENT_SECRET/);
 });
 
+test('AGENT_SECRET_FILE is read once and deleted', () => {
+  const file = path.join(mkdtempSync(path.join(tmpdir(), 'secret-')), 'agent-secret');
+  writeFileSync(file, 'from-file\n');
+  assert.equal(loadConfig({ FACTORY_API_KEY: 'fk', AGENT_SECRET_FILE: file }).agentSecret, 'from-file');
+  assert.equal(existsSync(file), false);
+});
+
 test('scrubEnv leaves Droid no secrets', () => {
   const env: NodeJS.ProcessEnv = {
     PATH: '/bin', HOME: '/root', LC_ALL: 'C', FACTORY_API_KEY: 'fk', AGENT_SECRET: 's',
@@ -126,4 +136,12 @@ test('scrubEnv leaves Droid no secrets', () => {
   };
   scrubEnv(env);
   assert.deepEqual(Object.keys(env).sort(), ['HOME', 'LC_ALL', 'PATH']);
+});
+
+test('the hourly budget refills after an hour', () => {
+  let t = 0;
+  const budget = new HourlyBudget(2, () => t);
+  assert.deepEqual([budget.take(), budget.take(), budget.take()], [true, true, false]);
+  t = 3_600_000;
+  assert.equal(budget.take(), true);
 });

@@ -27,6 +27,7 @@ export interface JobDeps {
   config: Pick<Config, 'factoryApiKey' | 'droidPath' | 'extractorsDir' | 'modelId' | 'maxPatchesPerRun' | 'runTimeoutMs'>;
   api: Pick<HindsightApi, 'scan' | 'rescan' | 'raw' | 'rank' | 'alerts' | 'event'>;
   startSession?: StartSession;
+  secrets?: string[]; // redacted from every event, on top of RunLog's key patterns
 }
 
 function short(value: unknown, max = 300): string {
@@ -60,7 +61,7 @@ function isStructuredEcho(text: string): boolean {
 export async function runJob(job: Job, deps: JobDeps): Promise<void> {
   const { config, api } = deps;
   const startSession = deps.startSession ?? (createSession as unknown as StartSession);
-  const log = new RunLog(api, job.runId);
+  const log = new RunLog(api, job.runId, [config.factoryApiKey, ...(deps.secrets ?? [])]);
   const scope = new EditScope(config.extractorsDir, config.maxPatchesPerRun);
   const state: JobState = { everFailing: new Set() };
   const before = await snapshot(config.extractorsDir);
@@ -74,10 +75,11 @@ export async function runJob(job: Job, deps: JobDeps): Promise<void> {
     }
   }
 
-  await log.step(
-    `Run started: ${job.trigger === 'profile_created' ? `new profile ${job.profileId}` : `${job.trigger} scan`} for ${job.campus}`,
-    { trigger: job.trigger, campus: job.campus, profile_id: job.profileId ?? null },
-  );
+  // No profile id here: it acts as a bearer token and this log is public.
+  await log.step(`Run started: ${job.trigger === 'profile_created' ? 'new profile' : `${job.trigger} scan`} for ${job.campus}`, {
+    trigger: job.trigger,
+    campus: job.campus,
+  });
 
   let session: SessionLike | undefined;
   try {
@@ -144,4 +146,27 @@ export async function runJob(job: Job, deps: JobDeps): Promise<void> {
     await session?.close().catch(() => undefined);
     await log.flush();
   }
+}
+
+/**
+ * A new profile when the hourly budget for Droid runs is spent (POST /profiles is public,
+ * so profile runs must not be an unbounded way to spend credits): rank and alert for
+ * that profile directly, without a Droid session.
+ */
+export async function runDirect(job: Job, deps: Pick<JobDeps, 'api' | 'secrets'>): Promise<void> {
+  const log = new RunLog(deps.api, job.runId, deps.secrets ?? []);
+  await log.step(`Run started: new profile for ${job.campus} (hourly Droid budget reached; ranking directly, no Droid session)`, {
+    trigger: job.trigger,
+    campus: job.campus,
+  });
+  try {
+    const ranked = await deps.api.rank(job.campus, job.profileId);
+    await log.step(`Ranked opportunities for ${ranked.profiles.length} profile(s)`, ranked);
+    const alerts = await deps.api.alerts(job.campus, job.profileId);
+    await log.step(`Wrote ${alerts.new} new alert(s) (${alerts.alerts.length} due in total; rule: ${alerts.rule})`, alerts);
+    await log.result(`Ranked and wrote ${alerts.new} new alert(s) without Droid.`, { alerts_new: alerts.new });
+  } catch (e) {
+    await log.error(`Run failed: ${(e as Error).message}`);
+  }
+  await log.flush();
 }

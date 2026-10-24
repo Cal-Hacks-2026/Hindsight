@@ -50,6 +50,9 @@ def test_plain_parsing_code_loads_and_runs(tmp_path, monkeypatch):
     ("def extract(raw, source):\n    source.url = 'https://evil.example'", "assigning to `.url`"),
     ("def extract(raw, source):\n    del source.tags", "assigning to `.tags`"),
     ("def extract(raw, source)\n    return []", "syntax error"),
+    ("match source:\n    case object(__class__=c):\n        pass", "`match`"),
+    ("x = int.mro()", "`.mro`"),
+    ("try:\n    pass\nexcept:\n    pass", "bare `except:`"),
 ])
 def test_guard_refuses_unsafe_code(snippet, why):
     with pytest.raises(extract.ExtractorError, match=why.replace("(", r"\(").replace(".", r"\.")):
@@ -87,3 +90,72 @@ def test_a_patch_is_picked_up_on_the_next_load(tmp_path, monkeypatch):
     path.write_text("from app.services.radar.extract import Parsed\n"
                     "def extract(raw, source):\n    return [Parsed(title='t', url='https://a.b')]\n")
     assert len(extract.load("k")({}, None)) == 1
+
+
+# ---- isolated runner ----
+
+from datetime import datetime, timezone  # noqa: E402
+
+from app.services.radar import sources  # noqa: E402
+
+SRC = sources.by_id("sjsu-events-ai-tech")
+
+
+def _write(tmp_path, kind, body):
+    (tmp_path / f"{kind}.py").write_text(body)
+
+
+def test_isolated_runner_round_trips_parsed_items(tmp_path):
+    _write(tmp_path, "k", "from datetime import datetime, timezone\n"
+           "from app.services.radar.extract import Parsed\n"
+           "def extract(raw, source):\n"
+           "    return [Parsed(title=raw['t'], url='https://a.b', starts_at=datetime(2026, 11, 1, tzinfo=timezone.utc),"
+           " tags=['x'], type_hints={'workshop'})]\n")
+    (res,) = extract.run_isolated({"k": [({"t": "Hi"}, SRC)]}, extractors_dir=tmp_path)["k"]
+    assert res == [extract.Parsed(title="Hi", url="https://a.b", starts_at=datetime(2026, 11, 1, tzinfo=timezone.utc),
+                                  tags=["x"], type_hints={"workshop"})]
+
+
+def test_isolated_runner_starts_with_no_environment(monkeypatch):
+    """The API's keys never reach the process that runs patched code."""
+    import subprocess
+
+    seen = {}
+    real_run = subprocess.run
+
+    def spy(args, **kwargs):
+        seen.update(args=args, env=kwargs.get("env"))
+        return real_run(args, **kwargs)
+
+    monkeypatch.setenv("SUPABASE_SERVICE_ROLE_KEY", "sb_secret_should_not_leak")
+    monkeypatch.setattr(extract.subprocess, "run", spy)
+    extract.run_isolated({"localist": [({"json": {"events": []}}, SRC)]})
+    assert seen["env"] == {} and seen["args"][1] == "-I"
+
+
+def test_isolated_runner_times_out_one_kind(tmp_path):
+    _write(tmp_path, "slow", "def extract(raw, source):\n    while True:\n        try:\n            pass\n"
+           "        except Exception:\n            pass\n")
+    _write(tmp_path, "fast", "def extract(raw, source):\n    return []\n")
+    monkey = extract.KIND_TIMEOUT_S
+    extract.KIND_TIMEOUT_S = 1
+    try:
+        out = extract.run_isolated({"slow": [({}, SRC)], "fast": [({}, SRC)]}, extractors_dir=tmp_path)
+    finally:
+        extract.KIND_TIMEOUT_S = monkey
+    assert "did not finish" in str(out["slow"][0]) and out["fast"] == [[]]
+
+
+def test_isolated_runner_fails_closed_on_a_dead_process(tmp_path):
+    out = extract.run_isolated({"k": [({}, SRC)]}, extractors_dir=tmp_path, timeout=0.001)
+    assert isinstance(out["k"][0], extract.ExtractorError)
+
+
+@pytest.mark.parametrize("forged", [
+    "nope", {"title": 1, "url": "", "org": "", "description": "", "tags": [], "type_hints": []},
+    {"title": "t", "url": "u", "org": "", "description": "", "tags": [], "type_hints": [], "starts_at": "2026-11-01"},
+    {"title": "t", "url": "u", "org": "", "description": "", "tags": "x", "type_hints": []},
+])
+def test_worker_output_is_revalidated(forged):
+    with pytest.raises((ValueError, TypeError)):
+        extract.parsed_from_json(forged)

@@ -60,3 +60,21 @@ export class RunQueue {
     }
   }
 }
+
+/** At most `limit` uses in any rolling hour. */
+export class HourlyBudget {
+  private readonly uses: number[] = [];
+
+  constructor(
+    private readonly limit: number,
+    private readonly now: () => number = Date.now,
+  ) {}
+
+  take(): boolean {
+    const t = this.now();
+    while (this.uses.length && t - this.uses[0] >= 3_600_000) this.uses.shift();
+    if (this.uses.length >= this.limit) return false;
+    this.uses.push(t);
+    return true;
+  }
+}

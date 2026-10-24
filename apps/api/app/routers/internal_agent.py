@@ -1,6 +1,7 @@
 """Endpoints apps/agent calls on Droid's behalf (DECISIONS.md D-006). Not part of the
 public contract (PROJECT.md §10): every request needs X-Agent-Secret = AGENT_SECRET,
-and the agent is the only client."""
+and the agent is the only client. Responses reach Droid and the public run log
+(/agent/events), so they never carry profile ids."""
 
 import hmac
 import json
@@ -129,14 +130,16 @@ def _profile_errors(fn, *args):
 def rank_profiles(body: CampusRequest) -> dict:
     """Re-rank the Radar feed for every profile on the campus (or one) and store it."""
     ranked = _profile_errors(alerts.rank_profiles, body.campus, body.profile_id)
-    return {"profiles": [asdict(r) for r in ranked]}
+    # Profile ids act as bearer tokens (no auth), and this lands in the public run log.
+    return {"profiles": [{"ranked": r.ranked, "top": r.top} for r in ranked]}
 
 
 @router.post("/alerts")
 def write_alerts(body: CampusRequest) -> dict:
     """Mark top-ranked items due within 7 days as notified (alerts)."""
     written = _profile_errors(alerts.write_alerts, body.campus, body.profile_id)
-    return {"alerts": [asdict(a) for a in written], "new": sum(a.new for a in written),
+    return {"alerts": [{k: v for k, v in asdict(a).items() if k != "profile_id"} for a in written],
+            "new": sum(a.new for a in written),
             "rule": f"top {alerts.ALERT_TOP_N} ranked, deadline or start within {alerts.ALERT_WINDOW.days} days"}
 
 

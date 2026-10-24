@@ -22,13 +22,13 @@ export interface ScanReport {
 }
 
 export interface AlertsReport {
-  alerts: { profile_id: string; opportunity_id: string; title: string; url: string; when: string; new: boolean }[];
+  alerts: { opportunity_id: string; title: string; url: string; when: string; new: boolean }[];
   new: number;
   rule: string;
 }
 
 export interface RankReport {
-  profiles: { profile_id: string; ranked: number; top: unknown[] }[];
+  profiles: { ranked: number; top: unknown[] }[]; // no profile ids: this reaches the public log
 }
 
 export class ApiError extends Error {

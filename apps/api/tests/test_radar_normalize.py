@@ -24,6 +24,11 @@ def result(dataset):
     return n.normalize(dataset, SCRAPED)
 
 
+def in_process(load):
+    """Run injected test extractors in this process (the default runs them isolated)."""
+    return lambda batches: extract.run_in_process(batches, load)
+
+
 def by_url(result, url):
     return next(i for i in result.items if i.url == url)
 
@@ -205,7 +210,7 @@ def test_a_broken_extractor_fails_only_its_own_sources(dataset):
             raise extract.ExtractorError("localist.py: syntax error on line 3: invalid syntax")
         return extract.load(kind)
 
-    res = n.normalize(dataset, SCRAPED, load=load)
+    res = n.normalize(dataset, SCRAPED, runner=in_process(load))
     assert set(res.errors) == {"sjsu-events-ai-tech"} and "syntax error" in res.errors["sjsu-events-ai-tech"]
     assert res.parsed["sjsu-events-ai-tech"] == 0 and res.skipped["extractor_error"] == 1
     assert res.per_source["berkeley-devpost"] > 0 and res.per_source["sjsu-club-events"] > 0
@@ -219,7 +224,7 @@ def test_extractor_exceptions_and_bad_returns_are_contained(dataset):
             return lambda raw, source: {}["missing"]
         return extract.load(kind)
 
-    res = n.normalize(dataset, SCRAPED, load=load)
+    res = n.normalize(dataset, SCRAPED, runner=in_process(load))
     assert "must return a list of Parsed" in res.errors["berkeley-devpost"]
     assert "KeyError" in res.errors["sjsu-events-ai-tech"]
     assert res.per_source["sjsu-club-events"] > 0
@@ -232,7 +237,7 @@ def test_extractors_get_a_copy_of_the_source(dataset):
             return []
         return extract_
 
-    n.normalize(dataset, SCRAPED, load=load)
+    n.normalize(dataset, SCRAPED, runner=in_process(load))
     assert all("tampered" not in s.tags for s in sources.load().campuses["sjsu"])
 
 
@@ -248,6 +253,6 @@ def test_malformed_parsed_fields_fail_only_that_source(dataset, bad):
             return lambda raw, source: [extract.Parsed(**{"title": "t", "url": "https://x.org", **bad})]
         return extract.load(kind)
 
-    res = n.normalize(dataset, SCRAPED, load=load)
+    res = n.normalize(dataset, SCRAPED, runner=in_process(load))
     assert "must return a list of Parsed" in res.errors["sjsu-events-ai-tech"]
     assert res.per_source["sjsu-club-events"] > 0

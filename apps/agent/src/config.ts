@@ -1,6 +1,6 @@
 // Environment → config. Read once at startup; main.ts then scrubs secrets from
 // process.env, because the Droid SDK passes process.env on to the droid subprocess.
-import { realpathSync } from 'node:fs';
+import { readFileSync, realpathSync, rmSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 export const CAMPUSES = ['sjsu', 'berkeley'] as const;
@@ -21,6 +21,7 @@ export interface Config {
   runTimeoutMs: number;
   queueLimit: number;
   manualCooldownMs: number;
+  profileRunsPerHour: number;
 }
 
 const DEFAULT_EXTRACTORS = fileURLToPath(new URL('../../api/app/services/radar/extractors', import.meta.url));
@@ -40,6 +41,21 @@ function required(env: NodeJS.ProcessEnv, name: string): string {
   return value;
 }
 
+/**
+ * AGENT_SECRET, or in the container AGENT_SECRET_FILE: read once, then deleted. Droid runs
+ * as the agent's OS user and could read /proc/<agent pid>/environ, which keeps the
+ * process's original environment even after scrubEnv(); a file passed this way is gone
+ * before Droid starts.
+ */
+function agentSecret(env: NodeJS.ProcessEnv): string {
+  const file = env.AGENT_SECRET_FILE;
+  if (!file) return required(env, 'AGENT_SECRET');
+  const secret = readFileSync(file, 'utf8').trim();
+  rmSync(file, { force: true });
+  if (!secret) throw new Error('AGENT_SECRET_FILE is empty');
+  return secret;
+}
+
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   const campuses = (env.AGENT_CAMPUSES ?? 'sjsu,berkeley')
     .split(',')
@@ -50,7 +66,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   }
   return {
     apiUrl: (env.AGENT_API_URL ?? 'http://127.0.0.1:8000').replace(/\/+$/, ''),
-    agentSecret: required(env, 'AGENT_SECRET'),
+    agentSecret: agentSecret(env),
     factoryApiKey: required(env, 'FACTORY_API_KEY'),
     host: env.AGENT_HOST ?? '127.0.0.1',
     port: int(env, 'AGENT_PORT', 8787, 1),
@@ -63,6 +79,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     runTimeoutMs: int(env, 'AGENT_RUN_TIMEOUT_MINUTES', 20, 1) * 60_000,
     queueLimit: int(env, 'AGENT_QUEUE_LIMIT', 10, 1),
     manualCooldownMs: int(env, 'AGENT_MANUAL_COOLDOWN_MINUTES', 2) * 60_000,
+    profileRunsPerHour: int(env, 'AGENT_PROFILE_RUNS_PER_HOUR', 6),
   };
 }
 

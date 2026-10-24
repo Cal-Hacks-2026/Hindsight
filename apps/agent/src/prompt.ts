@@ -32,7 +32,7 @@ export const RESULT_SCHEMA = {
 export function buildPrompt(job: Job): string {
   const scanSteps =
     job.trigger === 'profile_created'
-      ? `This run was triggered by a new profile (${job.profileId}). Skip the scan: the scheduled scans keep opportunities fresh.`
+      ? 'This run was triggered by a new profile. Skip the scan: the scheduled scans keep opportunities fresh.'
       : `2. Call scan_campus.
 3. Self-healing. For each source the scan reports as "empty" or "extractor_error":
    a. Call get_source_raw for it and Read its extractor file (named in the report; the current directory is the extractors folder).

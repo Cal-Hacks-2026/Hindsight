@@ -6,16 +6,21 @@ import { randomUUID } from 'node:crypto';
 import { HindsightApi } from './api.ts';
 import { loadConfig, scrubEnv } from './config.ts';
 import { RunLog } from './events.ts';
-import { runJob } from './job.ts';
-import { QueueFull, RunQueue } from './queue.ts';
+import { runDirect, runJob } from './job.ts';
+import { HourlyBudget, QueueFull, RunQueue } from './queue.ts';
 import { createAgentServer } from './server.ts';
 
 const config = loadConfig();
 const removed = scrubEnv(); // Droid inherits process.env; it gets no secrets but its own API key (passed explicitly)
 const api = new HindsightApi(config.apiUrl, config.agentSecret);
+const secrets = [config.agentSecret]; // redacted from the public run log (the Factory key always is)
+const profileRuns = new HourlyBudget(config.profileRunsPerHour);
 
 const queue = new RunQueue(
-  (job) => runJob(job, { config, api }),
+  (job) =>
+    job.trigger === 'profile_created' && !profileRuns.take()
+      ? runDirect(job, { api, secrets })
+      : runJob(job, { config, api, secrets }),
   config.queueLimit,
   (job, position) => {
     if (position > 0) void new RunLog(api, job.runId).step(`Queued behind ${position - 1 ? `${position - 1} other run(s) and ` : ''}the current run`);

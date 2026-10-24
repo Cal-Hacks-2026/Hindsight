@@ -7,7 +7,9 @@ import { test } from 'node:test';
 import { ToolConfirmationOutcome as O, ToolConfirmationType as T, type CreateSessionOptions } from '@factory/droid-sdk/node';
 
 import type { ScanReport, SourceReport } from '../src/api.ts';
-import { runJob, type SessionLike } from '../src/job.ts';
+import { redact } from '../src/events.ts';
+import { runDirect, runJob, type SessionLike } from '../src/job.ts';
+import { buildPrompt } from '../src/prompt.ts';
 import type { Job } from '../src/prompt.ts';
 
 const RUN = '11111111-1111-4111-8111-111111111111';
@@ -35,7 +37,7 @@ function fakeApi() {
       scan: async () => (calls.push('scan'), report('empty')),
       rescan: async (_c: string, id: string) => (calls.push(`rescan:${id}`), report('ok')),
       raw: async (_id: string, source: string) => (calls.push(`raw:${source}`), { items: [{ json: { items: [] } }] }),
-      rank: async () => (calls.push('rank'), { profiles: [{ profile_id: 'p', ranked: 5, top: [] }] }),
+      rank: async () => (calls.push('rank'), { profiles: [{ ranked: 5, top: [] }] }),
       alerts: async () => (calls.push('alerts'), { alerts: [], new: 2, rule: 'top 5' }),
       event: async (runId: string, kind: string, message: string, payload?: unknown) => {
         assert.equal(runId, RUN);
@@ -169,7 +171,7 @@ test('a profile_created run skips the scan and cannot edit anything', async () =
       },
     });
     assert.deepEqual(calls, ['rank', 'alerts']);
-    assert.match(events[0].message, /new profile 2222/);
+    assert.match(events[0].message, /Run started: new profile for sjsu/);
     assert.equal(events.at(-1)!.kind, 'result');
     assert.equal(events.filter((e) => e.kind === 'diff').length, 0);
   } finally {
@@ -212,6 +214,61 @@ test('a run that cannot start Droid logs why', async () => {
     await runJob(JOB, { config: config(dir), api, startSession: async () => { throw new Error('No Factory API key found'); } });
     assert.equal(events.at(-1)!.kind, 'error');
     assert.match(events.at(-1)!.message, /No Factory API key/);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+const PROFILE = '22222222-2222-4222-8222-222222222222';
+
+test('profile ids never reach the public log or the prompt (they act as bearer tokens)', async () => {
+  const dir = await extractorsDir();
+  const { api, events } = fakeApi();
+  const job: Job = { runId: RUN, campus: 'sjsu', trigger: 'profile_created', profileId: PROFILE };
+  try {
+    assert.ok(!buildPrompt(job).includes(PROFILE));
+    await runDirect(job, { api });
+    await runJob(job, {
+      config: config(dir),
+      api,
+      startSession: async () => ({ close: async () => undefined, async *stream() {} }),
+    });
+    assert.ok(events.length > 0);
+    assert.ok(!JSON.stringify(events).includes(PROFILE));
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test('runDirect ranks and alerts without Droid', async () => {
+  const { api, events, calls } = fakeApi();
+  await runDirect({ runId: RUN, campus: 'sjsu', trigger: 'profile_created', profileId: PROFILE }, { api });
+  assert.deepEqual(calls, ['rank', 'alerts']);
+  assert.match(events[0].message, /no Droid session/);
+  assert.equal(events.at(-1)!.kind, 'result');
+});
+
+test('secrets and key-shaped strings are redacted from the run log', async () => {
+  const dir = await extractorsDir();
+  const { api, events } = fakeApi();
+  const leak = 'here: fk-abcdefghijklmnopqrstu sk-ant-api03-abcdefghijklmnopqrstuvwx agent-secret-value-123';
+  try {
+    await runJob(JOB, {
+      config: config(dir),
+      api,
+      secrets: ['agent-secret-value-123'],
+      startSession: async () => ({
+        close: async () => undefined,
+        async *stream() {
+          yield { type: 'assistant', text: leak, message: {} } as never;
+          yield { type: 'result', subtype: 'success', success: true, interrupted: false, error: null, text: leak, durationMs: 1, tokenUsage: null, messages: [], turnCount: 1, sessionId: 's' } as never;
+        },
+      }),
+    });
+    const all = JSON.stringify(events);
+    for (const secret of ['fk-abcdefghijklmnopqrstu', 'sk-ant-api03', 'agent-secret-value-123']) assert.ok(!all.includes(secret), secret);
+    assert.ok(all.includes('[redacted]'));
+    assert.equal(redact('token fk-short'), 'token fk-short', 'short strings are left alone');
   } finally {
     await rm(dir, { recursive: true, force: true });
   }

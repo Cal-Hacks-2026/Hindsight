@@ -17,7 +17,6 @@ import re
 from collections import Counter
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import Any
 
 from pydantic import BaseModel
 
@@ -25,6 +24,7 @@ from app.models.contracts import Campus
 from app.services.radar import extract
 from app.services.radar import sources as sources_mod
 from app.services.radar.extract import ItemType, Parsed, clean_text, is_http_url
+from app.services.radar.sources import Source
 from app.services.radar.extract import parse_devpost_dates, parse_when  # noqa: F401 (re-exported)
 
 log = logging.getLogger(__name__)
@@ -101,38 +101,16 @@ def _iso(dt: datetime | None) -> str | None:
     return dt.isoformat() if dt else None
 
 
-def _well_formed(p: Any) -> bool:
-    """A Parsed whose fields have the types the shared rules below rely on."""
-    return (isinstance(p, Parsed) and isinstance(p.title, str) and isinstance(p.url, str)
-            and isinstance(p.org, str) and isinstance(p.description, str)
-            and all(d is None or (isinstance(d, datetime) and d.tzinfo is not None)
-                    for d in (p.starts_at, p.ends_at, p.deadline))
-            and isinstance(p.tags, list) and isinstance(p.type_hints, set))
-
-
-def _extract(fn: "extract.Extractor | extract.ExtractorError", raw: dict, source) -> list[Parsed]:
-    """Run one extractor; every failure comes back as ExtractorError. It gets a copy of
-    the source, so patched code can't change what later scans fetch."""
-    if isinstance(fn, extract.ExtractorError):
-        raise fn
-    try:
-        parsed = fn(raw, source.model_copy(deep=True))
-    except Exception as e:  # patchable code: its failure must stay with its own sources
-        raise extract.ExtractorError(f"{source.kind}.py: {type(e).__name__}: {e}") from e
-    if not isinstance(parsed, list) or not all(_well_formed(p) for p in parsed):
-        raise extract.ExtractorError(f"{source.kind}.py: extract() must return a list of Parsed "
-                                     "(str fields, timezone-aware datetimes or None, list tags, set type_hints)")
-    return parsed
-
-
 def normalize(raw_items: list[dict], now: datetime, lookup=sources_mod.by_id,
-              load=extract.load) -> NormalizeResult:
-    """Dataset items from one or more scans → deduped (by url) Radar items."""
+              runner=extract.run_isolated) -> NormalizeResult:
+    """Dataset items from one or more scans → deduped (by url) Radar items.
+    `runner` executes the extractors (by default in a separate process; see extract.py)."""
     items: dict[str, RadarItem] = {}
     result = NormalizeResult(items=[], per_source=Counter(), skipped=Counter())
-    extractors: dict[str, extract.Extractor | extract.ExtractorError] = {}
     scraped_at = now.isoformat()
 
+    pending: list[tuple[dict, Source, str]] = []
+    batches: extract.Batches = {}
     for raw in raw_items:
         source = lookup(raw.get("sourceId") or "")
         campus = raw.get("campus")
@@ -144,17 +122,16 @@ def normalize(raw_items: list[dict], now: datetime, lookup=sources_mod.by_id,
             result.skipped["fetch_failed"] += 1
             result.fetch_failed[source.id] += 1
             continue
-        if source.kind not in extractors:
-            try:
-                extractors[source.kind] = load(source.kind)
-            except extract.ExtractorError as e:
-                extractors[source.kind] = e
-        try:
-            parsed = _extract(extractors[source.kind], raw, source)
-        except extract.ExtractorError as e:
+        pending.append((raw, source, campus))
+        batches.setdefault(source.kind, []).append((raw, source))
+
+    outputs = {kind: iter(results) for kind, results in runner(batches).items()}
+    for raw, source, campus in pending:
+        parsed = next(outputs[source.kind])
+        if isinstance(parsed, extract.ExtractorError):
             result.skipped["extractor_error"] += 1
-            result.errors[source.id] = str(e)
-            log.warning("radar: extractor failed for %s: %s", source.id, e)
+            result.errors[source.id] = str(parsed)
+            log.warning("radar: extractor failed for %s: %s", source.id, parsed)
             continue
         result.parsed[source.id] += len(parsed)
         for p in parsed:

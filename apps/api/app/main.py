@@ -1,4 +1,6 @@
+import ctypes
 import logging
+import sys
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -12,6 +14,19 @@ from app.services.claude_limits import RateLimited
 from app.services.db import StoreError, StoreNotConfigured
 
 log = logging.getLogger(__name__)
+
+
+def _not_dumpable() -> None:
+    """On Linux, stop other processes running as this user (an extractor worker, or Droid
+    if it ever shares the user) from reading this process's keys via /proc/<pid>/environ."""
+    if sys.platform.startswith("linux"):
+        try:
+            ctypes.CDLL(None, use_errno=True).prctl(4, 0, 0, 0, 0)  # PR_SET_DUMPABLE = 4
+        except (OSError, AttributeError) as e:
+            log.warning("could not mark the API process non-dumpable: %s", e)
+
+
+_not_dumpable()
 
 app = FastAPI(title=f"{APP_NAME} API")
 
