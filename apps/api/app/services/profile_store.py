@@ -72,3 +72,10 @@ def confirmed_courses(profile_id: str, transport: httpx.BaseTransport | None = N
         "order": "term,prefix,number",
     })
     return [Course(**row) for row in res.json()]
+
+
+def list_profiles(campus: str, limit: int = 200, transport: httpx.BaseTransport | None = None) -> list[Profile]:
+    """Newest first; the agent ranks and alerts for each of these on its runs."""
+    res = _call(transport, "GET", "/profiles", params={
+        "select": PROFILE_COLUMNS, "campus": f"eq.{campus}", "order": "created_at.desc", "limit": str(limit)})
+    return [Profile(**row) for row in res.json()]

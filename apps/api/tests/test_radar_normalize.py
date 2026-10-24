@@ -6,6 +6,7 @@ from pathlib import Path
 
 import pytest
 
+from app.services.radar import extract
 from app.services.radar import normalize as n
 from app.services.radar import sources
 
@@ -23,6 +24,11 @@ def result(dataset):
     return n.normalize(dataset, SCRAPED)
 
 
+def in_process(load):
+    """Run injected test extractors in this process (the default runs them isolated)."""
+    return lambda batches: extract.run_in_process(batches, load)
+
+
 def by_url(result, url):
     return next(i for i in result.items if i.url == url)
 
@@ -34,7 +40,7 @@ def test_sources_file_is_valid():
     every = [s for group in data.campuses.values() for s in group] + data.shared
     assert len({s.id for s in every}) == len(every)
     assert all(s.url.scheme == "https" for s in every)
-    assert all(s.kind in n.PARSERS for s in every)
+    assert all(callable(extract.load(s.kind)) for s in every)  # every kind has a loadable extractor
     assert sources.by_id("mlh-2027-california") in sources.for_campus("sjsu")
     assert sources.by_id("nope") is None
 
@@ -157,3 +163,96 @@ def test_rss_xml_bombs_are_refused():
             "<rss><channel><item><title>&b;</title></item></channel></rss>")
     raw = {"sourceId": "sjsu-club-events", "campus": "sjsu", "text": bomb}
     assert n.normalize([raw], SCRAPED).items == []
+
+
+@pytest.mark.parametrize("url,ok", [
+    ("https://events.sjsu.edu/event/x", True),
+    ("http://example.com", True),
+    ("HTTPS://Example.com/a", True),
+    ("javascript:alert(1)", False),
+    ("data:text/html,<script>alert(1)</script>", False),
+    ("JavaScript://example.com/%0aalert(1)", False),
+    ("/relative/path", False),
+    ("//example.com/no-scheme", False),
+    ("https:///no-host", False),
+    ("https://exa mple.com", False),
+    ("https://example.com/\njavascript:alert(1)", False),
+    ("https://example.com/\x00", False),
+    ("https://[::1", False),
+    ("ftp://example.com", False),
+    (None, False),
+])
+def test_is_http_url(url, ok):
+    assert extract.is_http_url(url) is ok
+
+
+def test_non_http_urls_are_dropped(dataset):
+    raw = json.loads(json.dumps(next(r for r in dataset if r["sourceId"] == "berkeley-devpost")))
+    hacks = raw["json"]["hackathons"]
+    hacks[0]["url"] = "javascript:alert(document.cookie)"
+    res = n.normalize([raw], SCRAPED)
+    assert all(extract.is_http_url(i.url) for i in res.items)
+    assert "javascript:alert(document.cookie)" not in {i.url for i in res.items}
+    assert res.skipped["missing_title_or_url"] >= 1
+
+
+def test_reports_parsed_counts_and_fetch_failures_per_source(dataset):
+    failed = {"sourceId": "berkeley-devpost", "campus": "berkeley", "#error": True}
+    res = n.normalize([r for r in dataset if r["sourceId"] != "berkeley-devpost"] + [failed], SCRAPED)
+    assert res.parsed["sjsu-events-ai-tech"] > 0
+    assert res.fetched["berkeley-devpost"] == res.fetch_failed["berkeley-devpost"] == 1
+    assert res.parsed["berkeley-devpost"] == 0 and res.errors == {}
+
+
+def test_a_broken_extractor_fails_only_its_own_sources(dataset):
+    def load(kind):
+        if kind == "localist":
+            raise extract.ExtractorError("localist.py: syntax error on line 3: invalid syntax")
+        return extract.load(kind)
+
+    res = n.normalize(dataset, SCRAPED, runner=in_process(load))
+    assert set(res.errors) == {"sjsu-events-ai-tech"} and "syntax error" in res.errors["sjsu-events-ai-tech"]
+    assert res.parsed["sjsu-events-ai-tech"] == 0 and res.skipped["extractor_error"] == 1
+    assert res.per_source["berkeley-devpost"] > 0 and res.per_source["sjsu-club-events"] > 0
+
+
+def test_extractor_exceptions_and_bad_returns_are_contained(dataset):
+    def load(kind):
+        if kind == "devpost":
+            return lambda raw, source: [{"title": "not a Parsed"}]
+        if kind == "localist":
+            return lambda raw, source: {}["missing"]
+        return extract.load(kind)
+
+    res = n.normalize(dataset, SCRAPED, runner=in_process(load))
+    assert "must return a list of Parsed" in res.errors["berkeley-devpost"]
+    assert "KeyError" in res.errors["sjsu-events-ai-tech"]
+    assert res.per_source["sjsu-club-events"] > 0
+
+
+def test_extractors_get_a_copy_of_the_source(dataset):
+    def load(kind):
+        def extract_(raw, source):
+            source.tags.append("tampered")  # a list mutation, which the AST guard allows
+            return []
+        return extract_
+
+    n.normalize(dataset, SCRAPED, runner=in_process(load))
+    assert all("tampered" not in s.tags for s in sources.load().campuses["sjsu"])
+
+
+@pytest.mark.parametrize("bad", [
+    {"starts_at": "2026-10-30"},  # a string where a datetime belongs
+    {"deadline": datetime(2026, 10, 30)},  # naive datetime
+    {"tags": "ai"},
+    {"title": None},
+])
+def test_malformed_parsed_fields_fail_only_that_source(dataset, bad):
+    def load(kind):
+        if kind == "localist":
+            return lambda raw, source: [extract.Parsed(**{"title": "t", "url": "https://x.org", **bad})]
+        return extract.load(kind)
+
+    res = n.normalize(dataset, SCRAPED, runner=in_process(load))
+    assert "must return a list of Parsed" in res.errors["sjsu-events-ai-tech"]
+    assert res.per_source["sjsu-club-events"] > 0

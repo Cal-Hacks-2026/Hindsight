@@ -255,7 +255,7 @@ type AgentEvent = { run_id: string; kind: "plan" | "step" | "diff" | "result" | 
 | Track | Their criteria | How we satisfy it |
 |---|---|---|
 | **Anthropic** | Named community; real lived problem; works Monday; thoughtful Claude use incl. where it could go wrong | Community = CA CC transfers. Founder lived it. Deterministic matching + citations + human-confirmed transcript = our failure-mode story |
-| **Factory Droid SDK** | Droid does real work in the running product on a designed trigger; scoped permissions with safety; visible plans/steps/diffs; README explains where/how. Scores poorly: chatbot wrapper, slides-only, invisible agent | Droid runs on a **schedule** (and on new profile) → runs campus scans → matches → writes alerts. **Self-healing:** if a scraper breaks, Droid patches it, permission-scoped to `apps/actor/` only, and the diff shows in `/agent`. README section required |
+| **Factory Droid SDK** | Droid does real work in the running product on a designed trigger; scoped permissions with safety; visible plans/steps/diffs; README explains where/how. Scores poorly: chatbot wrapper, slides-only, invisible agent | Droid runs on a **schedule** (and on new profile) → runs campus scans → matches → writes alerts. **Self-healing:** if a scraper breaks, Droid patches it, permission-scoped to `apps/api/app/services/radar/extractors/` only (DECISIONS.md D-003, D-006), and the diff shows in `/agent`. README section required |
 | **Apify** | Meaningful use; top 5 projects + **Best Actor** for an Actor built for the event | Custom campus Actor is the Radar's data source; published to Apify Store |
 | **Figma** | TBD (check the Figma track doc / booth) | All screens designed in Figma first (Figma Agent), files kept clean and linked in Devpost |
 

@@ -4,18 +4,11 @@ Every value here is fake and is replaced in Phase 1–3 (see PHASES.md).
 Labels are prefixed "MOCK" so nothing here can pass as a real claim.
 """
 
-from datetime import datetime, timezone
-
 from app.models import (
-    AgentEvent,
     Course,
     Semester,
     SemesterCourse,
 )
-
-
-def now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
 
 
 def transcript_courses() -> list[Course]:
@@ -53,12 +46,3 @@ def plan() -> list[Semester]:
     ]
 
 
-def agent_events(run_id: str) -> list[AgentEvent]:
-    t = now_iso()
-    return [
-        AgentEvent(run_id=run_id, kind="plan", message="MOCK · Scan SJSU sources, rank, write alerts",
-                   payload={"sources": 3}, created_at=t),
-        AgentEvent(run_id=run_id, kind="step", message="MOCK · Ran campus Actor", created_at=t),
-        AgentEvent(run_id=run_id, kind="result", message="MOCK · 2 new opportunities, 1 alert",
-                   payload={"new": 2, "alerts": 1}, created_at=t),
-    ]

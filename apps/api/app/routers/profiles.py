@@ -1,5 +1,6 @@
 import json
 import logging
+import uuid
 
 from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, Query, Response, UploadFile
 from fastapi.concurrency import run_in_threadpool
@@ -19,7 +20,7 @@ from app.models import (
     RankedOpportunity,
     UpdateCoursesRequest,
 )
-from app.services import claude_limits, counselor, planner, profile_store, transcript
+from app.services import agent_client, claude_limits, counselor, planner, profile_store, transcript
 from app.services.assist import AssistError, AssistNotFound, get_service
 from app.services.assist import limits as assist_limits
 from app.services.db import StoreError
@@ -41,8 +42,11 @@ def _get_profile(profile_id: str) -> Profile:
 
 
 @router.post("", response_model=ProfileResponse)
-def create_profile(body: CreateProfileRequest) -> ProfileResponse:
-    return ProfileResponse(profile=profile_store.create_profile(body))
+def create_profile(body: CreateProfileRequest, background: BackgroundTasks) -> ProfileResponse:
+    profile = profile_store.create_profile(body)
+    # Trigger: a new profile gets its own Droid run (rank + alerts) once the response is sent.
+    background.add_task(agent_client.start_run, str(uuid.uuid4()), profile.campus, "profile_created", profile.id)
+    return ProfileResponse(profile=profile)
 
 
 @router.get("/{profile_id}", response_model=ProfileResponse)
