@@ -1,0 +1,123 @@
+{
+  "version": 1,
+  "verified_on": "2026-10-24",
+  "notes": "Campus Radar sources (PROJECT.md §8.3). Every url was fetched and returned real, current listings on verified_on. `url` is what the Apify Cheerio Scraper fetches; `homepage` is the human-facing page it mirrors. `kind` picks the parser in apps/api/app/services/radar/normalize.py. Sources under `shared` are scanned with every campus.",
+  "campuses": {
+    "sjsu": [
+      {
+        "id": "sjsu-events-ai-tech",
+        "name": "SJSU Events: Artificial Intelligence + Science and Technology",
+        "kind": "localist",
+        "url": "https://events.sjsu.edu/api/2/events?type%5B%5D=45325508707422&type%5B%5D=32174662713644&days=90&pp=100&distinct=true",
+        "homepage": "https://events.sjsu.edu/",
+        "org": "San José State University",
+        "tags": ["ai", "tech"]
+      },
+      {
+        "id": "sjsu-events-workshops",
+        "name": "SJSU Events: Conferences, Training, Workshops",
+        "kind": "localist",
+        "url": "https://events.sjsu.edu/api/2/events?type%5B%5D=32174659381001&days=60&pp=100&distinct=true",
+        "homepage": "https://events.sjsu.edu/",
+        "org": "San José State University",
+        "tags": ["workshop"]
+      },
+      {
+        "id": "sjsu-events-career",
+        "name": "SJSU Events: Professional Development + Info Sessions and Fairs",
+        "kind": "localist",
+        "url": "https://events.sjsu.edu/api/2/events?type%5B%5D=32174662715051&type%5B%5D=48801459064507&days=60&pp=100&distinct=true",
+        "homepage": "https://events.sjsu.edu/",
+        "org": "San José State University",
+        "tags": ["career"]
+      },
+      {
+        "id": "sjsu-club-events",
+        "name": "SAMMY App (SJSU student organizations) event feed",
+        "kind": "campusgroups_rss",
+        "url": "https://sammyapp.sjsu.edu/rss_events",
+        "homepage": "https://sammyapp.sjsu.edu/events",
+        "org": "SJSU student organizations",
+        "tags": ["clubs"]
+      },
+      {
+        "id": "sjsu-devpost",
+        "name": "Devpost: open and upcoming hackathons matching \"San Jose\"",
+        "kind": "devpost",
+        "url": "https://devpost.com/api/hackathons?search=san%20jose&status%5B%5D=upcoming&status%5B%5D=open",
+        "homepage": "https://devpost.com/hackathons",
+        "org": "Devpost",
+        "tags": ["hackathon"]
+      }
+    ],
+    "berkeley": [
+      {
+        "id": "berkeley-events-ai",
+        "name": "UC Berkeley Events: search \"artificial intelligence\"",
+        "kind": "livewhale",
+        "url": "https://events.berkeley.edu/live/json/events/search/artificial%20intelligence/response_fields/summary,tags,event_types,group_title",
+        "homepage": "https://events.berkeley.edu/",
+        "org": "UC Berkeley",
+        "tags": ["ai"]
+      },
+      {
+        "id": "berkeley-events-data-science",
+        "name": "UC Berkeley Events: search \"data science\"",
+        "kind": "livewhale",
+        "url": "https://events.berkeley.edu/live/json/events/search/data%20science/response_fields/summary,tags,event_types,group_title",
+        "homepage": "https://events.berkeley.edu/",
+        "org": "UC Berkeley",
+        "tags": ["data science"]
+      },
+      {
+        "id": "berkeley-events-machine-learning",
+        "name": "UC Berkeley Events: search \"machine learning\"",
+        "kind": "livewhale",
+        "url": "https://events.berkeley.edu/live/json/events/search/machine%20learning/response_fields/summary,tags,event_types,group_title",
+        "homepage": "https://events.berkeley.edu/",
+        "org": "UC Berkeley",
+        "tags": ["machine learning"]
+      },
+      {
+        "id": "berkeley-events-entrepreneurship",
+        "name": "UC Berkeley Events: search \"entrepreneurship\"",
+        "kind": "livewhale",
+        "url": "https://events.berkeley.edu/live/json/events/search/entrepreneurship/response_fields/summary,tags,event_types,group_title",
+        "homepage": "https://events.berkeley.edu/",
+        "org": "UC Berkeley",
+        "tags": ["entrepreneurship"]
+      },
+      {
+        "id": "berkeley-events-hackathon",
+        "name": "UC Berkeley Events: search \"hackathon\"",
+        "kind": "livewhale",
+        "url": "https://events.berkeley.edu/live/json/events/search/hackathon/response_fields/summary,tags,event_types,group_title",
+        "homepage": "https://events.berkeley.edu/",
+        "org": "UC Berkeley",
+        "tags": ["hackathon"]
+      },
+      {
+        "id": "berkeley-devpost",
+        "name": "Devpost: open and upcoming hackathons matching \"Berkeley\"",
+        "kind": "devpost",
+        "url": "https://devpost.com/api/hackathons?search=berkeley&status%5B%5D=upcoming&status%5B%5D=open",
+        "homepage": "https://devpost.com/hackathons",
+        "org": "Devpost",
+        "tags": ["hackathon"]
+      }
+    ]
+  },
+  "shared": [
+    {
+      "id": "mlh-2027-california",
+      "name": "MLH 2027 season: hackathons in California",
+      "kind": "mlh_season",
+      "url": "https://www.mlh.com/seasons/2027/events",
+      "homepage": "https://www.mlh.com/seasons/2027/events",
+      "org": "Major League Hacking",
+      "tags": ["hackathon", "mlh"],
+      "json_selector": "script[data-page=app]",
+      "location_contains": ["California"]
+    }
+  ]
+}

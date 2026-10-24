@@ -1,0 +1,625 @@
+[
+ {
+  "url": "https://events.sjsu.edu/api/2/events?type%5B%5D=45325508707422&days=90&pp=100&distinct=true",
+  "loadedUrl": "https://events.sjsu.edu/api/2/events?type%5B%5D=45325508707422&days=90&pp=100&distinct=true",
+  "sourceId": "sjsu-events-ai-tech",
+  "campus": "sjsu",
+  "contentType": "application/json",
+  "#error": false,
+  "json": {
+   "events": [
+    {
+     "event": {
+      "id": 53435958294797,
+      "title": "Open Lab Hours at AI Center for Civic and Social Good",
+      "url": "https://sjlibrary.org/aicenter",
+      "updated_at": "2026-10-23T17:39:02-07:00",
+      "created_at": "2026-07-15T11:18:50-07:00",
+      "facebook_id": null,
+      "first_date": "2026-07-15",
+      "last_date": "2026-12-17",
+      "hashtag": "SJSUAI",
+      "urlname": "open-lab-ai-center",
+      "user_id": 52896262384191,
+      "directions": null,
+      "allows_reviews": true,
+      "allows_attendance": true,
+      "location": "",
+      "room_number": "Room 125, AI Center for Civic and Social Good",
+      "location_name": "King Library",
+      "status": "live",
+      "experience": "inperson",
+      "stream_url": null,
+      "stream_info": null,
+      "stream_embed_code": null,
+      "created_by": 52896262384191,
+      "updated_by": 54319988424005,
+      "conference_event_id": null,
+      "kind": "standalone",
+      "address": "150 E San Fernando St, San Jose, CA 95112",
+      "school_id": 31149777688070,
+      "campus_id": null,
+      "recurring": true,
+      "free": false,
+      "private": false,
+      "verified": true,
+      "rejected": false,
+      "sponsored": false,
+      "venue_id": 31617969846877,
+      "ticket_url": "",
+      "ticket_cost": "",
+      "has_register": false,
+      "keywords": [],
+      "tags": [
+       "event",
+       "sjsu_sjpl",
+       "kinglibrary_AI"
+      ],
+      "description": "<p>Drop in, explore, and create! During Open Lab Hours, SJSU students, faculty, staff, and SJPL library members are welcome to discover cutting-edge AI tools, experiment with new technologies, and bring their ideas to life.</p>\r\n\r\n<p>Whether you&#39;re working on a class assignment, building a passion project, supporting your community, or simply curious about AI, we&#39;ve got the resources to help you get started.</p>\r\n\r\n<p>What you&#39;ll find:<br />\r\n&bull; State-of-the-art computers and powerful AI software<br />\r\n&bull; Responsible AI tools for academic, public service, and community projects<br />\r\n&bull; Collaborative workspaces for individuals and small groups<br />\r\n&bull; Open access for anyone with a valid SJSU Tower Card or SJPL Library Card</p>\r\n\r\n<p>Come learn, create, collaborate, and see what&#39;s possible with AI!</p>\r\n",
+      "description_text": "Drop in, explore, and create! During Open Lab Hours, SJSU students, faculty, staff, and SJPL library members are welcome to discover cutting-edge AI tools, experiment with new technologies, and bring their ideas to life.\n\nWhether you're working on a class assignment, building a passion project, supporting your community, or simply curious about AI, we've got the resources to help you get started.\n\nWhat you'll find:\n• State-of-the-art computers and powerful AI software\n• Responsible AI tools for academic, public service, and community projects\n• Collaborative workspaces for individuals and small groups\n• Open access for anyone with a valid SJSU Tower Card or SJPL Library Card\n\nCome learn, create, collaborate, and see what's possible with AI!",
+      "photo_id": 53435958399298,
+      "speaker_ids": [],
+      "feedback_enabled": true,
+      "feedback_goal_ids": [
+       36157712329674,
+       36157732300761,
+       36157741711873,
+       36157754951232
+      ],
+      "featured_section_ids": [],
+      "detail_views": 2089,
+      "featured": false,
+      "publish_status": "published",
+      "geo": {
+       "latitude": "37.335691",
+       "longitude": "-121.885256",
+       "street": "150 East San Fernando Street",
+       "city": "San Jose",
+       "state": "CA",
+       "country": "US",
+       "zip": "95112"
+      },
+      "groups": [
+       {
+        "id": 51163940710311,
+        "name": "Dr. Martin Luther King Jr. Library"
+       }
+      ],
+      "departments": [
+       {
+        "id": 51225486841102,
+        "name": "Dr. Martin Luther King Jr. Library"
+       }
+      ],
+      "filters": {
+       "event_target_audience": [
+        {
+         "name": "Alumni",
+         "id": 32174665160306
+        },
+        {
+         "name": "SJSU Employees",
+         "id": 32174665163519
+        },
+        {
+         "name": "General Public",
+         "id": 32174665165098
+        },
+        {
+         "name": "Students",
+         "id": 51190117661255
+        },
+        {
+         "name": "Prospective Students",
+         "id": 32174665167030
+        },
+        {
+         "name": "Current Students",
+         "id": 32174665168187
+        },
+        {
+         "name": "Faculty",
+         "id": 43731624500269
+        },
+        {
+         "name": "Staff",
+         "id": 43731749012066
+        },
+        {
+         "name": "Undergraduate Students",
+         "id": 51190117664328
+        },
+        {
+         "name": "Graduate Students",
+         "id": 51190117666377
+        },
+        {
+         "name": "Students and Families",
+         "id": 51190117669450
+        },
+        {
+         "name": "Donors",
+         "id": 51190120043034
+        }
+       ],
+       "event_time_zone": [
+        {
+         "name": "Pacific Time (UTC-08:00)",
+         "id": 50524445679190
+        }
+       ],
+       "event_topic": [
+        {
+         "name": "Science and Technology",
+         "id": 32174662713644
+        },
+        {
+         "name": "Artificial Intelligence",
+         "id": 45325508707422
+        },
+        {
+         "name": "Humanities",
+         "id": 51163650177295
+        },
+        {
+         "name": "Digital Humanities",
+         "id": 51163650181393
+        }
+       ],
+       "event_types": [
+        {
+         "name": "Visitors and Tourism",
+         "id": 32174659387613
+        },
+        {
+         "name": "Info Sessions, Fairs and Events",
+         "id": 48801459064507
+        }
+       ]
+      },
+      "custom_fields": {},
+      "event_instances": [
+       {
+        "event_instance": {
+         "id": 53436243996341,
+         "event_id": 53435958294797,
+         "start": "2026-10-26T09:00:00-07:00",
+         "end": "2026-10-26T13:00:00-07:00",
+         "ranking": 0.05,
+         "all_day": false,
+         "num_attending": 0
+        }
+       }
+      ],
+      "localist_url": "https://events.sjsu.edu/event/open-lab-ai-center",
+      "localist_ics_url": "https://events.sjsu.edu/event/open-lab-ai-center.ics",
+      "photo_url": "https://localist-images.azureedge.net/photos/53435958399298/huge/4141403c3ab7f1f25bd9d89e27fe38e158b7d182.jpg",
+      "photo_caption": "AI Center for Civic and Social Good; Interior photo of desks and chairs ",
+      "venue_url": "https://events.sjsu.edu/king"
+     }
+    },
+    {
+     "event": {
+      "id": 54295766186420,
+      "title": "What Makes AI Scary? A dialogue event for SJSU students",
+      "url": "https://docs.google.com/forms/d/e/1FAIpQLScsBlcEpCFUD1QlU6VvIzCjojFN5tSpdGpcQG6vBZeEg3tbKw/viewform?usp=header",
+      "updated_at": "2026-10-23T04:58:07-07:00",
+      "created_at": "2026-10-20T15:41:31-07:00",
+      "facebook_id": null,
+      "first_date": "2026-10-29",
+      "last_date": "2026-10-29",
+      "hashtag": "AI-dialogue",
+      "urlname": "what-makes-ai-scary-a-dialogue-event-for-ai-students",
+      "user_id": 38397061821371,
+      "directions": "",
+      "allows_reviews": true,
+      "allows_attendance": true,
+      "location": "ISB",
+      "room_number": "870",
+      "location_name": "ISB",
+      "status": "live",
+      "experience": "inperson",
+      "stream_url": null,
+      "stream_info": null,
+      "stream_embed_code": null,
+      "created_by": 38397061821371,
+      "updated_by": 38397061821371,
+      "conference_event_id": null,
+      "kind": "standalone",
+      "address": "",
+      "school_id": 31149777688070,
+      "campus_id": null,
+      "recurring": false,
+      "free": false,
+      "private": false,
+      "verified": true,
+      "rejected": false,
+      "sponsored": false,
+      "venue_id": null,
+      "ticket_url": "",
+      "ticket_cost": "",
+      "has_register": false,
+      "keywords": [],
+      "tags": [],
+      "description": "<p>Are you haunted by the specter of computers with super-human intelligence who might not wish humans well? Worried that ChatGPT might be a monkeypaw granting wishes that turn out to be cursed? &nbsp;Scared that you&#39;re the only SJSU student who feels the way you do about AI products (no mattter how that is you&#39;re feeling)?</p>\n\n<p><b>Join us to explore the things that makes AI scary while you learn how to engage in dialogue (not debate) with other SJSU students. &nbsp;Whatever your feelings about AI, your voice is welcome in this dialogue!</b></p>\n\n<p>Please RSVP at&nbsp;<a href=\"https://docs.google.com/forms/d/e/1FAIpQLScsBlcEpCFUD1QlU6VvIzCjojFN5tSpdGpcQG6vBZeEg3tbKw/viewform?usp=header\">https://docs.google.com/forms/d/e/1FAIpQLScsBlcEpCFUD1QlU6VvIzCjojFN5tSpdGpcQG6vBZeEg3tbKw/viewform?usp=header</a></p>\n\n<p>Questions? Email Janet Stemwedel (janet.stemwedel@sjsu.edu)</p>\n\n<p><i>Supported by a College of Humanities &amp; the Arts Aristic Excellence Programming Grant</i></p>\n",
+      "description_text": "Are you haunted by the specter of computers with super-human intelligence who might not wish humans well? Worried that ChatGPT might be a monkeypaw granting wishes that turn out to be cursed?  Scared that you're the only SJSU student who feels the way you do about AI products (no mattter how that is you're feeling)?\n\nJoin us to explore the things that makes AI scary while you learn how to engage in dialogue (not debate) with other SJSU students.  Whatever your feelings about AI, your voice is welcome in this dialogue!\n\nPlease RSVP at https://docs.google.com/forms/d/e/1FAIpQLScsBlcEpCFUD1QlU6VvIzCjojFN5tSpdGpcQG6vBZeEg3tbKw/viewform?usp=header\n\nQuestions? Email Janet Stemwedel (janet.stemwedel@sjsu.edu)\n\nSupported by a College of Humanities & the Arts Aristic Excellence Programming Grant",
+      "photo_id": 54295766319551,
+      "speaker_ids": [],
+      "feedback_enabled": false,
+      "feedback_goal_ids": [],
+      "featured_section_ids": [],
+      "detail_views": 28,
+      "featured": false,
+      "publish_status": "published",
+      "geo": {
+       "latitude": null,
+       "longitude": null,
+       "street": null,
+       "city": null,
+       "state": null,
+       "country": null,
+       "zip": null
+      },
+      "groups": [
+       {
+        "id": 53612480373202,
+        "name": "Artificial Intelligence"
+       },
+       {
+        "id": 51190252869120,
+        "name": "College of Humanities and the Arts"
+       }
+      ],
+      "departments": [
+       {
+        "id": 47384753833114,
+        "name": "Future of Humanity and Civic Engagement"
+       },
+       {
+        "id": 47492250303250,
+        "name": "H & A Passports"
+       },
+       {
+        "id": 31618340092887,
+        "name": "Philosophy"
+       }
+      ],
+      "filters": {
+       "event_target_audience": [
+        {
+         "name": "Students",
+         "id": 51190117661255
+        },
+        {
+         "name": "Current Students",
+         "id": 32174665168187
+        }
+       ],
+       "event_topic": [
+        {
+         "name": "Science and Technology",
+         "id": 32174662713644
+        },
+        {
+         "name": "Artificial Intelligence",
+         "id": 45325508707422
+        },
+        {
+         "name": "Humanities",
+         "id": 51163650177295
+        },
+        {
+         "name": "Intellectual Discourse",
+         "id": 51323764080371
+        }
+       ],
+       "event_types": [
+        {
+         "name": "Conferences, Training, Workshops",
+         "id": 32174659381001
+        }
+       ]
+      },
+      "custom_fields": {},
+      "event_instances": [
+       {
+        "event_instance": {
+         "id": 54295766187445,
+         "event_id": 54295766186420,
+         "start": "2026-10-29T15:00:00-07:00",
+         "end": "2026-10-29T16:30:00-07:00",
+         "ranking": 0.33,
+         "all_day": false,
+         "num_attending": 1
+        }
+       }
+      ],
+      "localist_url": "https://events.sjsu.edu/event/what-makes-ai-scary-a-dialogue-event-for-ai-students",
+      "localist_ics_url": "https://events.sjsu.edu/event/what-makes-ai-scary-a-dialogue-event-for-ai-students.ics",
+      "photo_url": "https://localist-images.azureedge.net/photos/54295766319551/huge/256463f7c2f35f6dba30bbd234b366c61000b573.jpg",
+      "photo_caption": "Black gothic letters on a spooky red background, reading \"What makes AI scary? A dialogue event for SJSU students\""
+     }
+    }
+   ],
+   "page": {
+    "current": 1,
+    "size": 100,
+    "total": 1,
+    "total_items": 4,
+    "next_page": null,
+    "previous_page": null
+   }
+  }
+ },
+ {
+  "url": "https://sammyapp.sjsu.edu/rss_events",
+  "loadedUrl": "https://sammyapp.sjsu.edu/rss_events",
+  "sourceId": "sjsu-club-events",
+  "campus": "sjsu",
+  "contentType": "text/xml",
+  "#error": false,
+  "text": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<rss version=\"2.0\" xmlns:cg=\"https://www.campusgroups.com/rss_calendar\">\r\n\t<channel>\r\n\t\t<title>sjsu Events</title>\r\n\t\t<link>https://sammyapp.sjsu.edu/events</link>\r\n\t\t<description>Events calendar for sjsu</description>\r\n\t\t<pubDate>Sat, 24 Oct 2026 04:46:00 +0000</pubDate>\r\n\t\t<generator>https://www.campusgroups.com</generator>\r\n\t\t<language>en</language>\r\n\t\t<item>\r\n\t\t\t<eventId>379796</eventId>\r\n\t\t\t<eventUid>688cbf2f7fad786686a2c6107205bd99</eventUid>\r\n\t\t\t<groupId>35663</groupId>\r\n\t\t\t<group>Network Engineering Technology Society</group>\r\n\t\t\t<coHostedGroupIds deprecated=\"deprecated\">Association of Technology, Management, and Applied Engineering (ATMAE),Epsilon Pi Tau,Responsible Computing Club,Theta Tau</coHostedGroupIds>\r\n\t\t\t<groupType>Recognized Student Organization</groupType>\r\n\t\t\t<groupAcronym>NETS</groupAcronym>\r\n\t\t\t<eventDate>10/24/2026</eventDate>\r\n\t\t\t<eventEndDate>10/24/2026</eventEndDate>\r\n\t\t\t<eventTime>7:00am</eventTime>\r\n\t\t\t<eventEndTime>5:30pm</eventEndTime>\r\n\t\t\t<locale></locale>\r\n\t\t\t<title>Sparthill Hackathon 2026 Day #2</title>\r\n\t\t\t<description>Join students from across the Bay Area for a 30-hour+ interdisciplinary hackathon focused on using AI to solve real-world sustainability challenges.&#xD;&#xA; 5 Impact Tracks choose your challenge, collaborate with your team, and build solutions for a more sustainable future.&#xD;&#xA;What you&apos;ll  “Experience”&#xD;&#xA;&#xD;&#xA; AI &amp; Sustainability Challenges&#xD;&#xA; Build innovative solutions to real-world problems.&#xD;&#xA;&#xD;&#xA; Wor...</description>\r\n\t\t\t<fullDescription>Join students from across the Bay Area for a 30-hour+ interdisciplinary hackathon focused on using AI to solve real-world sustainability challenges.&#xD;&#xA; 5 Impact Tracks choose your challenge, collaborate with your team, and build solutions for a more sustainable future.&#xD;&#xA;What you&apos;ll  “Experience”&#xD;&#xA;&#xD;&#xA; AI &amp; Sustainability Challenges&#xD;&#xA; Build innovative solutions to real-world problems.&#xD;&#xA;&#xD;&#xA; Workshops &amp; Mentorship&#xD;&#xA; Learn from industry professionals and technical experts.&#xD;&#xA;&#xD;&#xA; Network &amp; Collaborate&#xD;&#xA; Connect with students, sponsors, and industry partners.&#xD;&#xA;&#xD;&#xA; Showcase &amp; Compete&#xD;&#xA; Present your project and compete for prizes.</fullDescription>\r\n\t\t\t<eventPhoto>/upload/sjsu/2025/e3_image_upload_600119_IMG_4140_819193851.jpeg</eventPhoto>\r\n\t\t\t<eventPhotoAltText></eventPhotoAltText>\r\n\t\t\t<eventPhotoFullUrl>https://sammyapp.sjsu.edu/upload/sjsu/2025/e3_image_upload_600119_IMG_4140_819193851.jpeg</eventPhotoFullUrl>\r\n\t\t\t<eventFlyerFullUrl>https://sammyapp.sjsu.edu/upload/sjsu/2026/e3_image_upload_619410_IMG_0397_4f709362-f118-4111-809e-37731dc851b9_106222944.png</eventFlyerFullUrl>\r\n\t\t\t<iCalLink>https://sammyapp.sjsu.edu/vcal?source=rss_feed&amp;type=ical&amp;school=sjsu&amp;uid=688cbf2f7fad786686a2c6107205bd99</iCalLink>\r\n\t\t\t<eventLink>https://sammyapp.sjsu.edu/NETS/rsvp?id=379796</eventLink>\r\n\t\t\t<eventExternalRegistrationLink></eventExternalRegistrationLink>\r\n\t\t\t<eventType>Workshop</eventType>\r\n\t\t\t<eventTypeId>16709</eventTypeId>\r\n\t\t\t<timeZone>-7</timeZone>\r\n\t\t\t<timeZoneId>Pacific Standard Time</timeZoneId>\r\n\t\t\t<publishLcd>0</publishLcd>\r\n\t\t\t<publishCalendar>0</publishCalendar>\r\n\t\t\t<publishSchoolWebsite>0</publishSchoolWebsite>\r\n\t\t\t<eventLocation>Private Location (sign in to display)</eventLocation>\r\n\t\t\t<locationType>On-Campus</locationType>\r\n\t\t\t<allDayEvent>0</allDayEvent>\r\n\t\t\t<approvalStatus>1</approvalStatus>\r\n\t\t\t<approvalStatus2>2</approvalStatus2>\r\n\t\t\t<eventDelete>0</eventDelete>\r\n\t\t\t<eventTopicIds></eventTopicIds>\r\n\t\t\t<eventTopics></eventTopics>\r\n\t\t\t<eventTopicsSeparated>\r\n\t\t\t</eventTopicsSeparated>\r\n\t\t\t<privacyLevel>0</privacyLevel>\r\n\t\t\t<privacyDisplayedTo>0</privacyDisplayedTo>\r\n\t\t\t<publishOnHome>1</publishOnHome>\r\n\t\t\t<eventStartDateTime>2026-10-24T07:00:00.0000000-07:00</eventStartDateTime>\r\n\t\t\t<eventEndDateTime>2026-10-24T17:30:00.0000000-07:00</eventEndDateTime>\r\n\t\t\t<eventPromoteTo></eventPromoteTo>\r\n\t\t\t<cohostingGroupIds>35484,35555,35708,35798</cohostingGroupIds>\r\n\t\t\t<cohostingGroupNames>Association of Technology, Management, and Applied Engineering (ATMAE),Epsilon Pi Tau,Responsible Computing Club,Theta Tau</cohostingGroupNames>\r\n\t\t\t<link>https://sammyapp.sjsu.edu/NETS/rsvp?id=379796</link>\r\n\t\t\t<category>Workshop</category>\r\n\t\t\t<guid>https://sammyapp.sjsu.edu/NETS/rsvp?id=379796</guid>\r\n\t\t\t<start>Sat, 24 Oct 2026 14:00:00 GMT</start>\r\n\t\t\t<end>Sun, 25 Oct 2026 00:30:00 GMT</end>\r\n\t\t\t<eventOriginalPhotoFullUrl>https://sammyapp.sjsu.edu/upload/sjsu/2025/image_upload_600119_IMG_4140_819193851.jpeg</eventOriginalPhotoFullUrl>\r\n\t\t\t<eventOriginalFlyerFullUrl>https://sammyapp.sjsu.edu/upload/sjsu/2026/image_upload_619410_IMG_0397_4f709362-f118-4111-809e-37731dc851b9_106222944.png</eventOriginalFlyerFullUrl>\r\n\t\t\t<externalRegistrationLink></externalRegistrationLink>\r\n\t\t\t<foodProvided>0</foodProvided>\r\n\t\t\t<attendeesRating></attendeesRating>\r\n\t\t\t<feedbackRequested>1</feedbackRequested>\r\n\t\t\t<attendanceEstimate></attendanceEstimate>\r\n\t\t</item>\n<item>\r\n\t\t\t<eventId>379541</eventId>\r\n\t\t\t<eventUid>cac1e2b8a863700d95b25f0819c7d2ef</eventUid>\r\n\t\t\t<groupId>35715</groupId>\r\n\t\t\t<group>San Jose State Amateur Radio Club</group>\r\n\t\t\t<coHostedGroupIds deprecated=\"deprecated\"></coHostedGroupIds>\r\n\t\t\t<groupType>Recognized Student Organization</groupType>\r\n\t\t\t<groupAcronym>ARC</groupAcronym>\r\n\t\t\t<eventDate>10/27/2026</eventDate>\r\n\t\t\t<eventEndDate>10/27/2026</eventEndDate>\r\n\t\t\t<eventTime>4:30pm</eventTime>\r\n\t\t\t<eventEndTime>5:30pm</eventEndTime>\r\n\t\t\t<locale></locale>\r\n\t\t\t<title>Weekly Club Meeting</title>\r\n\t\t\t<description>ENG 376A</description>\r\n\t\t\t<fullDescription>ENG 376A</fullDescription>\r\n\t\t\t<eventPhoto>/upload/sjsu/2025/e3_image_600213_IMG20250628141505_01_07d9cd4d-2ebc-451b-b1e3-6c2ee443a0cd_717195819.jpg</eventPhoto>\r\n\t\t\t<eventPhotoAltText></eventPhotoAltText>\r\n\t\t\t<eventPhotoFullUrl>https://sammyapp.sjsu.edu/upload/sjsu/2025/e3_image_600213_IMG20250628141505_01_07d9cd4d-2ebc-451b-b1e3-6c2ee443a0cd_717195819.jpg</eventPhotoFullUrl>\r\n\t\t\t<eventFlyerFullUrl></eventFlyerFullUrl>\r\n\t\t\t<iCalLink>https://sammyapp.sjsu.edu/vcal?source=rss_feed&amp;type=ical&amp;school=sjsu&amp;uid=cac1e2b8a863700d95b25f0819c7d2ef</iCalLink>\r\n\t\t\t<eventLink>https://sammyapp.sjsu.edu/ARC/rsvp?id=379541</eventLink>\r\n\t\t\t<eventExternalRegistrationLink></eventExternalRegistrationLink>\r\n\t\t\t<eventType>Meeting</eventType>\r\n\t\t\t<eventTypeId>16698</eventTypeId>\r\n\t\t\t<timeZone>-7</timeZone>\r\n\t\t\t<timeZoneId>Pacific Standard Time</timeZoneId>\r\n\t\t\t<publishLcd>0</publishLcd>\r\n\t\t\t<publishCalendar>0</publishCalendar>\r\n\t\t\t<publishSchoolWebsite>0</publishSchoolWebsite>\r\n\t\t\t<eventLocation>Private Location (sign in to display)</eventLocation>\r\n\t\t\t<locationType>On-Campus</locationType>\r\n\t\t\t<allDayEvent>0</allDayEvent>\r\n\t\t\t<approvalStatus>1</approvalStatus>\r\n\t\t\t<approvalStatus2>2</approvalStatus2>\r\n\t\t\t<eventDelete>0</eventDelete>\r\n\t\t\t<eventTopicIds></eventTopicIds>\r\n\t\t\t<eventTopics></eventTopics>\r\n\t\t\t<eventTopicsSeparated>\r\n\t\t\t</eventTopicsSeparated>\r\n\t\t\t<privacyLevel>0</privacyLevel>\r\n\t\t\t<privacyDisplayedTo>0</privacyDisplayedTo>\r\n\t\t\t<publishOnHome>1</publishOnHome>\r\n\t\t\t<eventStartDateTime>2026-10-27T16:30:00.0000000-07:00</eventStartDateTime>\r\n\t\t\t<eventEndDateTime>2026-10-27T17:30:00.0000000-07:00</eventEndDateTime>\r\n\t\t\t<eventPromoteTo></eventPromoteTo>\r\n\t\t\t<cohostingGroupIds></cohostingGroupIds>\r\n\t\t\t<cohostingGroupNames></cohostingGroupNames>\r\n\t\t\t<link>https://sammyapp.sjsu.edu/ARC/rsvp?id=379541</link>\r\n\t\t\t<category>Meeting</category>\r\n\t\t\t<guid>https://sammyapp.sjsu.edu/ARC/rsvp?id=379541</guid>\r\n\t\t\t<start>Tue, 27 Oct 2026 23:30:00 GMT</start>\r\n\t\t\t<end>Wed, 28 Oct 2026 00:30:00 GMT</end>\r\n\t\t\t<eventOriginalPhotoFullUrl>https://sammyapp.sjsu.edu/upload/sjsu/2025/image_600213_IMG20250628141505_01_07d9cd4d-2ebc-451b-b1e3-6c2ee443a0cd_717195819.jpg</eventOriginalPhotoFullUrl>\r\n\t\t\t<eventOriginalFlyerFullUrl></eventOriginalFlyerFullUrl>\r\n\t\t\t<externalRegistrationLink></externalRegistrationLink>\r\n\t\t\t<foodProvided>0</foodProvided>\r\n\t\t\t<attendeesRating></attendeesRating>\r\n\t\t\t<feedbackRequested>1</feedbackRequested>\r\n\t\t\t<attendanceEstimate></attendanceEstimate>\r\n\t\t</item>\n<item>\r\n\t\t\t<eventId>378598</eventId>\r\n\t\t\t<eventUid>b50a6d96c1775dfa9cf966fc98875040</eventUid>\r\n\t\t\t<groupId>36046</groupId>\r\n\t\t\t<group>Student Union, Inc.</group>\r\n\t\t\t<coHostedGroupIds deprecated=\"deprecated\"></coHostedGroupIds>\r\n\t\t\t<groupType>College/Department/Program</groupType>\r\n\t\t\t<groupAcronym>SUI</groupAcronym>\r\n\t\t\t<eventDate>7/29/2026</eventDate>\r\n\t\t\t<eventEndDate>12/7/2026</eventEndDate>\r\n\t\t\t<eventTime>1:00pm</eventTime>\r\n\t\t\t<eventEndTime>1:00pm</eventEndTime>\r\n\t\t\t<locale></locale>\r\n\t\t\t<title>Event Center Check in</title>\r\n\t\t\t<description>let us know what your up to during your visit</description>\r\n\t\t\t<fullDescription>let us know what your up to during your visit</fullDescription>\r\n\t\t\t<eventPhoto>/upload/sjsu/2025/e3_image_upload_599697_Sammy_App_Card_Image_10201572.png</eventPhoto>\r\n\t\t\t<eventPhotoAltText></eventPhotoAltText>\r\n\t\t\t<eventPhotoFullUrl>https://sammyapp.sjsu.edu/upload/sjsu/2025/e3_image_upload_599697_Sammy_App_Card_Image_10201572.png</eventPhotoFullUrl>\r\n\t\t\t<eventFlyerFullUrl></eventFlyerFullUrl>\r\n\t\t\t<iCalLink>https://sammyapp.sjsu.edu/vcal?source=rss_feed&amp;type=ical&amp;school=sjsu&amp;uid=b50a6d96c1775dfa9cf966fc98875040</iCalLink>\r\n\t\t\t<eventLink>https://sammyapp.sjsu.edu/SUI/rsvp?id=378598</eventLink>\r\n\t\t\t<eventExternalRegistrationLink></eventExternalRegistrationLink>\r\n\t\t\t<eventType>Office Hours</eventType>\r\n\t\t\t<eventTypeId>16700</eventTypeId>\r\n\t\t\t<timeZone>-7</timeZone>\r\n\t\t\t<timeZoneId>Pacific Standard Time</timeZoneId>\r\n\t\t\t<publishLcd>0</publishLcd>\r\n\t\t\t<publishCalendar>0</publishCalendar>\r\n\t\t\t<publishSchoolWebsite>0</publishSchoolWebsite>\r\n\t\t\t<eventLocation>Private Location (sign in to display)</eventLocation>\r\n\t\t\t<locationType>On-Campus</locationType>\r\n\t\t\t<allDayEvent>0</allDayEvent>\r\n\t\t\t<approvalStatus>1</approvalStatus>\r\n\t\t\t<approvalStatus2>2</approvalStatus2>\r\n\t\t\t<eventDelete>0</eventDelete>\r\n\t\t\t<eventTopicIds></eventTopicIds>\r\n\t\t\t<eventTopics></eventTopics>\r\n\t\t\t<eventTopicsSeparated>\r\n\t\t\t</eventTopicsSeparated>\r\n\t\t\t<privacyLevel>1</privacyLevel>\r\n\t\t\t<privacyDisplayedTo>0</privacyDisplayedTo>\r\n\t\t\t<publishOnHome>1</publishOnHome>\r\n\t\t\t<eventStartDateTime>2026-07-29T13:00:00.0000000-07:00</eventStartDateTime>\r\n\t\t\t<eventEndDateTime>2026-12-07T13:00:00.0000000-08:00</eventEndDateTime>\r\n\t\t\t<eventPromoteTo></eventPromoteTo>\r\n\t\t\t<cohostingGroupIds></cohostingGroupIds>\r\n\t\t\t<cohostingGroupNames></cohostingGroupNames>\r\n\t\t\t<link>https://sammyapp.sjsu.edu/SUI/rsvp?id=378598</link>\r\n\t\t\t<category>Office Hours</category>\r\n\t\t\t<guid>https://sammyapp.sjsu.edu/SUI/rsvp?id=378598</guid>\r\n\t\t\t<start>Wed, 29 Jul 2026 20:00:00 GMT</start>\r\n\t\t\t<end>Mon, 07 Dec 2026 21:00:00 GMT</end>\r\n\t\t\t<eventOriginalPhotoFullUrl>https://sammyapp.sjsu.edu/upload/sjsu/2025/image_upload_599697_Sammy_App_Card_Image_10201572.png</eventOriginalPhotoFullUrl>\r\n\t\t\t<eventOriginalFlyerFullUrl></eventOriginalFlyerFullUrl>\r\n\t\t\t<externalRegistrationLink></externalRegistrationLink>\r\n\t\t\t<foodProvided>0</foodProvided>\r\n\t\t\t<attendeesRating></attendeesRating>\r\n\t\t\t<feedbackRequested>1</feedbackRequested>\r\n\t\t\t<attendanceEstimate></attendanceEstimate>\r\n\t\t</item>\n\t</channel>\n</rss>\n"
+ },
+ {
+  "url": "https://www.mlh.com/seasons/2027/events",
+  "loadedUrl": "https://www.mlh.com/seasons/2027/events",
+  "sourceId": "mlh-2027-california",
+  "campus": "berkeley",
+  "contentType": "text/html",
+  "#error": false,
+  "jsonLd": [],
+  "embeddedJson": [
+   "{\"component\": \"SeasonEvents/Index\", \"props\": {\"upcomingEvents\": [{\"id\": \"01a0439b-7ccc-7e99-15a8-09bd3de3e722\", \"slug\": \"cal-hacks-13-0\", \"name\": \"Cal Hacks 13.0 \", \"status\": \"in_progress\", \"startsAt\": \"2026-10-23T17:00:00Z\", \"endsAt\": \"2026-10-25T19:00:00Z\", \"dateRange\": \"OCT 23 - 25\", \"url\": \"/events/cal-hacks-13-0/prizes\", \"location\": \"San Francisco, California\", \"formatType\": \"physical\", \"backgroundUrl\": \"https://mlhusercontent.com/backgrounds/events/01a0439b-7ccc-7e99-15a8-09bd3de3e722/cal-hacks-13-0_913993ea4da5_medium.png\", \"logoUrl\": \"https://mlhusercontent.com/logos/events/01a0439b-7ccc-7e99-15a8-09bd3de3e722/cal-hacks-13-0_ad3b4c6d0858_small.png\", \"websiteUrl\": \"https://calhacks.io/\", \"region\": \"AMER\", \"customFields\": {\"underserved_types\": [], \"hackathon_focus\": [\"Software\", \"Hardware\"]}, \"venueAddress\": {\"city\": \"San Francisco\", \"state\": \"California\", \"country\": \"US\"}}, {\"id\": \"019ef10c-9b62-a9d2-47ee-d07adeac232e\", \"slug\": \"diamondhacks-dc\", \"name\": \"Diamondhacks\", \"status\": \"pending\", \"startsAt\": \"2027-04-04T01:11:11Z\", \"endsAt\": \"2027-04-05T23:59:59Z\", \"dateRange\": \"APR 04 - 05\", \"url\": \"/events/diamondhacks-dc/prizes\", \"location\": \"La Jolla, California \", \"formatType\": \"physical\", \"backgroundUrl\": \"https://mlhusercontent.com/backgrounds/events/019ef10c-9b62-a9d2-47ee-d07adeac232e/diamondhacks-dc_9757914b1074_medium.png\", \"logoUrl\": \"https://mlhusercontent.com/logos/events/019ef10c-9b62-a9d2-47ee-d07adeac232e/diamondhacks-dc_749c6b2df0d6_small.png\", \"websiteUrl\": \"https://diamondhacks.acmucsd.com/\", \"region\": \"AMER\", \"customFields\": {\"underserved_types\": []}, \"venueAddress\": {\"city\": \"La Jolla\", \"state\": \"California \", \"country\": \"US\"}}, {\"id\": \"019edb2f-1833-08c3-96ea-d0b428d7c1e4\", \"slug\": \"sbuhacks-5f\", \"name\": \"SBUHacks\", \"status\": \"in_progress\", \"startsAt\": \"2026-10-23T22:30:00Z\", \"endsAt\": \"2026-10-25T20:00:00Z\", \"dateRange\": \"OCT 23 - 25\", \"url\": \"/events/sbuhacks-5f/prizes\", \"location\": \"Stony Brook, New York\", \"formatType\": \"physical\", \"backgroundUrl\": \"https://mlhusercontent.com/backgrounds/events/019edb2f-1833-08c3-96ea-d0b428d7c1e4/sbuhacks-5f_f1d2cf019898_medium.png\", \"logoUrl\": \"https://mlhusercontent.com/logos/events/019edb2f-1833-08c3-96ea-d0b428d7c1e4/sbuhacks-5f_415e573e08c2_small.png\", \"websiteUrl\": \"https://hack.sbcs.io/\", \"region\": \"AMER\", \"customFields\": {\"underserved_types\": [], \"hackathon_focus\": []}, \"venueAddress\": {\"city\": \"Stony Brook\", \"state\": \"New York\", \"country\": \"US\"}}]}}"
+  ]
+ },
+ {
+  "url": "https://events.berkeley.edu/live/json/events/search/data%20science/response_fields/summary,tags,event_types,group_title",
+  "loadedUrl": "https://events.berkeley.edu/live/json/events/search/data%20science/response_fields/summary,tags,event_types,group_title",
+  "sourceId": "berkeley-events-data-science",
+  "campus": "berkeley",
+  "contentType": "application/json",
+  "#error": false,
+  "json": {
+   "meta": {
+    "total_results": 2
+   },
+   "data": [
+    {
+     "id": 335640,
+     "gid": 162,
+     "group_title": "Physics",
+     "title": "Condensed Matter Seminar with Archana Raja: Quantum Materials in the Age of AI: From 2D Heterostructures to Agentic Discovery",
+     "url": "https://events.berkeley.edu/physics/event/335640-condensed-matter-seminar-with-archana-raja-quantum-ma",
+     "date": "Oct. 26",
+     "date_time": "2:30 p.m.",
+     "date_utc": "2026-10-26 21:30:00",
+     "date_iso": "2026-10-26T14:30:00-07:00",
+     "date_ts": 1793050200,
+     "tz_offset": -25200,
+     "timezone": "America/Los_Angeles",
+     "date2_time": null,
+     "date2_utc": null,
+     "date2_iso": null,
+     "date2_ts": null,
+     "tz2_offset": null,
+     "is_all_day": null,
+     "repeats": null,
+     "repeats_until": null,
+     "repeats_start": "2026-10-26 21:30:00",
+     "repeats_end": null,
+     "is_starred": null,
+     "is_canceled": null,
+     "is_online": null,
+     "online_type": null,
+     "online_url": null,
+     "online_button_label": null,
+     "online_instructions": null,
+     "summary": "<p>\n  Understanding and controlling quantum phases of matter is one of the central challenges of condensed matter physics. In this talk, I will describe how our group uses this challenge as a unifying thread to connect experiment, theory, and artificial intelligence, with topological van der Waals materials as our primary arena.\n</p>",
+     "cost": "Free",
+     "event_types": [
+      "Lectures"
+     ],
+     "event_types_audience": null,
+     "event_types_campus": null,
+     "tags": [
+      "Condensed Matter Seminar"
+     ],
+     "tags_starred": null,
+     "tags_global": null,
+     "relevance": 0.0438
+    },
+    {
+     "id": 331685,
+     "gid": 139,
+     "group_title": "Library",
+     "title": "Meet MySuppleHub: An Open, Community-Contributed Evidence Base for Dietary Supplements (Bay Area Open Science Group)",
+     "url": "https://berkeley.libcal.com/event/17661114",
+     "date": "Oct. 27",
+     "date_time": "2 - 3 p.m.",
+     "date_utc": "2026-10-27 21:00:00",
+     "date_iso": "2026-10-27T14:00:00-07:00",
+     "date_ts": 1793134800,
+     "tz_offset": -25200,
+     "timezone": "America/Los_Angeles",
+     "date2_time": "3 p.m.",
+     "date2_utc": "2026-10-27 22:00:00",
+     "date2_iso": "2026-10-27T15:00:00-07:00",
+     "date2_ts": 1793138400,
+     "tz2_offset": -25200,
+     "is_all_day": null,
+     "repeats": null,
+     "repeats_until": null,
+     "repeats_start": "2026-10-27 21:00:00",
+     "repeats_end": "2026-10-27 22:00:00",
+     "is_starred": null,
+     "is_canceled": null,
+     "is_online": null,
+     "online_type": null,
+     "online_url": null,
+     "online_button_label": null,
+     "online_instructions": null,
+     "summary": null,
+     "cost": null,
+     "event_types": [
+      "Academic"
+     ],
+     "event_types_audience": [
+      "Students"
+     ],
+     "event_types_campus": null,
+     "tags": [
+      "Library Workshops"
+     ],
+     "tags_starred": [
+      "Library Workshops"
+     ],
+     "tags_global": null,
+     "relevance": 0.1635
+    }
+   ]
+  }
+ },
+ {
+  "url": "https://devpost.com/api/hackathons?search=berkeley&status%5B%5D=upcoming&status%5B%5D=open",
+  "loadedUrl": "https://devpost.com/api/hackathons?search=berkeley&status%5B%5D=upcoming&status%5B%5D=open",
+  "sourceId": "berkeley-devpost",
+  "campus": "berkeley",
+  "contentType": "application/json",
+  "#error": false,
+  "json": {
+   "hackathons": [
+    {
+     "id": 29871,
+     "title": "Cal Hacks 13.0",
+     "displayed_location": {
+      "icon": "map-marker-alt",
+      "location": "Palace of Fine Arts"
+     },
+     "open_state": "open",
+     "thumbnail_url": "//d112y698adiu2z.cloudfront.net/photos/production/challenge_thumbnails/005/519/078/datas/medium_square.png",
+     "analytics_identifier": "Cal Hacks 13.0 (29871)",
+     "url": "https://cal-hacks-13-0.devpost.com/",
+     "time_left_to_submission": "1 day left",
+     "submission_period_dates": "Oct 23 - 25, 2026",
+     "themes": [
+      {
+       "id": 23,
+       "name": "Beginner Friendly"
+      },
+      {
+       "id": 13,
+       "name": "Social Good"
+      },
+      {
+       "id": 22,
+       "name": "Open Ended"
+      }
+     ],
+     "prize_amount": "$<span data-currency-value>83,328</span>",
+     "prizes_counts": {
+      "cash": 42,
+      "other": 17
+     },
+     "registrations_count": 447,
+     "featured": false,
+     "organization_name": "Cal Hacks",
+     "winners_announced": false,
+     "submission_gallery_url": "https://cal-hacks-13-0.devpost.com/project-gallery",
+     "start_a_submission_url": "https://cal-hacks-13-0.devpost.com/challenges/start_a_submission",
+     "invite_only": false,
+     "eligibility_requirement_invite_only_description": null,
+     "managed_by_devpost_badge": false
+    },
+    {
+     "id": 31141,
+     "title": "HackStorm 3.0: Sense, Think and Act",
+     "displayed_location": {
+      "icon": "map-marker-alt",
+      "location": "San Francisco, California, USA"
+     },
+     "open_state": "upcoming",
+     "thumbnail_url": "https://assets.devpost.com/assets/defaults/thumbnail-placeholder-8c916ef4da99a222ce6ece077c71c7e282f071f830747b2abb5718018cbfa699.gif",
+     "analytics_identifier": "HackStorm 3.0: Sense, Think and Act (31141)",
+     "url": "https://hackstorm3.devpost.com/",
+     "time_left_to_submission": "Upcoming",
+     "submission_period_dates": "Jan 15 - 17, 2027",
+     "themes": [
+      {
+       "id": 2,
+       "name": "DevOps"
+      },
+      {
+       "id": 7,
+       "name": "IoT"
+      },
+      {
+       "id": 27,
+       "name": "Robotic Process Automation"
+      }
+     ],
+     "prize_amount": "$<span data-currency-value>5,200</span>",
+     "prizes_counts": {
+      "cash": 3,
+      "other": 0
+     },
+     "registrations_count": 30,
+     "featured": false,
+     "organization_name": "HackStorm",
+     "winners_announced": false,
+     "submission_gallery_url": "https://hackstorm3.devpost.com/project-gallery",
+     "start_a_submission_url": "https://hackstorm3.devpost.com/challenges/start_a_submission",
+     "invite_only": false,
+     "eligibility_requirement_invite_only_description": null,
+     "managed_by_devpost_badge": false
+    },
+    {
+     "id": 30110,
+     "title": "MEGA Hackathon 2027",
+     "displayed_location": {
+      "icon": "globe",
+      "location": "Online"
+     },
+     "open_state": "upcoming",
+     "thumbnail_url": "//d112y698adiu2z.cloudfront.net/photos/production/challenge_thumbnails/005/619/670/datas/medium_square.png",
+     "analytics_identifier": "MEGA Hackathon 2027 (30110)",
+     "url": "https://megahackathon-27.devpost.com/",
+     "time_left_to_submission": "Upcoming",
+     "submission_period_dates": "Feb 14 - 21, 2027",
+     "themes": [
+      {
+       "id": 14,
+       "name": "COVID-19"
+      },
+      {
+       "id": 16,
+       "name": "Health"
+      },
+      {
+       "id": 23,
+       "name": "Beginner Friendly"
+      }
+     ],
+     "prize_amount": "$<span data-currency-value>0</span>",
+     "prizes_counts": {
+      "cash": 0,
+      "other": 1
+     },
+     "registrations_count": 4,
+     "featured": false,
+     "organization_name": "MegaHackathonLeague",
+     "winners_announced": false,
+     "submission_gallery_url": "https://megahackathon-27.devpost.com/project-gallery",
+     "start_a_submission_url": "https://megahackathon-27.devpost.com/challenges/start_a_submission",
+     "invite_only": false,
+     "eligibility_requirement_invite_only_description": null,
+     "managed_by_devpost_badge": false
+    }
+   ],
+   "meta": {
+    "total_count": 3,
+    "per_page": 9,
+    "fuzzy": false
+   }
+  }
+ }
+]

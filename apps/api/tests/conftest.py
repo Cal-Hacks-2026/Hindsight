@@ -28,3 +28,37 @@ def assist_fake() -> FakeAssist:
     set_service(service)
     yield fake
     set_service(None)
+
+
+class FakeRadarStore:
+    """Stands in for Supabase `opportunities`; rows look like PostgREST's."""
+
+    def __init__(self):
+        self.rows: list[dict] = []
+        self.upserts: list[list] = []
+
+    def candidates(self, campus, transport=None):
+        return [r for r in self.rows if r["campus"] == campus or r["type"] == "hackathon"]
+
+    def upsert(self, items, transport=None):
+        self.upserts.append(items)
+        return len(items)
+
+
+@pytest.fixture(autouse=True)
+def radar_fake(monkeypatch) -> FakeRadarStore:
+    """No test reaches Supabase, Apify, or Claude for the Radar unless it opts in."""
+    from app.services.radar import rank, store
+
+    fake = FakeRadarStore()
+    monkeypatch.setattr(store, "candidates", fake.candidates)
+    monkeypatch.setattr(store, "upsert", fake.upsert)
+
+    def no_claude(profile, items):
+        raise AssertionError("test called Claude without faking rank.ask_claude")
+
+    monkeypatch.setattr(rank, "ask_claude", no_claude)
+    monkeypatch.setattr(rank, "reason_cache", rank._ReasonCache())
+    monkeypatch.delenv("APIFY_TOKEN", raising=False)
+    monkeypatch.delenv("APIFY_WEBHOOK_SECRET", raising=False)
+    return fake

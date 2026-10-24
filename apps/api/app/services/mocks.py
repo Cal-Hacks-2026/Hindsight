@@ -4,13 +4,12 @@ Every value here is fake and is replaced in Phase 1–3 (see PHASES.md).
 Citation labels are prefixed "MOCK" so nothing here can pass as a real claim.
 """
 
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 
 from app.models import (
     AgentEvent,
     Citation,
     Course,
-    RankedOpportunity,
     Semester,
     SemesterCourse,
 )
@@ -63,24 +62,6 @@ def plan() -> list[Semester]:
             SemesterCourse(code="DATA 101", title="Data Science Fundamentals", units=3,
                            reason="Core upper-division requirement", prereqs=["MATH 39", "CS 46B"]),
         ]),
-    ]
-
-
-def opportunities() -> list[RankedOpportunity]:
-    soon = datetime.now(timezone.utc) + timedelta(days=9)
-    return [
-        RankedOpportunity(
-            id="opp-1", title="MOCK · AI Student Builders Program", type="program",
-            org="Example AI Co.", url="https://example.com/mock-program",
-            deadline=soon.isoformat(), score=0.92,
-            reason="MOCK · Matches your Data Science major and AI interest; closes in 9 days.",
-        ),
-        RankedOpportunity(
-            id="opp-2", title="MOCK · Hackathon travel funding", type="hackathon",
-            org="Example Club", url="https://example.com/mock-hackathon",
-            starts_at=(soon + timedelta(days=14)).isoformat(), score=0.78,
-            reason="MOCK · Club-funded trip; transfers welcome.",
-        ),
     ]
 
 
