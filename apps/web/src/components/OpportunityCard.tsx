@@ -10,11 +10,13 @@ const TYPE_LABEL: Record<string, string> = {
   event: "Event",
 };
 
-function hostname(url: string): string {
+// Scraped URLs are untrusted: only link out to http(s).
+function safeUrl(url: string): URL | undefined {
   try {
-    return new URL(url).hostname.replace(/^www\./, "");
+    const parsed = new URL(url);
+    return parsed.protocol === "https:" || parsed.protocol === "http:" ? parsed : undefined;
   } catch {
-    return url;
+    return undefined;
   }
 }
 
@@ -47,6 +49,7 @@ export function OpportunityCard({
   as?: "li" | "article";
 }) {
   const starts = item.starts_at ? formatWhen(item.starts_at) : null;
+  const link = safeUrl(item.url);
   return (
     <Tag className="card opportunity">
       <div className="opportunity-head">
@@ -56,9 +59,13 @@ export function OpportunityCard({
           </span>
         )}
         <div className="opportunity-title-block">
-          <a className="opportunity-title" href={item.url} target="_blank" rel="noreferrer">
-            {item.title}
-          </a>
+          {link ? (
+            <a className="opportunity-title" href={link.href} target="_blank" rel="noreferrer">
+              {item.title}
+            </a>
+          ) : (
+            <span className="opportunity-title">{item.title}</span>
+          )}
           {item.org && <div className="muted">{item.org}</div>}
         </div>
         <TypeBadge type={item.type} />
@@ -74,9 +81,11 @@ export function OpportunityCard({
       <div className="opportunity-meta">
         {item.deadline && <DeadlineCountdown deadline={item.deadline} now={now} />}
         {starts && <span className="muted">Starts {starts}</span>}
-        <a className="source" href={item.url} target="_blank" rel="noreferrer">
-          Source: {hostname(item.url)} ↗
-        </a>
+        {link && (
+          <a className="source" href={link.href} target="_blank" rel="noreferrer">
+            Source: {link.hostname.replace(/^www\./, "")} ↗
+          </a>
+        )}
       </div>
     </Tag>
   );
