@@ -1,0 +1,177 @@
+"""Pydantic mirror of packages/contracts/src/index.ts (PROJECT.md §10).
+
+Keep the two files in lockstep. Optional fields default to None and routes
+serialize with response_model_exclude_none so they're omitted, matching the
+TS `field?: T` shape.
+"""
+
+from typing import Any, Literal
+
+from pydantic import BaseModel
+
+Campus = Literal["sjsu", "berkeley"]
+
+
+class CreateProfileRequest(BaseModel):
+    name: str
+    campus: Campus
+    sending_institution_id: int
+    receiving_institution_id: int
+    majors: list[str]
+    goals: str
+    interests: list[str]
+
+
+class Profile(CreateProfileRequest):
+    id: str
+    created_at: str
+
+
+class Course(BaseModel):
+    prefix: str
+    number: str
+    title: str
+    units: float
+    grade: str
+    term: str
+    academic_year_id: int | None = None
+    confirmed: bool
+
+
+class Citation(BaseModel):
+    source: Literal["assist", "catalog", "web"]
+    label: str
+    url: str
+    ref: str | None = None
+
+
+class Requirement(BaseModel):
+    id: str
+    group_title: str
+    rule: Literal["all", "n_of"]
+    n: int | None = None
+    receiving_course: str
+    status: Literal["satisfied", "partial", "missing", "at_university"]
+    satisfied_by: list[str]
+    flags: list[str]
+    citation: Citation
+    confidence: Literal["high", "medium", "low"]
+
+
+class MatchSummary(BaseModel):
+    satisfied: int
+    partial: int
+    missing: int
+    at_university: int
+
+
+class MatchResult(BaseModel):
+    major_label: str
+    agreement_key: str
+    requirements: list[Requirement]
+    summary: MatchSummary
+
+
+class SemesterCourse(BaseModel):
+    code: str
+    title: str
+    units: float
+    reason: str
+    prereqs: list[str]
+
+
+class Semester(BaseModel):
+    term: str
+    courses: list[SemesterCourse]
+
+
+class RankedOpportunity(BaseModel):
+    id: str
+    title: str
+    type: str
+    org: str
+    url: str
+    starts_at: str | None = None
+    deadline: str | None = None
+    score: float
+    reason: str
+
+
+class AgentEvent(BaseModel):
+    run_id: str
+    kind: Literal["plan", "step", "diff", "result", "error"]
+    message: str
+    payload: Any | None = None
+    created_at: str
+
+
+class ChatMessage(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str
+
+
+class AssistMajor(BaseModel):
+    label: str
+    key: str
+
+
+# ---- Request / response envelopes ----
+
+
+class ProfileResponse(BaseModel):
+    profile: Profile
+
+
+class CoursesResponse(BaseModel):
+    courses: list[Course]
+
+
+class UpdateCoursesRequest(BaseModel):
+    courses: list[Course]
+
+
+class AssistMajorsResponse(BaseModel):
+    majors: list[AssistMajor]
+
+
+class MatchRequest(BaseModel):
+    major_label: str
+
+
+class PlanResponse(BaseModel):
+    semesters: list[Semester]
+
+
+class OpportunitiesResponse(BaseModel):
+    items: list[RankedOpportunity]
+
+
+class CounselorRequest(BaseModel):
+    message: str
+    history: list[ChatMessage]
+
+
+class CounselorResponse(BaseModel):
+    reply: str
+    citations: list[Citation]
+
+
+class AgentRunRequest(BaseModel):
+    campus: Campus
+
+
+class AgentRunResponse(BaseModel):
+    run_id: str
+
+
+class AgentEventsResponse(BaseModel):
+    events: list[AgentEvent]
+
+
+class WebhookResponse(BaseModel):
+    ok: Literal[True]
+
+
+class HealthResponse(BaseModel):
+    status: Literal["ok"]
+    app: str

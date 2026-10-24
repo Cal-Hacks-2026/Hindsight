@@ -1,0 +1,59 @@
+/* Placeholder design tokens — replaced by the Figma tokens in Phase 1. */
+:root {
+  --color-bg: #ffffff;
+  --color-surface: #f5f6f8;
+  --color-border: #dde1e7;
+  --color-text: #15191f;
+  --color-text-muted: #5b6573;
+  --color-primary: #1f3a5f;
+  --color-primary-contrast: #ffffff;
+
+  --color-satisfied: #1a7f4b;
+  --color-satisfied-bg: #e3f4ea;
+  --color-partial: #9a6200;
+  --color-partial-bg: #fdf1dc;
+  --color-missing: #b42318;
+  --color-missing-bg: #fde8e6;
+  --color-at-university: #4b4f9e;
+  --color-at-university-bg: #ebebfa;
+
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-size-sm: 0.875rem;
+  --font-size-md: 1rem;
+  --font-size-lg: 1.25rem;
+  --font-size-xl: 1.75rem;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-pill: 999px;
+
+  --content-width: 880px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #0f1216;
+    --color-surface: #181c22;
+    --color-border: #2a3039;
+    --color-text: #e8ebf0;
+    --color-text-muted: #9aa4b2;
+    --color-primary: #8fb4e3;
+    --color-primary-contrast: #0f1216;
+
+    --color-satisfied: #6fd39f;
+    --color-satisfied-bg: #12301f;
+    --color-partial: #f0be63;
+    --color-partial-bg: #3a2a0d;
+    --color-missing: #f4877d;
+    --color-missing-bg: #3d1714;
+    --color-at-university: #aeb1f2;
+    --color-at-university-bg: #22234a;
+  }
+}

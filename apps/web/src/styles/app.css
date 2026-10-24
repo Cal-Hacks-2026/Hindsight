@@ -1,0 +1,270 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: var(--font-size-md);
+  line-height: 1.5;
+}
+
+a {
+  color: var(--color-primary);
+}
+
+h1 {
+  font-size: var(--font-size-xl);
+  margin: 0 0 var(--space-2);
+}
+
+h2 {
+  font-size: var(--font-size-lg);
+  margin: var(--space-5) 0 var(--space-3);
+}
+
+.muted {
+  color: var(--color-text-muted);
+}
+
+/* ---- Layout ---- */
+
+.app-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3) var(--space-5);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.brand {
+  font-weight: 700;
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+}
+
+.nav a {
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-pill);
+  color: var(--color-text-muted);
+  text-decoration: none;
+  font-size: var(--font-size-sm);
+}
+
+.nav a.active {
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+main {
+  max-width: var(--content-width);
+  margin: 0 auto;
+  padding: var(--space-5) var(--space-4) var(--space-6);
+}
+
+/* ---- Controls ---- */
+
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+}
+
+label.inline {
+  flex-direction: row;
+  align-items: center;
+  font-weight: 400;
+}
+
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+  min-width: 0;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+button.primary {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: var(--color-primary-contrast);
+  font-weight: 600;
+}
+
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.error {
+  color: var(--color-missing);
+  background: var(--color-missing-bg);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+}
+
+.steps {
+  display: flex;
+  gap: var(--space-2);
+  padding: 0;
+  margin: 0 0 var(--space-5);
+  list-style: none;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.steps .current {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+/* ---- Course confirm table ---- */
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+table.courses {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+table.courses th {
+  text-align: left;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  padding: var(--space-1) var(--space-1) var(--space-2);
+}
+
+table.courses td {
+  padding: var(--space-1);
+}
+
+table.courses input {
+  width: 100%;
+}
+
+table.courses .w-xs { width: 5rem; }
+table.courses .w-sm { width: 7rem; }
+
+/* ---- Degree results ---- */
+
+.summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.chip {
+  display: inline-block;
+  padding: 2px var(--space-3);
+  border-radius: var(--radius-pill);
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.chip.satisfied { color: var(--color-satisfied); background: var(--color-satisfied-bg); }
+.chip.partial { color: var(--color-partial); background: var(--color-partial-bg); }
+.chip.missing { color: var(--color-missing); background: var(--color-missing-bg); }
+.chip.at_university { color: var(--color-at-university); background: var(--color-at-university-bg); }
+.chip.neutral { color: var(--color-text-muted); background: var(--color-bg); border: 1px solid var(--color-border); }
+
+.requirements {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.requirement {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.requirement-head {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  align-items: flex-start;
+}
+
+.requirement-title {
+  font-weight: 600;
+}
+
+.flag {
+  font-size: var(--font-size-sm);
+  color: var(--color-partial);
+}
+
+.citation {
+  font-size: var(--font-size-sm);
+}
+
+fieldset.choices {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+fieldset.choices legend {
+  font-weight: 600;
+  font-size: var(--font-size-sm);
+  margin-bottom: var(--space-1);
+}
