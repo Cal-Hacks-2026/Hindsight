@@ -496,6 +496,12 @@
   margin-top: 4px;
 }
 
+.ag-status {
+  display: inline-block;
+  min-width: 4.5em;
+  margin-right: 8px;
+}
+
 .ag-plan li::marker {
   color: var(--gray-num);
   font-variant-numeric: tabular-nums;

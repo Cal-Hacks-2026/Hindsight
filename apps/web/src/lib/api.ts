@@ -1,9 +1,11 @@
 // Typed client for every endpoint in PROJECT.md §10.
 import type {
   AgentEventsResponse,
+  AgentLatestRunResponse,
   AgentRunRequest,
   AgentRunResponse,
   AssistMajorsResponse,
+  Campus,
   CounselorRequest,
   CounselorResponse,
   Course,
@@ -89,6 +91,9 @@ export const api = {
 
   runAgent: (body: AgentRunRequest) =>
     request<AgentRunResponse>("/agent/run", { method: "POST", body: json(body) }),
+
+  latestAgentRun: (campus: Campus) =>
+    request<AgentLatestRunResponse>(`/agent/runs/latest?${new URLSearchParams({ campus })}`),
 
   agentEvents: (runId: string) =>
     request<AgentEventsResponse>(`/agent/events?${new URLSearchParams({ run_id: runId })}`),

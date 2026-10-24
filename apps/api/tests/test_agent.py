@@ -11,12 +11,14 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
-from app.models import AgentEventsResponse, AgentRunResponse
+from app.models import AgentEventsResponse, AgentLatestRunResponse, AgentRunResponse
 from app.services import agent_client
 from app.services.agent_events import for_run as real_for_run
+from app.services.agent_events import latest_run_id as real_latest_run_id
 from app.services.agent_events import record as real_record
 from app.services.radar import alerts, scan, store
 from app.services.radar.normalize import RadarItem
+from app.services.radar.store import notified_ids as real_notified_ids
 from tests.test_radar_scan import CHEERIO_ID, DATASET, NOW, FakeApify, a_run
 
 client = TestClient(app)
@@ -39,6 +41,27 @@ def test_run_without_agent_secret_logs_why(agent_fake):
     assert agent_fake.started == []
     events = AgentEventsResponse.model_validate(client.get("/agent/events", params={"run_id": run_id}).json()).events
     assert [(e.kind, "AGENT_SECRET" in e.message) for e in events] == [("error", True)]
+
+
+def test_latest_run_is_per_campus(agent_fake):
+    def latest(campus):
+        res = client.get("/agent/runs/latest", params={"campus": campus})
+        assert res.status_code == 200
+        return AgentLatestRunResponse.model_validate(res.json()).run_id
+
+    assert client.get("/agent/runs/latest", params={"campus": "nowhere"}).status_code == 422
+    assert latest("sjsu") is None
+    assert client.get("/agent/runs/latest", params={"campus": "sjsu"}).json() == {"run_id": None}
+    older, newer, other = (str(uuid.uuid4()) for _ in range(3))
+    for run_id, campus in ((older, "sjsu"), (newer, "sjsu"), (other, "berkeley")):
+        agent_fake.record(run_id, "step", f"Run started: manual scan for {campus}",
+                          {"trigger": "manual", "campus": campus})
+    agent_fake.record(newer, "result", "Done.", {"alerts_new": 0})
+    assert latest("sjsu") == newer and latest("berkeley") == other
+    # A sign-up run logs one student's listings; it never becomes the public "latest".
+    agent_fake.record(str(uuid.uuid4()), "step", "Run started: new profile for sjsu",
+                      {"trigger": "profile_created", "campus": "sjsu"})
+    assert latest("sjsu") == newer
 
 
 def test_run_queues_on_the_agent(agent_fake, agent_env):
@@ -288,6 +311,32 @@ def test_record_and_read_events(supabase_env):
     assert real_for_run("nope") == []
     with pytest.raises(ValueError):
         real_record("nope", "step", "x")
+
+
+def test_latest_run_id_query(supabase_env):
+    seen = []
+
+    def handler(request):
+        seen.append(request)
+        return httpx.Response(200, json=[{"run_id": "r1"}] if len(seen) == 1 else [])
+
+    t = httpx.MockTransport(handler)
+    assert real_latest_run_id("sjsu", transport=t) == "r1"
+    assert seen[0].url.params["payload->>campus"] == "eq.sjsu"
+    assert seen[0].url.params["payload->>trigger"] == "in.(manual,schedule)"
+    assert seen[0].url.params["order"] == "created_at.desc" and seen[0].url.params["limit"] == "1"
+    assert real_latest_run_id("sjsu", transport=t) is None
+
+
+def test_notified_ids_query(supabase_env):
+    seen = []
+
+    def handler(request):
+        seen.append(request)
+        return httpx.Response(200, json=[{"opportunity_id": "o1"}, {"opportunity_id": "o2"}])
+
+    assert real_notified_ids("p1", transport=httpx.MockTransport(handler)) == {"o1", "o2"}
+    assert seen[0].url.params["profile_id"] == "eq.p1" and seen[0].url.params["notified"] == "is.true"
 
 
 def test_mark_notified_and_top_ranked_shapes(supabase_env):

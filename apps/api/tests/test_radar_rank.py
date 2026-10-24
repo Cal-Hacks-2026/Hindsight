@@ -143,6 +143,30 @@ def test_route_returns_ranked_contract(radar_fake, monkeypatch):
     assert items == sorted(items, key=lambda i: -i.score)
 
 
+def test_route_marks_droid_alerts_as_notified(radar_fake, monkeypatch):
+    now = datetime.now(timezone.utc)
+    radar_fake.rows = [dict(r, starts_at=(now + timedelta(days=2)).isoformat()) for r in ROWS[:3]]
+    monkeypatch.setattr(rank, "ask_claude", lambda p, items: {})
+    pid = make_profile()
+    radar_fake.notified[pid] = {"ai"}
+    body = client.get(f"/profiles/{pid}/opportunities").json()
+    assert {i["id"]: i["notified"] for i in body["items"]} == {i["id"]: i["id"] == "ai" for i in body["items"]}
+    assert "ai" in {i["id"] for i in body["items"]}
+
+
+def test_route_serves_feed_when_notified_read_fails(radar_fake, monkeypatch):
+    from app.services.radar import store
+
+    def down(profile_id):
+        raise store.StoreError("Supabase unreachable")
+
+    radar_fake.rows = [dict(ROWS[0], starts_at=(datetime.now(timezone.utc) + timedelta(days=2)).isoformat())]
+    monkeypatch.setattr(rank, "ask_claude", lambda p, items: {})
+    monkeypatch.setattr(store, "notified_ids", down)
+    res = client.get(f"/profiles/{make_profile()}/opportunities")
+    assert res.status_code == 200 and [i["notified"] for i in res.json()["items"]] == [False]
+
+
 def test_route_is_under_claude_per_ip_limit(radar_fake, monkeypatch):
     monkeypatch.setattr(claude_limits, "limiter", ClaudeLimiter(per_ip_per_min=2, daily_cap=100))
     pid = make_profile()

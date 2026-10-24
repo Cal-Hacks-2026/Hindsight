@@ -137,7 +137,17 @@ def opportunities(profile_id: str, background: BackgroundTasks) -> Opportunities
     profile = _get_profile(profile_id)
     items = rank.ranked_opportunities(profile, radar_store.candidates(profile.campus))
     background.add_task(_record_ranked, profile_id, items)
-    return OpportunitiesResponse(items=items)
+    alerted = _notified_ids(profile_id)
+    return OpportunitiesResponse(items=[i.model_copy(update={"notified": i.id in alerted}) for i in items])
+
+
+def _notified_ids(profile_id: str) -> set[str]:
+    """The "New" marks are extra; if they can't be read, serve the feed without them."""
+    try:
+        return radar_store.notified_ids(profile_id)
+    except StoreError as e:
+        log.warning("profile_opportunities read failed for %s: %s", profile_id, e)
+        return set()
 
 
 def _record_ranked(profile_id: str, items: list[RankedOpportunity]) -> None:

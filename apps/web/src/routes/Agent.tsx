@@ -1,5 +1,6 @@
 // Agent log: start a Droid run and follow its plan → steps → diffs → result (PROJECT.md §10).
 // Events are polled from /agent/events; the run id lives in ?run= so a run can be linked and reloaded.
+// Without ?run=, the page opens on the campus's latest run (/agent/runs/latest).
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router";
 import type { AgentEvent } from "@hindsight/contracts";
@@ -24,6 +25,24 @@ export function Agent() {
   const [poll, setPoll] = useState<Poll>(EMPTY);
   const [starting, setStarting] = useState(false);
   const [startError, setStartError] = useState<unknown>();
+  const [latest, setLatest] = useState<"loading" | "none" | "error">();
+
+  useEffect(() => {
+    if (runId) return;
+    let live = true;
+    setLatest("loading");
+    api.latestAgentRun(campus).then(
+      ({ run_id }) => {
+        if (!live) return;
+        if (run_id) setParams({ run: run_id }, { replace: true });
+        else setLatest("none");
+      },
+      () => live && setLatest("error"),
+    );
+    return () => {
+      live = false;
+    };
+  }, [runId, campus, setParams]);
 
   useEffect(() => {
     if (!runId) return;
@@ -37,8 +56,10 @@ export function Agent() {
         const { events } = await api.agentEvents(runId!);
         if (!live) return;
         const done = finished(events);
-        setPoll({ events, done, gaveUp: false });
-        if (done) return;
+        // A run older than the agent's timeout that never logged an end won't finish now.
+        const stale = !done && events.length > 0 && Date.now() - Date.parse(events[0]!.created_at) > MAX_POLL_MS;
+        setPoll({ events, done, gaveUp: stale });
+        if (done || stale) return;
       } catch (fetchError) {
         if (!live) return;
         setPoll((p) => ({ ...p, fetchError }));
@@ -95,6 +116,13 @@ export function Agent() {
               {starting ? "Starting…" : running ? "Running…" : "Run now"}
             </button>
           </div>
+          {!runId && latest === "loading" && (
+            <p className="cs-muted" role="status">
+              Loading the latest run…
+            </p>
+          )}
+          {!runId && latest === "none" && <p className="cs-muted">No runs logged yet. Start one to see it here.</p>}
+          {!runId && latest === "error" && <p className="cs-muted">Couldn't load the latest run.</p>}
           {startError !== undefined && (
             <p className="ag-alert" role="alert">
               {startErrorMessage(startError)}
@@ -198,9 +226,15 @@ function EventRow({ event }: { event: AgentEvent }) {
             {event.message
               .split("\n")
               .filter((line) => line.trim())
-              .map((line, i) => (
-                <li key={i}>{line.trim()}</li>
-              ))}
+              .map((line, i) => {
+                const { status, text } = planLine(line);
+                return (
+                  <li key={i}>
+                    {status && <span className="cs-label ag-status">{STATUS_LABEL[status] ?? status}</span>}
+                    {text}
+                  </li>
+                );
+              })}
           </ol>
         ) : (
           <p className="ag-message">{event.message}</p>
@@ -253,6 +287,14 @@ function ResultMeta({ payload }: { payload: unknown }) {
 }
 
 // ---- helpers ----
+
+const STATUS_LABEL: Record<string, string> = { completed: "Done", in_progress: "Doing", pending: "To do" };
+
+// Droid's TodoWrite lines arrive as "1. [completed] Scan sources"; the <ol> already numbers them.
+function planLine(line: string): { status?: string; text: string } {
+  const m = /^\s*(?:\d+[.)]\s*)?(?:\[([a-z_ ]+)\]\s*)?(.*)$/i.exec(line)!;
+  return { status: m[1]?.trim().toLowerCase().replace(/ /g, "_"), text: m[2]!.trim() };
+}
 
 // apps/agent/src/job.ts ends every run with one result, or an error that starts "Run ".
 function isTerminalError(e: AgentEvent): boolean {
