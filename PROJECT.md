@@ -1,15 +1,17 @@
-# PROJECT.md — Transfer Advisor (Cal Hacks 13.0)
+# PROJECT.md — Hindsight (Cal Hacks 13.0)
 
 > **Read this first.** This is the source of truth for what we are building, why, and what is out of scope.
+> Companion docs: `PHASES.md` (build timeline) and `TASKS.md` (who does what).
 
 ---
 
 ## 0. Status & naming
 
-- **Working name: f** **Hindsight** (tagline: *"Everything you'd wish you knew, before you need it."*
-- **Code identifier:** use neutral names (`web`, `api`, `advisor`) until the name is locked. Never hardcode a product name in logic; put it in one config constant (`APP_NAME`).
+- **Name:** **Hindsight** — tagline: *"Everything you'd wish you knew, before you need it."* (alt kept in reserve: Day One)
+- **Repo:** `github.com/Cal-Hacks-2026/Hindsight`
+- **Code identifier:** product name lives in one config constant (`APP_NAME = "Hindsight"`); never hardcode it in logic.
 - **Event:** Cal Hacks 13.0, Palace of Fine Arts, SF. Build freeze **Saturday 2:00 PM**. Devpost deadline **Sunday 8:50 AM**. Judging Sunday 10:30 AM (live demo required).
-- **Rule:** all project code is written during the event. Nothing pre written is copied in.
+- **Rule:** all project code is written during the event. Nothing pre-written is copied in.
 
 ---
 
@@ -119,7 +121,7 @@ Our product does three things a chat window cannot:
 ### Monorepo layout
 ```
 /
-├── PROJECT.md README.md
+├── PROJECT.md  PHASES.md  TASKS.md  README.md
 ├── apps/
 │   ├── web/                 # Vite React PWA
 │   │   └── src/{routes,components,lib/api.ts,styles/tokens.css}
