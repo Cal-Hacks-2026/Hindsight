@@ -18,10 +18,11 @@ TRUSTED_PROXY_HOPS to the number of proxies that append to X-Forwarded-For
 further left are client-supplied and can be spoofed.
 """
 
+import ipaddress
 import os
 import threading
 import time
-from collections import deque
+from collections import OrderedDict, deque
 from datetime import datetime, timedelta, timezone
 
 from fastapi import Request
@@ -43,7 +44,8 @@ class ClaudeLimiter:
         self.daily_cap = daily_cap
         self.clock = clock
         self._lock = threading.Lock()
-        self._hits: dict[str, deque[float]] = {}
+        # Least recently seen first; hard-capped so a flood of distinct IPs can't grow it unbounded.
+        self._hits: OrderedDict[str, deque[float]] = OrderedDict()
         self._day: str = ""
         self._day_count = 0
 
@@ -56,10 +58,12 @@ class ClaudeLimiter:
 
     def check_ip(self, ip: str) -> None:
         now = self.clock()
+        key = rate_key(ip)
         with self._lock:
-            if len(self._hits) > MAX_TRACKED_IPS:
-                self._hits = {k: v for k, v in self._hits.items() if v and v[-1] > now - WINDOW_SECONDS}
-            hits = self._hits.setdefault(ip, deque())
+            hits = self._hits.setdefault(key, deque())
+            self._hits.move_to_end(key)
+            while len(self._hits) > MAX_TRACKED_IPS:
+                self._hits.popitem(last=False)
             while hits and hits[0] <= now - WINDOW_SECONDS:
                 hits.popleft()
             if len(hits) >= self.per_ip_per_min:
@@ -81,6 +85,19 @@ class ClaudeLimiter:
 
 
 limiter = ClaudeLimiter.from_env()
+
+
+def rate_key(ip: str) -> str:
+    """IPv6 clients usually control a whole /64, so they share one bucket."""
+    try:
+        addr = ipaddress.ip_address(ip)
+    except ValueError:
+        return ip
+    if addr.version == 6:
+        if addr.ipv4_mapped:
+            return str(addr.ipv4_mapped)
+        return str(ipaddress.ip_network(f"{addr}/64", strict=False))
+    return str(addr)
 
 
 def client_ip(request: Request) -> str:

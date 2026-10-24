@@ -38,6 +38,24 @@ def test_per_ip_rolling_window():
     lim.check_ip("1.1.1.1")
 
 
+def test_ipv6_shares_a_64_bucket():
+    lim = ClaudeLimiter(per_ip_per_min=1, daily_cap=100, clock=Clock(NOON))
+    lim.check_ip("2001:db8:1:2::1")
+    with pytest.raises(RateLimited):
+        lim.check_ip("2001:db8:1:2:ffff::9")
+    lim.check_ip("2001:db8:1:3::1")
+    assert claude_limits.rate_key("::ffff:1.2.3.4") == "1.2.3.4"
+    assert claude_limits.rate_key("not-an-ip") == "not-an-ip"
+
+
+def test_tracked_ips_hard_capped(monkeypatch):
+    monkeypatch.setattr(claude_limits, "MAX_TRACKED_IPS", 3)
+    lim = ClaudeLimiter(per_ip_per_min=1, daily_cap=100, clock=Clock(NOON))
+    for i in range(10):
+        lim.check_ip(f"10.0.0.{i}")
+    assert list(lim._hits) == ["10.0.0.7", "10.0.0.8", "10.0.0.9"]
+
+
 def test_daily_cap_resets_at_utc_midnight():
     clock = Clock(NOON)
     lim = ClaudeLimiter(per_ip_per_min=100, daily_cap=2, clock=clock)
