@@ -38,17 +38,24 @@ ROWS = [
     row("bjj", "Brazilian Jiu-Jitsu Practice", type="club", days=1),
     row("old", "Last week's AI talk", days=-3),
     row("closed", "AI fellowship", type="program", days=-10, deadline_days=-1),
-    row("hack", "Cal Hacks 13.0", campus="berkeley", type="hackathon", days=None, deadline_days=1),
-    row("hack-dup", "Cal Hacks 13.0", campus="berkeley", type="hackathon", days=0),
+    row("hack", "Cal Hacks 13.0 AI track", campus="berkeley", type="hackathon", days=None, deadline_days=1),
+    row("hack-dup", "Cal Hacks 13.0 AI track", campus="berkeley", type="hackathon", days=0),
 ]
 
 
 def test_relevant_items_outrank_unrelated_ones():
     ranked = [s.row["id"] for s in rank.rank(PROFILE, ROWS, NOW)]
-    assert ranked.index("ai") < ranked.index("bjj")
-    assert ranked.index("ds") < ranked.index("bjj")
+    assert "ai" in ranked and "ds" in ranked
+    assert "bjj" not in ranked  # matches nothing the student said
     assert "old" not in ranked and "closed" not in ranked  # past start / past deadline
     assert ranked.count("hack") + ranked.count("hack-dup") == 1  # same title from two sources
+
+
+def test_generic_type_interest_alone_is_not_a_match():
+    profile = PROFILE.model_copy(update={"interests": ["hackathons"], "majors": ["History, B.A."], "goals": ""})
+    rows = [row("h1", "Health Hackathon 2027", type="hackathon", days=40),
+            row("h2", "History Hackathon", type="hackathon", days=40)]
+    assert [s.row["id"] for s in rank.rank(profile, rows, NOW)] == ["h2"]
 
 
 def test_score_records_what_matched():
@@ -91,7 +98,7 @@ def test_missing_or_failed_reasons_fall_back_to_computed(monkeypatch):
     out = {o.id: o.reason for o in rank.ranked_opportunities(PROFILE, ROWS, NOW)}
     assert out["ai"] == "Claude reason."
     assert out["ds"] == "Matches your Data Science major."
-    assert out["bjj"] == "Upcoming club from SJSU."
+    assert "bjj" not in out
 
     def down(profile, items):
         raise anthropic.APIConnectionError(request=None)
