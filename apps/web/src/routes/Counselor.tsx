@@ -1,11 +1,399 @@
-import { Placeholder } from "../components/Placeholder";
+// Counselor: ask about your plan; every answer shows its sources (DESIGN.md §6).
+// The API returns plain text with [n] markers, "- " bullets, and an optional
+// "Confirm with your advisor…" tail (apps/api/app/services/counselor.py); we lay that out here.
+import { useEffect, useRef, useState, type FormEvent, type ReactNode, type Ref } from "react";
+import { Link } from "react-router";
+import type { ChatMessage, Citation } from "@hindsight/contracts";
+import { api, ApiError } from "../lib/api";
+import { loadSession } from "../lib/session";
+import { useNow } from "../lib/time";
+import "../styles/counselor.css";
+
+type Exchange = {
+  question: string;
+  state: { status: "pending"; startedAt: number } | { status: "error"; error: unknown } | {
+    status: "done";
+    reply: string;
+    citations: Citation[];
+  };
+};
+
+const FIRST_CHIPS = [
+  "Can I graduate by Spring 2028 if I add Econ?",
+  "What do I still need for my major?",
+  "Which of my courses count at my university?",
+];
+const NEXT_CHIPS = [
+  "What if I take a summer term?",
+  "What if I drop my second major?",
+  "Which requirements should I check with my advisor?",
+  "Which courses should I take next term?",
+];
 
 export function Counselor() {
+  const { profile } = loadSession();
+  const [exchanges, setExchanges] = useState<Exchange[]>([]);
+  const [draft, setDraft] = useState("");
+  const latest = useRef<HTMLElement>(null);
+
+  const busy = exchanges.at(-1)?.state.status === "pending";
+
+  useEffect(() => {
+    latest.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [exchanges.length]);
+
+  async function ask(question: string, before: Exchange[]) {
+    if (!profile || !question.trim()) return;
+    const history: ChatMessage[] = before.flatMap((e) =>
+      e.state.status === "done"
+        ? [
+            { role: "user", content: e.question },
+            { role: "assistant", content: e.state.reply },
+          ]
+        : [],
+    );
+    const pending: Exchange = { question: question.trim(), state: { status: "pending", startedAt: Date.now() } };
+    setExchanges([...before, pending]);
+    setDraft("");
+    let state: Exchange["state"];
+    try {
+      const res = await api.counselor(profile.id, { message: pending.question, history });
+      state = { status: "done", reply: res.reply, citations: res.citations };
+    } catch (error) {
+      state = { status: "error", error };
+    }
+    setExchanges([...before, { ...pending, state }]);
+  }
+
+  function onSubmit(e: FormEvent) {
+    e.preventDefault();
+    if (!busy) void ask(draft, exchanges);
+  }
+
+  const asked = new Set(exchanges.map((e) => e.question));
+  const chips = (exchanges.length ? NEXT_CHIPS : FIRST_CHIPS).filter((c) => !asked.has(c)).slice(0, 3);
+  const number = String(Math.max(1, exchanges.length)).padStart(2, "0");
+
   return (
-    <Placeholder
-      title="Counselor"
-      purpose="Ask about your plan. Answers are grounded in your profile and results, with citations."
-      phase="Phase 3"
-    />
+    <div className="cs">
+      <header className="cs-title">
+        <div className="cs-label">Correspondence · Question {number}</div>
+        <h1>
+          Ask anything.
+          <br />
+          See the <em>sources</em>.
+        </h1>
+      </header>
+
+      {!profile ? (
+        <section className="cs-row">
+          <div className="cs-label cs-row-label">Start here</div>
+          <div className="cs-main">
+            <p className="cs-lead">The counselor answers from your transcript and degree plan.</p>
+            <p>
+              <Link to="/onboarding">Set up your profile</Link> first, then come back with a question.
+            </p>
+          </div>
+          <div className="cs-margin" />
+        </section>
+      ) : (
+        <>
+          {exchanges.map((ex, i) => (
+            <ExchangeView
+              key={i}
+              ref={i === exchanges.length - 1 ? latest : undefined}
+              index={i}
+              exchange={ex}
+              onRetry={i === exchanges.length - 1 && ex.state.status === "error" ? () => void ask(ex.question, exchanges.slice(0, i)) : undefined}
+            />
+          ))}
+
+          <section className="cs-row cs-ask">
+            <div className="cs-label cs-row-label">{exchanges.length ? "Ask next" : "Ask"}</div>
+            <form className="cs-main cs-form" onSubmit={onSubmit}>
+              <label htmlFor="cs-question" className="cs-sr">
+                Your question
+              </label>
+              <div className="cs-inputs">
+                <input
+                  id="cs-question"
+                  type="text"
+                  value={draft}
+                  maxLength={2000}
+                  placeholder={exchanges.length ? "What if I take a summer term?" : "Can I graduate by Spring 2028?"}
+                  onChange={(e) => setDraft(e.target.value)}
+                  disabled={busy}
+                />
+                <button type="submit" className="cs-btn cs-btn-solid" disabled={busy || !draft.trim()}>
+                  Ask
+                </button>
+              </div>
+              {chips.length > 0 && (
+                <div className="cs-chips">
+                  {chips.map((chip) => (
+                    <button key={chip} type="button" className="cs-chip" disabled={busy} onClick={() => void ask(chip, exchanges)}>
+                      {chip}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </form>
+            <div className="cs-margin" />
+          </section>
+        </>
+      )}
+
+      <footer className="cs-foot cs-label">Hindsight explains computed results · It never decides whether a credit counts</footer>
+    </div>
   );
+}
+
+function ExchangeView({
+  exchange,
+  index,
+  onRetry,
+  ref,
+}: {
+  exchange: Exchange;
+  index: number;
+  onRetry?: () => void;
+  ref?: Ref<HTMLElement>;
+}) {
+  const { question, state } = exchange;
+  return (
+    <article ref={ref} className="cs-exchange" aria-label={`Question ${index + 1}`}>
+      <section className="cs-row">
+        <div className="cs-label cs-row-label">You asked</div>
+        <p className="cs-main cs-question">“{question}”</p>
+        <div className="cs-margin" />
+      </section>
+
+      <section className="cs-row">
+        <div className="cs-label cs-row-label">Answer</div>
+        {state.status === "pending" ? (
+          <Pending startedAt={state.startedAt} />
+        ) : state.status === "error" ? (
+          <div className="cs-main" role="alert">
+            <p className="cs-lead">{errorTitle(state.error)}</p>
+            <p className="cs-muted">{errorDetail(state.error)}</p>
+            {onRetry && (
+              <button type="button" className="cs-btn" onClick={onRetry}>
+                Try again
+              </button>
+            )}
+          </div>
+        ) : (
+          <Answer reply={state.reply} citations={state.citations} id={`q${index + 1}`} />
+        )}
+        {state.status !== "done" && <div className="cs-margin" />}
+      </section>
+    </article>
+  );
+}
+
+// A counselor answer can take a while: Claude may call the planner a few times.
+function Pending({ startedAt }: { startedAt: number }) {
+  const now = useNow(1000);
+  const seconds = Math.max(0, Math.floor((now - startedAt) / 1000));
+  const message =
+    seconds < 5
+      ? "Reading your transcript and plan…"
+      : seconds < 20
+        ? "Running the matcher and planner for your question…"
+        : "Still working. Questions that compare plans take longer.";
+  return (
+    <div className="cs-main cs-pending" role="status" aria-live="polite">
+      <p className="cs-lead">{message}</p>
+      <span className="cs-num" aria-hidden="true">
+        {seconds}s
+      </span>
+    </div>
+  );
+}
+
+function Answer({ reply, citations, id }: { reply: string; citations: Citation[]; id: string }) {
+  const { body, advisor } = splitAdvisor(reply);
+  const blocks = toBlocks(body);
+  const cite = (text: string) => withCitations(text, citations.length, id);
+  let lead = true;
+
+  return (
+    <>
+      <div className="cs-main">
+        {blocks.map((block, i) => {
+          if (block.kind === "list") {
+            return (
+              <ol key={i} className="cs-list">
+                {block.items.map((item, j) => (
+                  <li key={j}>
+                    <span className="cs-numeral" aria-hidden="true">
+                      {roman(j + 1)}.
+                    </span>
+                    <span>{cite(item)}</span>
+                  </li>
+                ))}
+              </ol>
+            );
+          }
+          const isLead = lead;
+          lead = false;
+          return (
+            <p key={i} className={isLead ? "cs-lead" : "cs-para"}>
+              {cite(block.text)}
+            </p>
+          );
+        })}
+        {advisor && <AdvisorBlock question={advisor} cite={cite} />}
+      </div>
+
+      <aside className="cs-margin cs-sources" aria-label="Sources">
+        <div className="cs-label cs-sources-head">Sources</div>
+        {citations.length === 0 ? (
+          <p className="cs-note">This answer comes from your own profile and transcript.</p>
+        ) : (
+          <ol>
+            {citations.map((c, i) => (
+              <li key={i} id={`${id}-cite-${i + 1}`}>
+                <strong>{i + 1}</strong>
+                <span>
+                  {c.url ? (
+                    <a href={c.url} target="_blank" rel="noreferrer">
+                      {c.label}
+                    </a>
+                  ) : (
+                    c.label
+                  )}
+                  {c.ref && <span className="cs-ref"> · {c.ref}</span>}
+                </span>
+              </li>
+            ))}
+          </ol>
+        )}
+        {citations.some((c) => c.source === "catalog") && (
+          <p className="cs-note">Catalog data is from 2025–26 and assumes every course is offered in Fall and Spring.</p>
+        )}
+      </aside>
+    </>
+  );
+}
+
+function AdvisorBlock({ question, cite }: { question: string; cite: (text: string) => ReactNode[] }) {
+  const [copied, setCopied] = useState(false);
+  const plain = stripMarkers(question);
+  const mailto = `mailto:?${new URLSearchParams({ subject: "Question about my degree plan", body: plain })
+    .toString()
+    .replace(/\+/g, "%20")}`;
+
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(plain);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // clipboard blocked: the question is on screen to select by hand
+    }
+  }
+
+  return (
+    <div className="cs-advisor">
+      <div className="cs-label">Confirm with your advisor · Drafted for you</div>
+      <p className="cs-advisor-q">“{cite(question)}”</p>
+      <div className="cs-actions">
+        <a className="cs-btn cs-btn-solid" href={mailto}>
+          Email my advisor
+        </a>
+        <button type="button" className="cs-btn" onClick={() => void copy()}>
+          {copied ? "Copied" : "Copy question"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ---- reply parsing ----
+
+const ADVISOR = /\n*Confirm with your advisor\.[^\n]*\n\s*[“"]([\s\S]+?)[”"]\s*$/;
+const BULLET = /^\s*(?:[-*•]|\d+[.)])\s+/;
+const MARKERS = /(?:\[\d+\])+/g;
+
+function splitAdvisor(reply: string): { body: string; advisor?: string } {
+  const m = ADVISOR.exec(reply);
+  return m ? { body: reply.slice(0, m.index), advisor: m[1].trim() } : { body: reply };
+}
+
+type Block = { kind: "para"; text: string } | { kind: "list"; items: string[] };
+
+function toBlocks(body: string): Block[] {
+  const blocks: Block[] = [];
+  for (const raw of body.split("\n")) {
+    const line = raw.trim();
+    const last = blocks.at(-1);
+    if (!line) {
+      if (last?.kind === "para") blocks.push({ kind: "para", text: "" });
+      continue;
+    }
+    if (BULLET.test(line)) {
+      const item = line.replace(BULLET, "");
+      if (last?.kind === "list") last.items.push(item);
+      else blocks.push({ kind: "list", items: [item] });
+    } else if (last?.kind === "para") {
+      last.text = last.text ? `${last.text} ${line}` : line;
+    } else {
+      blocks.push({ kind: "para", text: line });
+    }
+  }
+  return blocks.filter((b) => b.kind === "list" || b.text);
+}
+
+/** "…ends Spring 2029.[1][2]" → text with a superscript "1 2" linking to the margin. */
+function withCitations(text: string, count: number, id: string): ReactNode[] {
+  const out: ReactNode[] = [];
+  let at = 0;
+  for (const m of text.matchAll(MARKERS)) {
+    out.push(text.slice(at, m.index).replace(/\s+$/, ""));
+    const nums = [...m[0].matchAll(/\d+/g)].map((n) => Number(n[0])).filter((n) => n >= 1 && n <= count);
+    if (nums.length) {
+      out.push(
+        <sup key={m.index} className="cs-cite">
+          {nums.map((n, i) => (
+            <a key={n} href={`#${id}-cite-${n}`} aria-label={`Source ${n}`}>
+              {i > 0 ? " " : ""}
+              {n}
+            </a>
+          ))}
+        </sup>,
+      );
+    }
+    at = m.index + m[0].length;
+  }
+  out.push(text.slice(at));
+  return out;
+}
+
+function stripMarkers(text: string): string {
+  return text.replace(MARKERS, "").replace(/\s+([.,;:?])/g, "$1");
+}
+
+function roman(n: number): string {
+  const table: [number, string][] = [[10, "x"], [9, "ix"], [5, "v"], [4, "iv"], [1, "i"]];
+  let out = "";
+  for (const [value, numeral] of table) {
+    while (n >= value) {
+      out += numeral;
+      n -= value;
+    }
+  }
+  return out;
+}
+
+function errorTitle(error: unknown): string {
+  if (error instanceof ApiError && error.status === 404) return "We couldn't find your profile.";
+  return "The counselor couldn't answer that.";
+}
+
+function errorDetail(error: unknown): string {
+  if (!(error instanceof ApiError)) return "We couldn't reach the Hindsight server. Check your connection and try again.";
+  if (error.status === 404) return "It may have been reset on the server. Set it up again from Onboarding.";
+  if (error.status === 429) return "Too many questions in a short time. Wait a minute, then try again.";
+  return error.message || "Something went wrong on our side. Try again in a moment.";
 }
