@@ -53,7 +53,14 @@ def test_profile_roundtrip():
     assert client.get("/profiles/nope").status_code == 404
 
 
-def test_transcript_then_confirm():
+def test_transcript_then_confirm(monkeypatch):
+    from app.services import mocks, transcript
+
+    async def fake_extract(data, media_type):
+        return [transcript._Row(**c.model_dump(exclude={"confirmed", "academic_year_id"}), legible=True)
+                for c in mocks.transcript_courses()]
+
+    monkeypatch.setattr(transcript, "extract_rows", fake_extract)
     pid = make_profile()
     res = client.post(
         f"/profiles/{pid}/transcript",
@@ -91,7 +98,7 @@ def test_remaining_endpoints():
     AssistMajorsResponse.model_validate(
         client.get("/assist/majors", params={"sending": 113, "receiving": 39, "year": 77}).json()
     )
-    PlanResponse.model_validate(client.get(f"/profiles/{pid}/plan", params={"majors": "a,b"}).json())
+    PlanResponse.model_validate(client.get(f"/profiles/{pid}/plan", params={"majors": "Data Science, B.S."}).json())
     OpportunitiesResponse.model_validate(client.get(f"/profiles/{pid}/opportunities").json())
     CounselorResponse.model_validate(
         client.post(f"/profiles/{pid}/counselor", json={"message": "hi", "history": []}).json()
