@@ -1,49 +1,701 @@
 {
-  "placeholder": true,
-  "placeholder_note": "PLACEHOLDER — invented course list and prerequisite edges used to wire up the planner. This is NOT SJSU's real Data Science B.S. requirements. Replace it with curated catalog data (PHASES.md Phase 1, step 5), set placeholder to false, and give every item its real source_url.",
+  "placeholder": false,
   "major_label": "Data Science, B.S.",
   "campus": "sjsu",
-  "catalog_year": "2026-27",
-  "source_url": "https://catalog.sjsu.edu/",
+  "catalog_year": "2025-26",
+  "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=1900",
+  "notes": [
+    "A grade of \"C-\" or better is required for courses being used to meet any requirement in any minor or major offered by the Department of Computer Science, including Major Preparation courses.",
+    "Summary of Degree Units: Core Lower Division GE 25, Upper Division GE 6, Physical Education 2, Major Preparation 25, Major Requirements 56; Total 120.",
+    "Offered by the Department of Computer Science."
+  ],
+  "needs_review": [
+    "Curated from the 2025-2026 SJSU catalog PDF. The 2026-2027 online catalog (catalog.sjsu.edu) blocks automated access, so it wasn't checked for changes.",
+    "The catalog doesn't say which terms courses are offered, so the planner assumes Fall and Spring for every course."
+  ],
   "courses": {
-    "MATH 30": { "title": "Calculus I", "units": 3, "prereqs": [], "source_url": "https://catalog.sjsu.edu/" },
-    "MATH 31": { "title": "Calculus II", "units": 4, "prereqs": ["MATH 30"], "source_url": "https://catalog.sjsu.edu/" },
-    "MATH 39": { "title": "Linear Algebra I", "units": 3, "prereqs": ["MATH 31"], "source_url": "https://catalog.sjsu.edu/" },
-    "CS 46A": { "title": "Introduction to Programming", "units": 4, "prereqs": [], "source_url": "https://catalog.sjsu.edu/" },
-    "CS 46B": { "title": "Introduction to Data Structures", "units": 4, "prereqs": ["CS 46A"], "source_url": "https://catalog.sjsu.edu/" },
-    "STAT 95": { "title": "Elementary Statistics", "units": 3, "prereqs": [], "source_url": "https://catalog.sjsu.edu/" },
-    "DATA 101": { "title": "Data Science Fundamentals", "units": 3, "prereqs": ["MATH 39", "CS 46B"], "source_url": "https://catalog.sjsu.edu/" },
-    "DATA 120": { "title": "Probability and Statistical Inference", "units": 3, "prereqs": ["MATH 31", "STAT 95"], "source_url": "https://catalog.sjsu.edu/" },
-    "DATA 130": { "title": "Data Management and Databases", "units": 3, "prereqs": ["CS 46B"], "source_url": "https://catalog.sjsu.edu/" },
-    "DATA 140": { "title": "Statistical Learning", "units": 3, "prereqs": ["DATA 101", "DATA 120"], "source_url": "https://catalog.sjsu.edu/" },
-    "DATA 150": { "title": "Data Visualization and Communication", "units": 3, "prereqs": ["DATA 101"], "terms_offered": ["Spring"], "source_url": "https://catalog.sjsu.edu/" },
-    "DATA 160": { "title": "Machine Learning", "units": 3, "prereqs": ["DATA 140"], "terms_offered": ["Fall"], "source_url": "https://catalog.sjsu.edu/" },
-    "DATA 170": { "title": "Big Data Systems", "units": 3, "prereqs": ["DATA 130"], "source_url": "https://catalog.sjsu.edu/" },
-    "DATA 180": { "title": "Data Ethics and Policy", "units": 3, "prereqs": ["DATA 101"], "source_url": "https://catalog.sjsu.edu/" },
-    "DATA 195": { "title": "Senior Capstone", "units": 3, "prereqs": ["DATA 140", "DATA 130"], "source_url": "https://catalog.sjsu.edu/" }
+    "MATH 30": {
+      "title": "Calculus I",
+      "units": 3,
+      "prereqs": [],
+      "prereq_text": "Prerequisite(s): Math Enrollment Category M-I or M-II and satisfactory score on the Precalculus Proficiency Assessment; MATH 19 with a grade of C- or better to waive the exam; or MATH 18A and MATH 18B, with a grade of C- or better in each to waive the exam. Corequisite(s): MATH 30W for students with satisfactory score on the Precalculus Proficiency Assessment or MATH 19 with a grade of B- or lower or MATH 18A and MATH 18B with a grade of B- or lower or students who are repeating MATH 30.",
+      "needs_review": [
+        "Prerequisite is placement or MATH 19/MATH 18A+18B; no course edge stored."
+      ],
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=1284"
+    },
+    "MATH 31": {
+      "title": "Calculus II",
+      "units": 4,
+      "prereqs": [
+        "MATH 30"
+      ],
+      "prereq_text": "Prerequisite(s): AP Calculus AB score 3 to 5, AP Calculus BC/AB Subscore 3-5, or MATH 30 with a grade of C- or better. Corequisite(s): MATH 31W for students with AP Calculus AB score of 3, AP Calculus BC/AB Subscore of 3, or MATH 30 with a grade of B- or lower, or students who are repeating MATH 31.",
+      "notes": [
+        "An AP Calculus AB score of 3-5 also meets the prerequisite.",
+        "A grade of C- (1.7) or better is required to satisfy GE Area 2."
+      ],
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=1284"
+    },
+    "MATH 39": {
+      "title": "Linear Algebra I",
+      "units": 3,
+      "prereqs": [
+        "MATH 31"
+      ],
+      "prereq_text": "Prerequisite(s): MATH 31 (with a grade of \"C-\" or better) or instructor consent.",
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=1286"
+    },
+    "MATH 42": {
+      "title": "Discrete Mathematics",
+      "units": 3,
+      "prereqs": [],
+      "prereq_text": "Prerequisite(s): Math Enrollment Category M-I or M-II and satisfactory score on the Precalculus Proficiency Assessment; AP Calculus AB score 3 to 5, AP Calculus BC score 3 to 5, or AP Pre-Calculus score 3 to 5 to waive the exam; MATH 19 with a grade of \"C-\" or better to waive the exam; or MATH 18A and MATH 18B, with a grade of \"C-\" or better in each to waive the exam. Corequisite(s): MATH 42W for students with satisfactory score on the Precalculus Proficiency Assessment; AP Calculus AB score 3, AP Calculus BC score 3 , or AP Pre-Calculus score 3; MATH 19 with a grade of B- or lower; or MATH 18A and MATH 18B with a grade of B- or lower; or students who are repeating MATH 42.",
+      "needs_review": [
+        "Prerequisite is placement or MATH 19/MATH 18A+18B; no course edge stored."
+      ],
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=1286"
+    },
+    "MATH 161A": {
+      "title": "Applied Probability and Statistics I",
+      "units": 3,
+      "prereqs": [
+        "MATH 31"
+      ],
+      "prereq_text": "Prerequisite(s): MATH 31 (with a grade of \"C-\" or better) or instructor consent.",
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=1293"
+    },
+    "MATH 167R": {
+      "title": "Statistical Programming with R",
+      "units": 3,
+      "prereqs": [
+        "MATH 161A"
+      ],
+      "prereq_text": "Prerequisite(s): MATH 161A with a grade of \"C-\" or better. Allowed Declared Major: Mathematics major/minor, MS Statistics, MS Data Science, or MS Bioinformatics.",
+      "needs_review": [
+        "The course description's allowed-majors list doesn't include Data Science, though the Data Science, BS lists this course."
+      ],
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=1294"
+    },
+    "CS 100W": {
+      "title": "Technical Writing Workshop",
+      "units": 3,
+      "prereqs": [],
+      "prereq_text": "Prerequisite(s): A3 or equivalent second semester composition course (with a grade of C- or better); completion of core GE; and upper division standing. Or Graduate or Postbaccalaureate level. Allowed Declared Majors: Computer Science, Data Science, Computer Science and Linguistics, or Mathematics.",
+      "notes": [
+        "Must be passed with C or better to satisfy the CSU Graduation Writing Assessment Requirement (GWAR)."
+      ],
+      "needs_review": [
+        "Prerequisites are second-semester composition, completion of core GE, and upper-division standing; no course edge stored."
+      ],
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=885"
+    },
+    "PHIL 133": {
+      "title": "Ethics in Science",
+      "units": 3,
+      "prereqs": [],
+      "prereq_text": "Prerequisite(s): Completion of Core General Education and upper division standing are prerequisites to all UD GE courses. Completion of, or co-registration in, 100W is strongly recommended.",
+      "needs_review": [
+        "Prerequisites are completion of core GE and upper-division standing; no course edge stored."
+      ],
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=1473"
+    },
+    "CS 22A": {
+      "title": "Python for Everyone",
+      "units": 3,
+      "prereqs": [],
+      "prereq_text": "Corequisite(s): CS 1022AS is required for Math Enrollment Category M-III and M-IV.",
+      "notes": [
+        "The Data Science, BS says CS 22A requires prior department approval."
+      ],
+      "needs_review": [
+        "Counts for the Data Science, BS only with prior department approval."
+      ],
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=881"
+    },
+    "CS 122": {
+      "title": "Advanced Programming with Python",
+      "units": 3,
+      "prereqs": [
+        "CS 146"
+      ],
+      "prereq_text": "Prerequisite(s): CS 146 (with a grade of \"C-\" or better) or instructor consent. Computer Science, Data Science, Computer Science and Linguistics, Applied and Computational Math, or Software Engineering majors only.",
+      "needs_review": [
+        "Listed both in 'CS 22A or CS 122' and in Major Electives; the catalog doesn't say whether one course can count for both. The planner counts it once."
+      ],
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=886"
+    },
+    "CS 46A": {
+      "title": "Introduction to Programming",
+      "units": 4,
+      "prereqs": [],
+      "prereq_text": "Prerequisite(s): Math Enrollment Category M-I, M-II, or M-III, or MATH 1 with a grade of C- or better; and a major of Computer Science, Data Science, Computer Science and Linguistics, Mathematics, Statistics, Applied and Computational Math, Software Engineering, Forensic Science: Digital Evidence, or Undeclared; or instructor consent.",
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=882"
+    },
+    "CS 46AX": {
+      "title": "Introduction to Programming",
+      "units": 4,
+      "prereqs": [],
+      "prereq_text": "Prerequisite(s): Math Enrollment Category M-I, M-II, or M-III, or MATH 1 with a grade of C- or better; and a major of Computer Science, Data Science, Computer Science and Linguistics, Mathematics, Statistics, Applied and Computational Math, Software Engineering, Forensic Science: Digital Evidence, or Undeclared; or instructor consent. Corequisite(s): CS 46AW.",
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=883"
+    },
+    "CS 46B": {
+      "title": "Introduction to Data Structures",
+      "units": 4,
+      "prereqs": [],
+      "prereqs_one_of": [
+        [
+          "CS 46A",
+          "CS 46AX"
+        ]
+      ],
+      "prereq_text": "Prerequisite(s): CS 46A or CS 46AX (with grade of C- or better). (If CS 46A was not in Java, then CS 46AW also required.) Math Enrollment Category M-I or M-II and satisfactory score on the Precalculus Proficiency Assessment (70 or higher), or MATH 19 with a C- or better, or MATH 18A and MATH 18B with C- or better; Allowed Majors: Computer Science, Data Science, Computer Science and Linguistics, Stats, Applied/Computational Math, Software Engineering or Forensic Science: Digital Evidence.",
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=883"
+    },
+    "CS 131": {
+      "title": "Processing Big Data - Tools and Techniques",
+      "units": 3,
+      "prereqs": [
+        "CS 46B"
+      ],
+      "prereq_text": "Prerequisite(s): CS 46B with a grade of \"C-\" or better; or CS 22B with a grade of \"C-\" or better AND graduate standing. Allowed Declared Majors: Computer Science BS, Data Science BS, MS Bioinformatics (MSBI).",
+      "notes": [
+        "The CS 22B alternative in the prerequisite also requires graduate standing."
+      ],
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=887"
+    },
+    "CS 133": {
+      "title": "Introduction to Data Visualization",
+      "units": 3,
+      "prereqs": [
+        "CS 146"
+      ],
+      "prereq_text": "Prerequisite(s): CS 146 with a grade of C- or better, or [CS 22B and graduate standing]. Computer Science, Data Science, Computer Science and Linguistics, or Software Engineering majors only.",
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=887"
+    },
+    "CS 146": {
+      "title": "Data Structures and Algorithms",
+      "units": 3,
+      "prereqs": [
+        "MATH 30",
+        "MATH 42",
+        "CS 46B"
+      ],
+      "prereq_text": "Prerequisite(s): MATH 30, MATH 42, CS 46B, and [(CS 48 or CS 49J) if CS 46B was not in Java], each with a grade of C- or better; Computer Science, Applied and Computational Math, Forensic Science: Digital Evidence, Software Engineering, Data Science, Computer Science and Linguistics majors only; or instructor consent.",
+      "needs_review": [
+        "Also requires CS 48 or CS 49J if CS 46B was not taken in Java; not stored as an edge."
+      ],
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=888"
+    },
+    "CS 156": {
+      "title": "Introduction to Artificial Intelligence",
+      "units": 3,
+      "prereqs": [
+        "CS 146"
+      ],
+      "prereq_text": "Prerequisite(s): CS 146 (with a grade of \"C-\" or better); Allowed Majors: Computer Science, Data Science, Computer Science and Linguistics, Applied and Computational Mathematics or Software Engineering; or instructor consent.",
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=890"
+    },
+    "CS 157A": {
+      "title": "Introduction to Database Management Systems",
+      "units": 3,
+      "prereqs": [
+        "CS 146"
+      ],
+      "prereq_text": "Prerequisite(s): CS 146 (with a grade of \"C-\" or better); Computer Science, Applied and Computational Math, Forensic Science: Digital Evidence, Software Engineering, Data Science, or Computer Science and Linguistics majors only; or instructor consent.",
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=891"
+    },
+    "CS 163": {
+      "title": "Data Science Senior Project",
+      "units": 3,
+      "prereqs": [
+        "CS 100W",
+        "CS 131"
+      ],
+      "prereqs_one_of": [
+        [
+          "CS 156",
+          "CS 171"
+        ]
+      ],
+      "prereq_text": "Prerequisite(s): CS 100W, CS 131, and either CS 156 or CS 171.",
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=892"
+    },
+    "CS 171": {
+      "title": "Introduction to Machine Learning",
+      "units": 3,
+      "prereqs": [
+        "CS 146"
+      ],
+      "prereq_text": "Prerequisite(s): CS 146 (with a grade of C- or better). Computer Science, Data Science, Computer Science and Linguistics, or Software Engineering majors only.",
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=893"
+    },
+    "CS 22B": {
+      "title": "Python Programming for Data Analysis",
+      "units": 3,
+      "prereqs": [
+        "CS 22A"
+      ],
+      "prereq_text": "Prerequisite(s): CS 22A with a grade of C- or better, or consent of the instructor; Allowed Majors: Data Science, Biology (all) or Chemistry (all).",
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=881"
+    },
+    "CS 47": {
+      "title": "Introduction to Computer Systems",
+      "units": 3,
+      "prereqs": [
+        "MATH 42",
+        "CS 46B"
+      ],
+      "prereq_text": "Prerequisite(s): CS 42 / MATH 42, and CS 46B (with a grade of \"C-\" or better);Allowed Majors: Computer Science, Data Science, Forensic Science: Digital Evidence.",
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=883"
+    },
+    "CS 48": {
+      "title": "Applied Algorithms",
+      "units": 1,
+      "prereqs": [
+        "CS 46B"
+      ],
+      "prereq_text": "Prerequisite(s): CS 46B and one Java course (with grades of C- or better), or instructor consent.",
+      "needs_review": [
+        "Also requires one Java course; not stored as an edge."
+      ],
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=883"
+    },
+    "CS 49J": {
+      "title": "Programming in Java",
+      "units": 3,
+      "prereqs": [
+        "CS 46B"
+      ],
+      "prereq_text": "Prerequisite(s): CS 46B or equivalent in a language other than Java; Allowed Majors: Computer Science, Data Science, Math, Math ITEP, Stats, Applied/Computational Math, Software Engineering, Forensic Science: Digital Evidence, or Undeclared.",
+      "notes": [
+        "(may be used with prior approval)"
+      ],
+      "needs_review": [
+        "The Data Science, BS lists this course as usable only with prior approval."
+      ],
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=884"
+    },
+    "CS 85A": {
+      "title": "Practical Computing Topics",
+      "units": 1,
+      "prereqs": [],
+      "prereq_text": "Prerequisite(s): Varies with topic",
+      "notes": [
+        "(may be used with prior approval)"
+      ],
+      "needs_review": [
+        "The Data Science, BS lists this course as usable only with prior approval.",
+        "Prerequisites vary with topic."
+      ],
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=884"
+    },
+    "CS 116A": {
+      "title": "Introduction to Computer Graphics",
+      "units": 3,
+      "prereqs": [
+        "MATH 31",
+        "MATH 39",
+        "CS 146"
+      ],
+      "prereq_text": "Prerequisite(s): Prerequisite(s): MATH 31, MATH 39, CS 146 (with a grade of \"C-\" or better in each) and previous programming experience in C/C++; Allowed Majors: Computer Science, Data Science, Software Engineering or Applied/Computational Math or instructor's consent.",
+      "needs_review": [
+        "Also requires previous programming experience in C/C++."
+      ],
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=885"
+    },
+    "CS 123A": {
+      "title": "Bioinformatics I",
+      "units": 3,
+      "prereqs": [],
+      "prereqs_one_of": [
+        [
+          "CS 46B",
+          "BIOL 31"
+        ]
+      ],
+      "prereq_text": "Prerequisite(s): CS 46B or BIOL 31, or instructor consent. Allowed Majors: Computer Science, Data Science, Software Engineering, Biology, Chemistry or MS Bioinformatics.",
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=886"
+    },
+    "CS 123B": {
+      "title": "Bioinformatics II",
+      "units": 3,
+      "prereqs": [],
+      "prereqs_one_of": [
+        [
+          "CS 123A",
+          "BIOL 123A",
+          "SE 123A"
+        ]
+      ],
+      "prereq_text": "Prerequisite(s): CS 123A/BIOL 123A/SE 123A; Allowed Majors: Computer Science, Data Science, Software Engineering Biology, Chemistry or MS Bioinformatics.",
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=886"
+    },
+    "CS 136": {
+      "title": "Introduction to Computer Vision",
+      "units": 3,
+      "prereqs": [
+        "CS 146",
+        "MATH 39",
+        "CS 49C"
+      ],
+      "prereq_text": "Prerequisite(s): CS 146, MATH 39, and CS 49C or equivalent (with a grade of \"C-\" or better in each).",
+      "needs_review": [
+        "CS 49C 'or equivalent' is accepted; CS 49C isn't part of this major's course list."
+      ],
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=887"
+    },
+    "CS 151": {
+      "title": "Object-Oriented Design",
+      "units": 3,
+      "prereqs": [
+        "MATH 42",
+        "CS 46B"
+      ],
+      "prereq_text": "Prerequisite(s): MATH 42, CS 46B, and [(CS 48 or CS 49J) if CS 46B was not in Java], each with a grade of C- or better; Allowed Declared Majors: Computer Science, Applied and Computational Math, Software Engineering, or Data Science; or instructor consent.",
+      "needs_review": [
+        "Also requires CS 48 or CS 49J if CS 46B was not taken in Java; not stored as an edge."
+      ],
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=889"
+    },
+    "CS 155": {
+      "title": "Introduction to the Design and Analysis of Algorithms",
+      "units": 3,
+      "prereqs": [
+        "CS 146"
+      ],
+      "prereq_text": "Prerequisite(s): CS 146 (with a grade of \"C-\" or better); Allowed Majors: Computer Science, Data Science, Computer Science and Linguistics, Applied and Computational Mathematics or Software Engineering; or instructor consent.",
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=890"
+    },
+    "CS 157B": {
+      "title": "Database Management Systems II",
+      "units": 3,
+      "prereqs": [
+        "CS 157A"
+      ],
+      "prereq_text": "Prerequisite(s): CS 157A (with a grade of \"C-\" or better); Computer Science, Applied and Computational Math, Forensic Science: Digital Evidence, or Software Engineering Majors only; or instructor consent.",
+      "needs_review": [
+        "The course description's allowed-majors list doesn't include Data Science, though the Data Science, BS lists this course."
+      ],
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=891"
+    },
+    "CS 157C": {
+      "title": "NoSQL Database Systems",
+      "units": 3,
+      "prereqs": [
+        "CS 157A"
+      ],
+      "prereq_text": "Prerequisite(s): CS 157A with a \"C- or better\". Computer Science or Software Engineering majors only.",
+      "needs_review": [
+        "The course description's allowed-majors list doesn't include Data Science, though the Data Science, BS lists this course."
+      ],
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=891"
+    },
+    "CS 158A": {
+      "title": "Computer Networks",
+      "units": 3,
+      "prereqs": [
+        "CS 146",
+        "CS 47"
+      ],
+      "prereq_text": "Prerequisite(s): CS 146 and CS 47 (with grades of \"C-\" or better); Computer Science or Software Engineering majors only, or instructor consent.",
+      "needs_review": [
+        "The course description's allowed-majors list doesn't include Data Science, though the Data Science, BS lists this course."
+      ],
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=891"
+    },
+    "CS 166": {
+      "title": "Information Security",
+      "units": 3,
+      "prereqs": [
+        "CS 146"
+      ],
+      "prereqs_one_of": [
+        [
+          "CS 47",
+          "CMPE 102",
+          "CMPE 120"
+        ]
+      ],
+      "prereq_text": "Prerequisite(s): CS 146 (with a grade of \"C-\" or better) and either CS 47 or CMPE 102 or CMPE 120 (with a grade of \"C-\" or better); Computer Science, Data Science, Computer Science and Linguistics, Applied and Computational Math, Forensic Science: Digital Evidence, or Software Engineering Majors only; or instructor consent.",
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=893"
+    },
+    "CS 176": {
+      "title": "Introduction to Social Network Analysis",
+      "units": 3,
+      "prereqs": [
+        "CS 146"
+      ],
+      "prereq_text": "Prerequisite(s): CS 146 (with a grade of C-); or instructor consent. Computer Science, Data Science, Computer Science and Linguistics, or Software Engineering majors only, or instructor consent.",
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=894"
+    },
+    "CS 180": {
+      "title": "Individual Studies",
+      "units": 1,
+      "units_max": 3,
+      "prereqs": [],
+      "prereq_text": "Prerequisite(s): Department chair consent. Not available to Open University Students",
+      "notes": [
+        "(may be used with prior approval)",
+        "Listed as 'CS 180 or CS 180H'."
+      ],
+      "needs_review": [
+        "The Data Science, BS lists this course as usable only with prior approval."
+      ],
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=894"
+    },
+    "CS 180H": {
+      "title": "Individual Studies for Honors",
+      "units": 3,
+      "prereqs": [],
+      "prereq_text": "Prerequisite(s): At least junior standing as computer science major. GPA of 3.5 or higher in the major and department chair consent.",
+      "notes": [
+        "(may be used with prior approval)",
+        "Listed as 'CS 180 or CS 180H'."
+      ],
+      "needs_review": [
+        "The Data Science, BS lists this course as usable only with prior approval.",
+        "The prerequisite asks for junior standing as a computer science major."
+      ],
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=894"
+    },
+    "CS 185C": {
+      "title": "Advanced Practical Computing Topics",
+      "units": 3,
+      "prereqs": [],
+      "prereq_text": "Prerequisite(s): Varies with topic; Allowed Majors: Computer Science or Data Science.",
+      "notes": [
+        "(At most 6 units may be used)"
+      ],
+      "needs_review": [
+        "At most 6 units count; the planner doesn't enforce the cap."
+      ],
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=894"
+    },
+    "CS 190": {
+      "title": "Internship Project",
+      "units": 1,
+      "prereqs": [
+        "CS 146"
+      ],
+      "prereq_text": "Prerequisite(s): CS 146 (with a grade of \"C-\" or better) or graduate standing, selection by a company, and instructor consent",
+      "notes": [
+        "(At most 3 units may be used)",
+        "Listed as 'CS 190 or CS 190I'."
+      ],
+      "needs_review": [
+        "At most 3 units count across CS 190/CS 190I; requires selection by a company and instructor consent."
+      ],
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=895"
+    },
+    "CS 190I": {
+      "title": "Internship Project",
+      "units": 3,
+      "prereqs": [
+        "CS 146"
+      ],
+      "prereq_text": "Prerequisite(s): CS 146 (with a grade of \"C-\" or better) or graduate standing, selection by a company, and instructor consent.",
+      "notes": [
+        "(At most 3 units may be used)",
+        "Listed as 'CS 190 or CS 190I'."
+      ],
+      "needs_review": [
+        "At most 3 units count across CS 190/CS 190I; requires selection by a company and instructor consent."
+      ],
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=895"
+    },
+    "MATH 32": {
+      "title": "Calculus III",
+      "units": 3,
+      "prereqs": [
+        "MATH 31"
+      ],
+      "prereq_text": "Prerequisite(s): Score of 4 to 5 on the AP Calculus BC Exam; or MATH 31 with a grade of B or better. Corequisite(s): MATH 32W for students with a score of 3 on the AP Calculus BC Exam; or MATH 31 with a grade of B- or lower; or students who are repeating MATH 32.",
+      "notes": [
+        "MATH 31 needs a grade of B or better, or an AP Calculus BC score of 4-5.",
+        "A grade of C- (1.7) or better is required to satisfy GE Area 2."
+      ],
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=1285"
+    },
+    "MATH 161B": {
+      "title": "Applied Probability and Statistics II",
+      "units": 3,
+      "prereqs": [
+        "MATH 161A"
+      ],
+      "prereq_text": "Prerequisite(s): MATH 161A (with a grade of \"C-\" or better), or instructor consent",
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=1293"
+    },
+    "MATH 161C": {
+      "title": "Applied Probability and Statistics III",
+      "units": 3,
+      "prereqs": [
+        "MATH 161B"
+      ],
+      "prereq_text": "Prerequisite(s): MATH 161B (with C- or better) or equivalent (with instructor consent).",
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=1293"
+    },
+    "MATH 163": {
+      "title": "Probability Theory",
+      "units": 3,
+      "prereqs": [
+        "MATH 32",
+        "MATH 161A"
+      ],
+      "prereq_text": "Prerequisite(s): MATH 32, and MATH 161A (each with a grade of \"C-\" or better) or instructor consent.",
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=1294"
+    },
+    "MATH 164": {
+      "title": "Mathematical Statistics",
+      "units": 3,
+      "prereqs": [
+        "MATH 163"
+      ],
+      "prereq_text": "Prerequisite(s): MATH 163 (with a grade of \"C-\" or better) or instructor consent.",
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=1294"
+    },
+    "SSCI 101": {
+      "title": "Leadership and Career Accelerator",
+      "units": 3,
+      "prereqs": [],
+      "prereq_text": "Prerequisite(s): ENGL 1A or ENGL 1AS with a grade of \"C-\" or better or complete GE Area 1A with a grade of \"C-\" or better.",
+      "notes": [
+        "Why Take SSCI 101? High Impact Practice: Collaborative Assignments/Project"
+      ],
+      "needs_review": [
+        "Prerequisite is ENGL 1A/1AS or GE Area 1A; no course edge stored."
+      ],
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=1573"
+    }
   },
   "groups": [
     {
       "id": "ds-prep",
-      "title": "Lower-division preparation",
+      "title": "Major Preparation",
       "rule": "all",
-      "courses": ["MATH 30", "MATH 31", "MATH 39", "CS 46A", "CS 46B", "STAT 95"],
-      "source_url": "https://catalog.sjsu.edu/"
+      "courses": [
+        "MATH 30",
+        "MATH 31",
+        "MATH 39",
+        "MATH 42",
+        "MATH 161A",
+        "MATH 167R",
+        "CS 100W",
+        "PHIL 133"
+      ],
+      "notes": [
+        "Major Preparation (25 units)"
+      ],
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=1902"
     },
     {
-      "id": "ds-core",
-      "title": "Upper-division core",
+      "id": "ds-python",
+      "title": "CS 22A or CS 122",
+      "rule": "n_of",
+      "n": 1,
+      "courses": [
+        "CS 22A",
+        "CS 122"
+      ],
+      "notes": [
+        "Complete one course. CS 22A requires prior department approval."
+      ],
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=1902"
+    },
+    {
+      "id": "ds-lower",
+      "title": "Major Requirements: Lower Division",
+      "rule": "n_of",
+      "n": 1,
+      "courses": [
+        "CS 46A",
+        "CS 46AX"
+      ],
+      "notes": [
+        "CS 46A or CS 46AX"
+      ],
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=1902"
+    },
+    {
+      "id": "ds-lower-46b",
+      "title": "Major Requirements: Lower Division",
       "rule": "all",
-      "courses": ["DATA 101", "DATA 120", "DATA 130", "DATA 140", "DATA 195"],
-      "source_url": "https://catalog.sjsu.edu/"
+      "courses": [
+        "CS 46B"
+      ],
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=1902"
+    },
+    {
+      "id": "ds-upper",
+      "title": "Major Requirements: Upper Division",
+      "rule": "all",
+      "courses": [
+        "CS 131",
+        "CS 133",
+        "CS 146",
+        "CS 156",
+        "CS 157A",
+        "CS 163",
+        "CS 171"
+      ],
+      "notes": [
+        "Upper Division (21 units)"
+      ],
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=1902"
     },
     {
       "id": "ds-electives",
-      "title": "Upper-division electives",
-      "rule": "n_of",
-      "n": 2,
-      "courses": ["DATA 150", "DATA 160", "DATA 170", "DATA 180"],
-      "source_url": "https://catalog.sjsu.edu/"
+      "title": "Major Electives",
+      "rule": "units",
+      "units": 15,
+      "courses": [
+        "CS 22B",
+        "CS 47",
+        "CS 48",
+        "CS 49J",
+        "CS 85A",
+        "CS 116A",
+        "CS 122",
+        "CS 123A",
+        "CS 123B",
+        "CS 136",
+        "CS 151",
+        "CS 155",
+        "CS 157B",
+        "CS 157C",
+        "CS 158A",
+        "CS 166",
+        "CS 176",
+        "CS 180",
+        "CS 180H",
+        "CS 185C",
+        "CS 190",
+        "CS 190I",
+        "MATH 32",
+        "MATH 161B",
+        "MATH 161C",
+        "MATH 163",
+        "MATH 164",
+        "SSCI 101"
+      ],
+      "notes": [
+        "Complete 15 units from the following courses."
+      ],
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=1902"
+    },
+    {
+      "id": "ds-domain",
+      "title": "Domain Field Electives",
+      "rule": "units",
+      "units": 9,
+      "courses": [],
+      "notes": [
+        "Complete 9 units of major requirement courses of one particular major program (excluding BS - Computer Science, BS - Software Engineering, and BS - Information Science and Data Analytics) to gain domain expertise; requires prior department approval."
+      ],
+      "needs_review": [
+        "The catalog lists no courses: any major's requirement courses can qualify, with prior department approval. The planner can't schedule these 9 units; whether a second major's courses also count here is a question for the department."
+      ],
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=1903"
     }
   ]
 }

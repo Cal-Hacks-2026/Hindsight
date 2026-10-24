@@ -100,8 +100,10 @@ def test_demo_question_runs_the_tools_and_cites_computed_results(counselor_claud
 
     def answer(req):
         econ = last_tool_result(req)
+        plan = json.loads(req["messages"][-3]["content"][0]["content"])  # the plan_with_majors result
         ds = student_data(req)["match_results"][0]
-        return (f"Can't tell yet. ECON 1B is still missing [{source_of(econ, 'ECON 1B')}], and your Calculus "
+        return (f"No: with Econ the plan runs to {plan['last_term']} [{plan['requirements_sources'][1]}]. "
+                f"ECON 1B is still missing [{source_of(econ, 'ECON 1B')}], and your Calculus "
                 f"is done [{source_of(ds, 'MATH 31')}][S999].", None)
 
     counselor_claude.steps += [
@@ -122,22 +124,25 @@ def test_demo_question_runs_the_tools_and_cites_computed_results(counselor_claud
     assert [o["title"] for o in data["top_opportunities"]] == ["AI Fellows Program"]
     assert "url" not in data["top_opportunities"][0]  # Claude cites by id; it never sees or writes URLs
 
-    # Econ isn't curated for planning, so the planner says so instead of Claude guessing.
+    # Both majors are curated, so the planner, not Claude, decides the finish term.
     plan_result = last_tool_result(counselor_claude.requests[1])
-    assert "Economics" in plan_result["error"] and DS in plan_result["error"]
+    assert plan_result["majors"] == [DS, ECON] and plan_result["finishes_by_target"] is False
+    assert [n["requirement"] for n in plan_result["not_scheduled"]] == ["Domain Field Electives"]
     econ = last_tool_result(counselor_claude.requests[2])
     assert econ["summary"]["missing"] == 1
 
     # [S…] → [1], [2] in order of use; unknown ids dropped.
-    assert "[1]" in body.reply and "[2]" in body.reply and "S999" not in body.reply and "[S" not in body.reply
-    assert [c.source for c in body.citations] == ["assist", "assist"]
-    assert "ECON 1B" in body.citations[0].ref and "Economics, B.S." in body.citations[0].label
-    assert "MATH 31" in body.citations[1].ref
-    assert all(c.url.startswith("https://assist.org/") for c in body.citations)
+    assert "[3]" in body.reply and "S999" not in body.reply and "[S" not in body.reply
+    assert [c.source for c in body.citations] == ["catalog", "assist", "assist"]
+    assert body.citations[0].url.startswith("https://catalog.sjsu.edu/") and "Economics" in body.citations[0].label
+    assert "ECON 1B" in body.citations[1].ref and "Economics, B.S." in body.citations[1].label
+    assert "MATH 31" in body.citations[2].ref
+    assert all(c.url.startswith("https://assist.org/") for c in body.citations[1:])
 
-    # The plan couldn't be computed, so an advisor question is added even though Claude didn't draft one.
+    # The Econ requirements weren't checked against 2026-27, so an advisor question is added
+    # even though Claude didn't draft one.
     assert "Confirm with your advisor" in body.reply
-    assert "Economics, B.S." in body.reply.split("Confirm with your advisor", 1)[1]
+    assert "2026-2027" in body.reply.split("Confirm with your advisor", 1)[1]
 
     # Every Claude call is charged to the daily cap; tools were allowed on each.
     assert fresh_claude_limiter._day_count == 3
@@ -215,10 +220,20 @@ def test_plan_uses_assist_matches_and_answers_finish_by():
     assert s.plan([DS], "Spring 2027")["finishes_by_target"] is False
     unparsed = s.plan([DS], "sometime in 2028")
     assert unparsed["finishes_by_target"] is None and "target_error" in unparsed
-    # The DS file is placeholder data, so citing its courses always triggers the advisor question.
-    sid = plan["semesters"][0]["courses"][0]["source"]
-    assert "placeholder" in s.sources.uncertain[sid]
-    assert s.sources.citations[sid].label.startswith("PLACEHOLDER · ")
+    # Catalog sources carry the curator's review flags into the advisor question.
+    sources = {c["code"]: c["source"] for sem in plan["semesters"] for c in sem["courses"]}
+    assert "2026-2027" in s.sources.uncertain[sources["MATH 39"]]  # no flag of its own: the major's
+    assert "allowed-majors" in s.sources.uncertain[sources["MATH 167R"]]
+    by_code = {c["code"]: c for sem in plan["semesters"] for c in sem["courses"]}
+    assert "needs_review" not in by_code["MATH 39"] and by_code["MATH 167R"]["needs_review"]
+    assert "2026-2027" in plan["requirements_caveats"][DS][0]
+    assert s.sources.citations[sources["MATH 39"]].url.startswith("https://catalog.sjsu.edu/")
+    # MATH 39 and MATH 42 share a catalog page; they're still separate sources.
+    assert sources["MATH 39"] != sources["MATH 42"]
+    assert s.sources.uncertain[sources["MATH 39"]] != s.sources.uncertain[sources["MATH 42"]]
+    assert "2026-2027" in s.sources.uncertain[plan["requirements_sources"][0]]
+    [domain] = plan["not_scheduled"]
+    assert domain["units"] == 9 and domain["source"] in s.sources.uncertain
 
 
 @pytest.mark.parametrize(("last", "target", "verdict"), [
@@ -344,4 +359,4 @@ def test_live_demo_question(monkeypatch, capsys):
         for i, c in enumerate(citations, 1):
             print(f"[{i}] {c.source} · {c.label} · {c.ref or ''}")
     assert citations and "[S" not in reply and "http" not in reply
-    assert "Confirm with your advisor" in reply  # Econ isn't curated for planning yet
+    assert "Confirm with your advisor" in reply  # the curated data is flagged as not checked against 2026-27
