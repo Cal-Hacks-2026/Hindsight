@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router";
 import type { AssistMajor, Course, Profile } from "@hindsight/contracts";
 import { Masthead, Note, Section } from "../components/Paper";
@@ -52,7 +52,7 @@ export function Onboarding() {
   const current = STEPS[index]!;
 
   return (
-    <>
+    <div className="intake">
       <Masthead kicker="Intake · Three steps" byline={`${DE_ANZA_NAME} → ${SJSU_NAME}`}>
         Begin with your
         <br />
@@ -84,7 +84,7 @@ export function Onboarding() {
         )}
         {step === "upload" && profile && (
           <UploadStep
-            profileId={profile.id}
+            profile={profile}
             onDone={(courses) => {
               setRows(courses.map((course, i) => ({ key: i, course })));
               setStep("confirm");
@@ -93,8 +93,22 @@ export function Onboarding() {
         )}
         {step === "confirm" && profile && <ConfirmStep profile={profile} rows={rows} setRows={setRows} />}
       </Section>
-    </>
+    </div>
   );
+}
+
+/**
+ * Saves the confirmed courses (none is fine), matches every major, and opens Degree.
+ * With no courses every requirement comes back Missing, which is the honest picture for a freshman.
+ */
+function useMatchAndOpenDegree(profile: Profile) {
+  const navigate = useNavigate();
+  return async (courses: Course[]) => {
+    await api.confirmCourses(profile.id, courses);
+    const matches = await Promise.all(profile.majors.map((m) => api.match(profile.id, m)));
+    saveSession({ profile, courses, matches });
+    navigate("/degree", { state: { matches } });
+  };
 }
 
 function ProfileStep({ onDone }: { onDone: (p: Profile) => void }) {
@@ -205,23 +219,48 @@ function ProfileStep({ onDone }: { onDone: (p: Profile) => void }) {
   );
 }
 
-function UploadStep({ profileId, onDone }: { profileId: string; onDone: (courses: Course[]) => void }) {
+function UploadStep({ profile, onDone }: { profile: Profile; onDone: (courses: Course[]) => void }) {
+  const matchAndOpenDegree = useMatchAndOpenDegree(profile);
+  const fileInput = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState<"reading" | "matching" | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // The file parsed but held no courses (blank page, a resume…).
+  const [empty, setEmpty] = useState(false);
 
   async function upload(e: FormEvent) {
     e.preventDefault();
     if (!file) return;
-    setBusy(true);
+    setBusy("reading");
     setError(null);
     try {
-      const { courses } = await api.uploadTranscript(profileId, file);
-      onDone(courses);
+      const { courses } = await api.uploadTranscript(profile.id, file);
+      if (courses.length) onDone(courses);
+      else setEmpty(true);
     } catch (e) {
       setError(errorText(e));
     } finally {
-      setBusy(false);
+      setBusy(null);
+    }
+  }
+
+  async function continueWithoutCourses() {
+    setBusy("matching");
+    setError(null);
+    try {
+      await matchAndOpenDegree([]);
+    } catch (e) {
+      setError(errorText(e));
+      setBusy(null);
+    }
+  }
+
+  // Opens the file picker; picking a file brings back the Upload button.
+  function tryAnother() {
+    setFile(null);
+    if (fileInput.current) {
+      fileInput.current.value = "";
+      fileInput.current.click();
     }
   }
 
@@ -231,15 +270,48 @@ function UploadStep({ profileId, onDone }: { profileId: string; onDone: (courses
         Upload your community-college transcript, as a PDF or a photo. We'll read the courses, then you check them
         before anything is matched.
       </p>
+      {empty && (
+        <div className="state" role="alert">
+          <h3>We didn't find any courses in this file.</h3>
+          <p>
+            It may be blank, unreadable, or not a transcript. Try another file, or continue without courses and every
+            requirement will show as missing.
+          </p>
+        </div>
+      )}
       <label className="field">
         <span className="label">Transcript</span>
-        <input type="file" accept="application/pdf,image/*" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
+        <input
+          ref={fileInput}
+          type="file"
+          accept="application/pdf,image/*"
+          onChange={(e) => {
+            setFile(e.target.files?.[0] ?? null);
+            setEmpty(false);
+          }}
+        />
       </label>
       {error && <p className="error">{error}</p>}
       <div className="actions">
-        <button className="primary" type="submit" disabled={!file || busy}>
-          {busy ? "Reading transcript…" : "Upload"}
-        </button>
+        {empty ? (
+          <>
+            <button className="primary" type="button" onClick={tryAnother} disabled={!!busy}>
+              Try another file
+            </button>
+            <button type="button" onClick={() => void continueWithoutCourses()} disabled={!!busy}>
+              {busy === "matching" ? "Matching…" : "Continue without courses"}
+            </button>
+          </>
+        ) : (
+          <>
+            <button className="primary" type="submit" disabled={!file || !!busy}>
+              {busy === "reading" ? "Reading transcript…" : "Upload"}
+            </button>
+            <button className="text" type="button" onClick={() => void continueWithoutCourses()} disabled={!!busy}>
+              {busy === "matching" ? "Matching…" : "I haven't taken any college courses yet"}
+            </button>
+          </>
+        )}
       </div>
     </form>
   );
@@ -256,7 +328,7 @@ function ConfirmStep({
   rows: Row[];
   setRows: (fn: (rows: Row[]) => Row[]) => void;
 }) {
-  const navigate = useNavigate();
+  const matchAndOpenDegree = useMatchAndOpenDegree(profile);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -270,10 +342,7 @@ function ConfirmStep({
     setBusy(true);
     setError(null);
     try {
-      await api.confirmCourses(profile.id, rows.map((r) => r.course));
-      const matches = await Promise.all(profile.majors.map((m) => api.match(profile.id, m)));
-      saveSession({ profile, courses: rows.map((r) => r.course), matches });
-      navigate("/degree", { state: { matches } });
+      await matchAndOpenDegree(rows.map((r) => r.course));
     } catch (e) {
       setError(errorText(e));
       setBusy(false);
@@ -301,9 +370,9 @@ function ConfirmStep({
           <tbody>
             {rows.map(({ key, course: c }) => (
               <tr key={key}>
-                <td><input aria-label="Prefix" value={c.prefix} onChange={(e) => text(key, "prefix", e.target.value)} /></td>
-                <td><input aria-label="Number" value={c.number} onChange={(e) => text(key, "number", e.target.value)} /></td>
-                <td>
+                <td data-label="Prefix"><input aria-label="Prefix" value={c.prefix} onChange={(e) => text(key, "prefix", e.target.value)} /></td>
+                <td data-label="Number"><input aria-label="Number" value={c.number} onChange={(e) => text(key, "number", e.target.value)} /></td>
+                <td data-label="Title">
                   <textarea
                     aria-label="Title"
                     rows={1}
@@ -311,7 +380,7 @@ function ConfirmStep({
                     onChange={(e) => text(key, "title", e.target.value.replace(/\s*\n\s*/g, " "))}
                   />
                 </td>
-                <td>
+                <td data-label="Units">
                   <input
                     aria-label="Units"
                     type="number"
@@ -321,8 +390,8 @@ function ConfirmStep({
                     onChange={(e) => update(key, { units: Number(e.target.value) || 0 })}
                   />
                 </td>
-                <td><input aria-label="Grade" value={c.grade} onChange={(e) => text(key, "grade", e.target.value)} /></td>
-                <td><input aria-label="Term" value={c.term} onChange={(e) => text(key, "term", e.target.value)} /></td>
+                <td data-label="Grade"><input aria-label="Grade" value={c.grade} onChange={(e) => text(key, "grade", e.target.value)} /></td>
+                <td data-label="Term"><input aria-label="Term" value={c.term} onChange={(e) => text(key, "term", e.target.value)} /></td>
                 <td>
                   <button type="button" onClick={() => remove(key)} aria-label={`Remove ${c.prefix} ${c.number}`}>
                     ✕
