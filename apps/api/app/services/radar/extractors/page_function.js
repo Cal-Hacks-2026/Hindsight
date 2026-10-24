@@ -1,6 +1,6 @@
 // Cheerio Scraper pageFunction (Apify Store actor apify/cheerio-scraper).
-// Returns raw material only; app/services/radar/normalize.py turns it into §8.3 items,
-// so all parsing stays in Python where it's unit-tested.
+// Returns raw material only; the matching extractors/<kind>.py turns it into §8.3 items,
+// so parsing stays in Python where it is unit-tested.
 async function pageFunction(context) {
     const { request, $, json, body, contentType } = context;
     const out = {
