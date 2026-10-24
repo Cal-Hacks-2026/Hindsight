@@ -8,7 +8,7 @@ from fastapi.testclient import TestClient
 
 from app.config import ASSIST_YEAR_ID
 from app.main import app
-from app.models import Citation, MatchResult, MatchSummary, PlanResponse, Requirement
+from app.models import Citation, Course, MatchResult, MatchSummary, PlanResponse, Requirement
 from app.services import mocks, planner
 from app.services.assist import AssistError, get_service
 from app.services.planner import Major, PlannerError, UnknownMajor, build_plan, resolve_majors
@@ -111,13 +111,93 @@ def test_resolve_majors_handles_commas_in_labels():
     ds = major(CHAIN, [], label="Data Science, B.S.")
     econ = major(CHAIN, [], label="Economics, B.A.")
     pop = major(CHAIN, [], label="Population Data Science, B.S.")
-    chosen = resolve_majors("Data Science, B.S.,Economics, B.A.", [], "sjsu", [ds, econ, pop])
-    assert [m.major_label for m in chosen] == ["Data Science, B.S.", "Economics, B.A."]
-    assert resolve_majors(None, ["Economics, B.A."], "sjsu", [ds, econ]) == [econ]
+    chosen, uncurated = resolve_majors("Data Science, B.S.,Economics, B.A.", [], "sjsu", [ds, econ, pop])
+    assert [m.major_label for m in chosen] == ["Data Science, B.S.", "Economics, B.A."] and uncurated == []
+    assert resolve_majors(None, ["Economics, B.A."], "sjsu", [ds, econ]) == ([econ], [])
     with pytest.raises(UnknownMajor):
         resolve_majors("Data Science", [], "sjsu", [ds])
     with pytest.raises(UnknownMajor):
         resolve_majors(None, ["Data Science, B.S."], "berkeley", [ds])
+
+
+def test_resolve_majors_returns_uncurated_labels_beside_the_curated_ones():
+    ds = major(CHAIN, [], label="Data Science, B.S.")
+    raw = "Computer Science, B.S.,Data Science, B.S.,Business Administration, Concentration in Finance, B.S."
+    chosen, uncurated = resolve_majors(raw, [], "sjsu", [ds])
+    assert chosen == [ds]
+    assert uncurated == ["Computer Science, B.S.", "Business Administration, Concentration in Finance, B.S."]
+    online = "Anthropology, B.A. (SJSU Online),Data Science, B.S."
+    assert resolve_majors(online, [], "sjsu", [ds]) == ([ds], ["Anthropology, B.A. (SJSU Online)"])
+    assert resolve_majors(None, ["Computer Science, B.S.", "Data Science, B.S."], "sjsu", [ds]) == (
+        [ds], ["Computer Science, B.S."])
+
+
+def test_no_curated_major_is_a_plain_language_404():
+    ds = major(CHAIN, [], label="Data Science, B.S.")
+    with pytest.raises(UnknownMajor) as e:
+        resolve_majors("Computer Science, B.S.,Biology, B.A.", [], "sjsu", [ds])
+    message = str(e.value)
+    assert message.startswith("We don't have SJSU's Computer Science, B.S. and Biology, B.A. requirements yet")
+    assert "lower-division only (from ASSIST)" in message
+    assert "[" not in message and "Plans are available for Data Science, B.S." in message
+
+
+def test_unschedulable_courses_are_named_in_plain_language():
+    courses = {"Z 1": {"title": "Z1", "units": 3, "terms_offered": []}, "Z 2": {"title": "Z2", "units": 3,
+                                                                           "terms_offered": []}}
+    m = major(courses, [{"id": "g", "title": "Core", "rule": "all", "courses": list(courses)}])
+    with pytest.raises(PlannerError) as e:
+        build_plan([m], set(), today=OCT_2026)
+    assert "Z 1, Z 2" in str(e.value) and "[" not in str(e.value)
+
+
+# ---- What counts as done on the transcript (I-09) ----
+
+
+def taken(code: str, grade: str, confirmed=True) -> Course:
+    prefix, number = code.split()
+    return Course(prefix=prefix, number=number, title="t", units=3, grade=grade, term="Fall 2025",
+                  confirmed=confirmed)
+
+
+GRADED = major(
+    {"G 1": {"title": "G1", "units": 3}, "G 2": {"title": "G2", "units": 3}},
+    [{"id": "a", "title": "Core", "rule": "all", "courses": ["G 1"]},
+     {"id": "s", "title": "Statistics", "rule": "all", "courses": ["G 2"], "notes": ['Grade of "C" or better.']}],
+)
+GRADED.notes = ['A grade of "C-" or better is required for courses being used to meet any requirement.']
+
+
+@pytest.mark.parametrize(("code", "grade", "done"), [
+    ("G 1", "A", True), ("G 1", "C-", True), ("G 1", "P", True), ("G 1", "IP", True),
+    ("G 1", "D+", False), ("G 1", "W", False), ("G 1", "F", False), ("G 1", "NP", False), ("G 1", "", False),
+    ("G 2", "C", True), ("G 2", "C-", False),  # the Statistics group asks for C
+    ("X 9", "D", True),  # not in any planned major: no minimum to apply, but still passed
+    ("X 9", "W", False),
+])
+def test_transcript_courses_count_only_when_passed_or_in_progress(code, grade, done):
+    assert (code in planner.satisfied_from_courses([taken(code, grade)], [GRADED])) is done
+
+
+def test_unconfirmed_and_retaken_courses():
+    assert planner.satisfied_from_courses([taken("G 1", "A", confirmed=False)], [GRADED]) == set()
+    assert planner.satisfied_from_courses([taken("G 1", "W"), taken("G 1", "B")], [GRADED]) == {"G 1"}
+
+
+def test_minimum_grades_from_the_curated_sjsu_files():
+    majors = {m.major_label: m for m in planner.load_majors()}
+    ds, econ = majors[DS], majors[ECON]
+    assert planner.minimum_grades([ds])["CS 146"] == "C-"
+    mins = planner.minimum_grades([econ])
+    assert mins["ECON 1A"] == "C-" and mins["STAT 95"] == "C"
+    assert planner.minimum_grades([ds, econ])["STAT 95"] == "C"  # strictest across the planned majors
+
+
+def test_in_progress_courses_are_assumed_passed_for_planning_only():
+    courses = [taken("MATH 1B", "IP"), taken("MATH 1C", "W")]
+    planning = planner.assume_in_progress_passed(courses)
+    assert [c.grade for c in planning] == ["P", "W"]
+    assert [c.grade for c in courses] == ["IP", "W"]  # the caller's list is untouched
 
 
 def test_satisfied_from_match():
@@ -216,7 +296,7 @@ def demo_plan(labels, today=OCT_2026):
     majors = [m for m in planner.load_majors() if m.major_label in labels]
     courses = [c.model_copy(update={"confirmed": True}) for c in mocks.transcript_courses()]
     matches = [get_service().match(113, 39, ASSIST_YEAR_ID, label, courses) for label in labels]
-    return build_plan(majors, planner.satisfied(courses, matches), today=today), majors
+    return build_plan(majors, planner.satisfied(courses, matches, majors), today=today), majors
 
 
 @pytest.mark.parametrize("labels", [[DS], [DS, ECON]])
@@ -274,3 +354,54 @@ def test_plan_route_falls_back_to_the_transcript_when_assist_is_down(monkeypatch
     assert res.status_code == 200
     scheduled = {c.code for s in PlanResponse.model_validate(res.json()).semesters for c in s.courses}
     assert {"MATH 30", "MATH 31"} <= scheduled
+
+
+def test_plan_route_plans_the_curated_majors_and_lists_the_rest():
+    pid = confirmed_student()
+    res = client.get(f"/profiles/{pid}/plan", params={"majors": f"Computer Science, B.S.,{DS}"})
+    assert res.status_code == 200
+    body = PlanResponse.model_validate(res.json())
+    assert body.uncurated_majors == ["Computer Science, B.S."]
+    assert body.semesters == demo_plan([DS], today=date.today())[0]
+    # Nothing left out: the field is omitted, like every optional contract field.
+    assert "uncurated_majors" not in client.get(f"/profiles/{pid}/plan", params={"majors": DS}).json()
+
+
+def test_plan_route_with_no_curated_major_says_so_plainly():
+    pid = confirmed_student()
+    res = client.get(f"/profiles/{pid}/plan", params={"majors": "Computer Science, B.S."})
+    assert res.status_code == 404
+    detail = res.json()["detail"]
+    assert detail.startswith("We don't have SJSU's Computer Science, B.S. requirements yet")
+    assert "[" not in detail
+
+
+def student_with(grades: dict[str, str]) -> str:
+    """The demo student with some grades changed, e.g. {"MATH 1B": "IP"}."""
+    pid = make_profile()
+    courses = [c.model_copy(update={"grade": grades.get(f"{c.prefix} {c.number}", c.grade)}).model_dump()
+               for c in mocks.transcript_courses()]
+    assert client.put(f"/profiles/{pid}/courses", json={"courses": courses}).status_code == 200
+    return pid
+
+
+def scheduled_codes(pid: str) -> set[str]:
+    res = client.get(f"/profiles/{pid}/plan", params={"majors": DS})
+    assert res.status_code == 200
+    return {c.code for s in PlanResponse.model_validate(res.json()).semesters for c in s.courses}
+
+
+def test_plan_route_treats_in_progress_as_done_and_withdrawn_as_not():
+    assert "MATH 31" not in scheduled_codes(student_with({}))
+    assert "MATH 31" not in scheduled_codes(student_with({"MATH 1B": "IP"}))  # P7: not rescheduled
+    assert "MATH 31" in scheduled_codes(student_with({"MATH 1B": "W"}))
+    assert "MATH 31" in scheduled_codes(student_with({"MATH 1B": "D"}))  # below the C- minimum
+
+
+def test_plan_route_ignores_failed_university_courses():
+    """P9: courses taken at SJSU itself count by code, but only when passed (or in progress)."""
+    pid = make_profile()
+    rows = [taken("MATH 39", "IP"), taken("CS 46A", "F"), taken("CS 46B", "NP")]
+    assert client.put(f"/profiles/{pid}/courses", json={"courses": [c.model_dump() for c in rows]}).status_code == 200
+    codes = scheduled_codes(pid)
+    assert "MATH 39" not in codes and {"CS 46A", "CS 46B"} <= codes

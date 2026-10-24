@@ -191,7 +191,10 @@ function NoResults({ hasProfile }: { hasProfile: boolean }) {
 
 function Report({ profile, matches, courses }: { profile: Profile; matches: MatchResult[]; courses?: Course[] }) {
   const majors = matches.map((m) => m.major_label);
-  const plans = usePlans(profile.id, majors);
+  // The planner only knows curated majors; the rest get the ASSIST rows above and no plan.
+  const planned = majors.filter((m) => catalogMajor(m));
+  const uncurated = majors.filter((m) => !catalogMajor(m));
+  const plans = usePlans(profile.id, planned.length ? majors : []);
 
   // Number the sources in reading order: agreements as the rows cite them, then the catalog.
   const sources = new Sources();
@@ -229,15 +232,16 @@ function Report({ profile, matches, courses }: { profile: Profile; matches: Matc
           </p>
         ))}
       >
-        <Abstract rows={rows} majors={majors} plans={plans.status === "ready" ? plans.plans : undefined} catalogRefs={catalogRefs} campus={campus} />
+        <Abstract rows={rows} majors={planned} plans={plans.status === "ready" ? plans.plans : undefined} catalogRefs={catalogRefs} campus={campus} />
       </Section>
 
-      {plans.status === "ready" && <GoalCheck goals={profile.goals} majors={majors} plans={plans.plans} />}
+      {plans.status === "ready" && <GoalCheck goals={profile.goals} majors={planned} plans={plans.plans} />}
 
       <Credits rows={rows} courses={courses} majors={majors} campus={campus} plans={plans.status === "ready" ? plans.plans : undefined} />
 
-      <Section num={2} label="Plan" title="The books still to collect, term by term." notes={<PlanNotes majors={majors} plans={plans.status === "ready" ? plans.plans : undefined} />}>
-        {plans.status === "loading" ? (
+      <Section num={2} label="Plan" title="The books still to collect, term by term." notes={<PlanNotes majors={planned} plans={plans.status === "ready" ? plans.plans : undefined} />}>
+        <NotPlanned majors={uncurated} campus={campus} />
+        {!planned.length ? null : plans.status === "loading" ? (
           <PlanLoading />
         ) : plans.status === "error" ? (
           <PlanError error={plans.error} />
@@ -247,7 +251,7 @@ function Report({ profile, matches, courses }: { profile: Profile; matches: Matc
               Planned terms are proposals: we haven't confirmed which terms SJSU offers each course, so check the
               schedule before you register.
             </p>
-            <PlanShelves semesters={plans.plans.combined} majors={majors} catalogRefs={catalogRefs} />
+            <PlanShelves semesters={plans.plans.combined} majors={planned} catalogRefs={catalogRefs} />
           </>
         )}
       </Section>
@@ -474,7 +478,8 @@ function Credits({ rows, courses, majors, campus, plans }: { rows: Row[]; course
           </thead>
           <tbody>
             {rows.map((r) => (
-              <RequirementRow key={r.key} row={r} courses={courses} majors={majors} planned={planned} plansReady={!!plans} />
+              // A row only for majors the planner doesn't cover can't be "not in your plan yet".
+              <RequirementRow key={r.key} row={r} courses={courses} majors={majors} planned={planned} plansReady={!!plans && r.majors.some((m) => !!catalogMajor(m))} />
             ))}
           </tbody>
         </table>
@@ -743,12 +748,22 @@ function PlanLoading() {
   );
 }
 
+function NotPlanned({ majors, campus }: { majors: string[]; campus: string }) {
+  if (!majors.length) return null;
+  return (
+    <p className="lede">
+      We don't have {campus}'s {listing(majors.map(shortMajor))} requirements yet, so lower-division only (from ASSIST).
+    </p>
+  );
+}
+
 function PlanError({ error }: { error: unknown }) {
+  // The API's messages are written for students; anything else gets a generic line.
   const detail =
     error instanceof ApiError
-      ? error.status === 404
+      ? error.status === 404 || error.status === 422
         ? error.message
-        : `The planner returned an error (${error.status}${error.message ? `: ${error.message}` : ""}).`
+        : "The planner hit an unexpected error. Reload to try again."
       : "We couldn't reach the Hindsight server. Reload to try again.";
   return (
     <div className="state" role="alert">

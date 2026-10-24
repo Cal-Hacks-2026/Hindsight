@@ -97,7 +97,8 @@ export type CoursesResponse = { courses: Course[] };
 export type UpdateCoursesRequest = { courses: Course[] };
 export type AssistMajorsResponse = { majors: AssistMajor[] };
 export type MatchRequest = { major_label: string };
-export type PlanResponse = { semesters: Semester[] };
+/** uncurated_majors: chosen majors left out of the plan because they have no curated requirements yet. */
+export type PlanResponse = { semesters: Semester[]; uncurated_majors?: string[] };
 export type OpportunitiesResponse = { items: RankedOpportunity[] };
 export type CounselorRequest = { message: string; history: ChatMessage[] };
 export type CounselorResponse = { reply: string; citations: Citation[] };

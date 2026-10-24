@@ -25,8 +25,10 @@ DEFAULT_MODEL = "claude-opus-5-5"
 FALLBACK_MODELS = {"claude-opus-5-5", "claude-opus-5", "claude-fable-5-1", "claude-sonnet-5-5"}
 MAX_UPLOAD_BYTES = 20 * 1024 * 1024
 
-IMAGE_TYPES = {"image/png", "image/jpeg", "image/webp", "image/gif"}
+IMAGE_TYPES = {"image/png", "image/jpeg", "image/webp"}
 PDF_TYPE = "application/pdf"
+UPLOAD_TYPES = {PDF_TYPE, *IMAGE_TYPES}  # the route checks against this too
+UPLOAD_TYPES_LABEL = "PDF, PNG, JPEG or WebP"
 
 # CA community college Common Course Numbering went live Fall 2025 (academic year
 # 2025–26, ASSIST year id 76). Phase I courses; extend as later phases roll out.
@@ -231,12 +233,16 @@ def assess(course: Course, legible: bool = True) -> CourseNote:
     return CourseNote(code=code, term=course.term, confidence=confidence, flags=flags)
 
 
-async def parse_transcript(data: bytes, media_type: str) -> tuple[list[Course], list[CourseNote]]:
-    """Uploaded file → (unconfirmed courses, per-course renumbering notes), index-aligned."""
+def check_upload_type(media_type: str | None) -> None:
     if media_type == "image/heic":
         raise UnsupportedUpload("HEIC isn't supported; export the photo as JPEG or PNG")
-    if media_type != PDF_TYPE and media_type not in IMAGE_TYPES:
-        raise UnsupportedUpload("Upload a PDF or image")
+    if media_type not in UPLOAD_TYPES:
+        raise UnsupportedUpload(f"Upload a {UPLOAD_TYPES_LABEL} file")
+
+
+async def parse_transcript(data: bytes, media_type: str) -> tuple[list[Course], list[CourseNote]]:
+    """Uploaded file → (unconfirmed courses, per-course renumbering notes), index-aligned."""
+    check_upload_type(media_type)
     if len(data) > MAX_UPLOAD_BYTES:
         raise UploadTooLarge("Transcript must be under 20 MB")
     if not data:

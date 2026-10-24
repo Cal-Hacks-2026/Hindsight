@@ -3,6 +3,7 @@
 Claude is stubbed; no network calls.
 """
 
+import asyncio
 import json
 
 import pytest
@@ -107,3 +108,34 @@ def test_route_rejects_oversized_upload(monkeypatch):
     res = client.post(f"/profiles/{make_profile()}/transcript",
                       files={"file": ("t.pdf", b"%PDF-" + b"x" * 100, "application/pdf")})
     assert res.status_code == 413
+
+
+ACCEPTED = "PDF, PNG, JPEG or WebP"
+
+
+@pytest.mark.parametrize("content_type", ["image/gif", "text/plain", "application/msword"])
+def test_route_names_the_accepted_upload_types(content_type):
+    res = client.post(f"/profiles/{make_profile()}/transcript", files={"file": ("t", b"x", content_type)})
+    assert res.status_code == 415 and ACCEPTED in res.json()["detail"]
+
+
+@pytest.mark.parametrize("content_type", ["image/gif", "text/plain"])
+def test_parser_rejects_what_the_route_rejects(content_type):
+    """AUDIT I-24: the route and the parser accept the same types."""
+    with pytest.raises(transcript.UnsupportedUpload, match=ACCEPTED):
+        asyncio.run(transcript.parse_transcript(b"x", content_type))
+
+
+@pytest.mark.parametrize("content_type", ["application/pdf", "image/png", "image/jpeg", "image/webp"])
+def test_route_accepts_every_type_the_parser_reads(monkeypatch, content_type):
+    async def fake_parse(data, media_type):
+        return [], []
+
+    monkeypatch.setattr(transcript, "parse_transcript", fake_parse)
+    res = client.post(f"/profiles/{make_profile()}/transcript", files={"file": ("t", b"x", content_type)})
+    assert res.status_code == 200
+
+
+def test_heic_keeps_its_own_hint():
+    res = client.post(f"/profiles/{make_profile()}/transcript", files={"file": ("t", b"x", "image/heic")})
+    assert res.status_code == 415 and "export the photo as JPEG or PNG" in res.json()["detail"]
