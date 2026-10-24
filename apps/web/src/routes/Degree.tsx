@@ -17,6 +17,7 @@ import {
   plural,
   shortMajor,
 } from "../lib/format";
+import { mentionsGraduation, parseGoalTerm, termIndex } from "../lib/goal";
 import { lastTerm, termUnits, usePlans, type Plans } from "../lib/plans";
 import { loadSession } from "../lib/session";
 import { departmentColor, parseReceiving, spineHeight, spineWidth, type ParsedCourse } from "../lib/shelf";
@@ -231,6 +232,8 @@ function Report({ profile, matches, courses }: { profile: Profile; matches: Matc
         <Abstract rows={rows} majors={majors} plans={plans.status === "ready" ? plans.plans : undefined} catalogRefs={catalogRefs} campus={campus} />
       </Section>
 
+      {plans.status === "ready" && <GoalCheck goals={profile.goals} majors={majors} plans={plans.plans} />}
+
       <Credits rows={rows} courses={courses} majors={majors} campus={campus} />
 
       <Section num={2} label="Plan" title="The books still to collect, term by term." notes={<PlanNotes majors={majors} plans={plans.status === "ready" ? plans.plans : undefined} />}>
@@ -336,6 +339,61 @@ function Abstract({
       {finish}
       <p className={finish ? "lede-sub" : "lede"}>{counts}</p>
     </>
+  );
+}
+
+// ---- Goal check ----
+
+function GoalCheck({ goals, majors, plans }: { goals: string; majors: string[]; plans: Plans }) {
+  const text = goals.trim();
+  if (!text) return null;
+  const goal = parseGoalTerm(text);
+  const finish = lastTerm(plans.combined);
+  const finishAt = finish ? termIndex(finish) : undefined;
+
+  if (!goal) {
+    if (!mentionsGraduation(text)) return null;
+    return (
+      <Section label="Your goal">
+        <p className="goal">
+          You wrote "{text}", but we couldn't read a target term from it. Add one like "Spring 2028" so we can check
+          it against your plan.{" "}
+          <Link to="/onboarding">Edit your goals</Link>
+        </p>
+      </Section>
+    );
+  }
+  if (!finish || finishAt === undefined) return null;
+
+  if (finishAt <= goal.index) {
+    return (
+      <Section label="Your goal">
+        <p className="goal ok">
+          On track. Your plan finishes {finish}, in time for your goal of graduating by {goal.label}.
+        </p>
+      </Section>
+    );
+  }
+
+  const levers = majors.flatMap((m) => {
+    const alone = plans.single[m] && lastTerm(plans.single[m]!);
+    const at = alone ? termIndex(alone) : undefined;
+    return alone && at !== undefined && at <= goal.index && majors.length > 1
+      ? [`Doing ${shortMajor(m)} alone finishes ${alone}, in time.`]
+      : [];
+  });
+  return (
+    <Section label="Your goal">
+      <p className="goal late">
+        {goal.label} isn't reachable with {majorsLine(majors)}: the plan finishes {finish}.
+      </p>
+      <ul className="goal-levers">
+        {levers.map((l) => (
+          <li key={l}>{l}</li>
+        ))}
+        <li>A heavier term load or summer courses could close some of the gap. Ask your advisor what's allowed.</li>
+      </ul>
+    </Section>
   );
 }
 

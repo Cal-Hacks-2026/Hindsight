@@ -1187,3 +1187,26 @@ table.confirm button {
   line-height: 1.5;
   color: var(--gray);
 }
+
+.goal {
+  margin: 0;
+  font-family: var(--serif);
+  font-size: 26px;
+  line-height: 1.25;
+}
+
+.goal.ok {
+  color: var(--ok);
+}
+
+.goal.late {
+  color: var(--missing);
+}
+
+.goal-levers {
+  margin: 14px 0 0;
+  padding-left: 18px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--gray);
+}
