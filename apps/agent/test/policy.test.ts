@@ -22,6 +22,7 @@ const patch = (file: string, op = 'Update') => ({
   filePath: file,
   fileName: file,
   patchContent: `*** Begin Patch\n*** ${op} File: ${file}\n@@\n-a\n+b\n*** End Patch`,
+  files: [{ filePath: file, operation: op.toLowerCase() }], // the CLI's own parse
 });
 
 function scope(): EditScope {
@@ -114,10 +115,16 @@ test('patch text is parsed strictly, and must agree with what the CLI reports', 
     `*** Begin Patch\n***Update File: ${DIR}/../normalize.py\n@@\n-a\n+b\n*** End Patch`,
     `*** Begin Patch\n*** Update File: ${DIR}/localist.py\n*** Move to: ${DIR}/x.py\n*** End Patch`,
     `*** Begin Patch\n@@\n-a\n+b\n*** End Patch`,
+    // Prefixes \s doesn't cover but another parser's trim might: NEL, zero-width space, BOM, a control char.
+    ...['\u0085', '\u200b', '\ufeff', '\u0001'].map(
+      (p) => `*** Begin Patch\n*** Update File: ${DIR}/localist.py\n@@\n-a\n+b\n${p}*** Add File: ${DIR}/new.py\n*** End Patch`,
+    ),
   ]) {
     assert.ok(denied(withText(sneaky)), sneaky);
   }
   assert.ok(denied({ ...ok, files: [{ filePath: `${DIR}/x.py`, operation: 'update' }] }), 'files[] names another file');
   assert.ok(denied({ ...ok, filePath: `${DIR}/x.py` }), 'filePath names another file');
+  assert.ok(denied({ ...ok, files: undefined }), 'no files[] from the CLI');
+  assert.ok(denied({ ...ok, files: [] }), 'empty files[] from the CLI');
   assert.equal(denied({ ...ok, files: [{ filePath: `${DIR}/localist.py`, operation: 'update' }] }), false);
 });
