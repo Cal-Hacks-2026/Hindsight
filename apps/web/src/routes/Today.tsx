@@ -8,7 +8,7 @@ import { CAMPUS_SHORT, countWord, formatDateline, hostWithCampus, listing, plura
 import { useOpportunities } from "../lib/opportunities";
 import { loadSession } from "../lib/session";
 import { LISTING_LEGEND, listingColor, spineHeight } from "../lib/shelf";
-import { useNow } from "../lib/time";
+import { closeAt, useNow } from "../lib/time";
 
 const PICKS = 3;
 const SHELF = 10;
@@ -56,9 +56,9 @@ export function Today() {
   );
 }
 
-function soonest(items: RankedOpportunity[]): { title: string; when: number } | undefined {
+function soonest(items: RankedOpportunity[], now: number): { title: string; when: number } | undefined {
   const dated = items.flatMap((i) => {
-    const at = Date.parse(i.deadline ?? i.starts_at ?? "");
+    const at = Date.parse(closeAt(i, now) ?? i.starts_at ?? "");
     return Number.isNaN(at) ? [] : [{ title: i.title, when: at }];
   });
   return dated.sort((a, b) => a.when - b.when)[0];
@@ -68,17 +68,18 @@ const monthOf = (when: number) =>
   `in ${new Intl.DateTimeFormat("en-US", { month: "long" }).format(new Date(when))}`;
 
 function Edition({ profile, items, now }: { profile: Profile; items: RankedOpportunity[]; now: number }) {
-  const upcoming = (i: RankedOpportunity) => {
-    const at = i.deadline ? Date.parse(i.deadline) : NaN;
-    return !Number.isNaN(at) && at > now;
+  const dueAt = (i: RankedOpportunity) => {
+    const at = Date.parse(closeAt(i, now) ?? "");
+    return Number.isNaN(at) ? NaN : at;
   };
+  const upcoming = (i: RankedOpportunity) => dueAt(i) > now;
   // Items stay in rank order; "Before it closes" holds only what actually closes soon.
-  const closing = items.filter((i) => upcoming(i) && Date.parse(i.deadline!) - now <= CLOSING_WINDOW).slice(0, PICKS);
+  const closing = items.filter((i) => upcoming(i) && dueAt(i) - now <= CLOSING_WINDOW).slice(0, PICKS);
   const byDeadline = closing.length > 0;
   const picks = byDeadline ? closing : items.slice(0, PICKS);
-  const nextUp = byDeadline ? undefined : soonest(picks);
+  const nextUp = byDeadline ? undefined : soonest(picks, now);
   const rest = items.filter((i) => !picks.includes(i)).slice(0, SHELF);
-  const thisWeek = items.filter((i) => upcoming(i) && Date.parse(i.deadline!) - now < WEEK).length;
+  const thisWeek = items.filter((i) => upcoming(i) && dueAt(i) - now < WEEK).length;
   const hosts = [...new Set(items.flatMap((i) => {
     const u = safeUrl(i.url);
     return u ? [hostWithCampus(hostOf(u))] : [];

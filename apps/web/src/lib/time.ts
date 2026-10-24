@@ -36,15 +36,38 @@ export function countdown(iso: string, now: number): Countdown | null {
   return { label, urgency };
 }
 
-const dateFmt = new Intl.DateTimeFormat(undefined, { weekday: "short", month: "short", day: "numeric" });
-const timeFmt = new Intl.DateTimeFormat(undefined, { hour: "numeric", minute: "2-digit" });
+// Campus listings are in Pacific time, whatever the browser's zone is.
+const PACIFIC = "America/Los_Angeles";
+const dateFmt = new Intl.DateTimeFormat("en-US", { timeZone: PACIFIC, weekday: "short", month: "short", day: "numeric" });
+const timeFmt = new Intl.DateTimeFormat("en-US", { timeZone: PACIFIC, hour: "numeric", minute: "2-digit" });
+const clockFmt = new Intl.DateTimeFormat("en-US", { timeZone: PACIFIC, hour: "numeric", minute: "numeric", hourCycle: "h23" });
 
-/** "Sat, Oct 25 · 6:00 PM"; the time is dropped for date-only values (local midnight). */
+/** Scraped date-only values are stored as midnight Pacific; those carry no real time of day. */
+export function isDateOnly(at: Date): boolean {
+  const parts = Object.fromEntries(clockFmt.formatToParts(at).map((p) => [p.type, p.value]));
+  return Number(parts.hour) === 0 && Number(parts.minute) === 0;
+}
+
+/** "Sat, Oct 25 · 6:00 PM" in Pacific time; the time is dropped for date-only values. */
 export function formatWhen(iso: string): string | null {
   const at = new Date(iso);
   if (Number.isNaN(at.getTime())) return null;
-  const midnight = at.getHours() === 0 && at.getMinutes() === 0;
-  return midnight ? dateFmt.format(at) : `${dateFmt.format(at)} · ${timeFmt.format(at)}`;
+  return isDateOnly(at) ? dateFmt.format(at) : `${dateFmt.format(at)} · ${timeFmt.format(at)}`;
+}
+
+/** "Fri, Jan 15" (no time), for ranges of days. */
+export function formatDay(iso: string): string | null {
+  const at = new Date(iso);
+  return Number.isNaN(at.getTime()) ? null : dateFmt.format(at);
+}
+
+/**
+ * The date a listing's countdown runs to. A hackathon's scraped "deadline" is the last day of its
+ * submission period, so until it starts the number that matters is its start.
+ */
+export function closeAt(item: { type: string; starts_at?: string; deadline?: string }, now: number): string | undefined {
+  if (item.type === "hackathon" && item.starts_at && Date.parse(item.starts_at) > now) return item.starts_at;
+  return item.deadline;
 }
 
 export type TimeLeft = { value: number; unit: string; urgency: Urgency };

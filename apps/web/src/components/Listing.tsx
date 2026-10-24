@@ -1,6 +1,6 @@
 // One Radar listing as a ruled entry: a big numeral (time left, or rank), the listing, its source.
 import type { RankedOpportunity } from "@hindsight/contracts";
-import { formatWhen, timeLeft } from "../lib/time";
+import { closeAt, formatDay, formatWhen, timeLeft } from "../lib/time";
 
 export const TYPE_LABEL: Record<string, string> = {
   hackathon: "Hackathon",
@@ -36,10 +36,19 @@ export function Listing({
   rank?: number;
 }) {
   const link = safeUrl(item.url);
-  const left = item.deadline ? timeLeft(item.deadline, now) : null;
-  const due = item.deadline ? formatWhen(item.deadline) : null;
+  const target = closeAt(item, now);
+  const isHackathon = item.type === "hackathon";
+  const beforeStart = isHackathon && target === item.starts_at;
+  const raw = target ? timeLeft(target, now) : null;
+  const left = raw && beforeStart && raw.urgency !== "past" ? { ...raw, unit: raw.unit.replace(/ left$/, " to start") } : raw;
   const starts = item.starts_at ? formatWhen(item.starts_at) : null;
-  const when = [starts && `Starts ${starts}`, due && `Due ${due}`].filter(Boolean).join(" · ");
+  const due = item.deadline ? formatWhen(item.deadline) : null;
+  // A hackathon's scraped end date is when it wraps up, not a registration deadline.
+  const from = item.starts_at ? formatDay(item.starts_at) : null;
+  const to = item.deadline ? formatDay(item.deadline) : null;
+  const when = isHackathon
+    ? from && to && from !== to ? `Runs ${from} – ${to}` : (from ?? to ?? "")
+    : [starts && `Starts ${starts}`, due && `Deadline ${due}`].filter(Boolean).join(" · ");
   const meta = [typeLabel(item.type), item.org, link && hostOf(link)].filter(Boolean).join(" · ");
 
   return (
