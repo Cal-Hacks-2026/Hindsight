@@ -100,3 +100,10 @@ def test_route_maps_parser_errors(monkeypatch):
     res = client.post(f"/profiles/{make_profile()}/transcript",
                       files={"file": ("t.png", b"\x89PNG", "image/png")})
     assert res.status_code == 503
+
+
+def test_route_rejects_oversized_upload(monkeypatch):
+    monkeypatch.setattr(transcript, "MAX_UPLOAD_BYTES", 10)
+    res = client.post(f"/profiles/{make_profile()}/transcript",
+                      files={"file": ("t.pdf", b"%PDF-" + b"x" * 100, "application/pdf")})
+    assert res.status_code == 413

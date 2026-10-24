@@ -52,7 +52,9 @@ async def upload_transcript(profile_id: str, response: Response,
         raise HTTPException(status_code=415, detail="Upload a PDF or image")
     # TODO: also store the file in Supabase Storage `transcripts/` once Supabase is wired.
     try:
-        courses, notes = await transcript.parse_transcript(await file.read(), file.content_type)
+        # Read at most one byte past the cap so an oversized upload is rejected without buffering it.
+        data = await file.read(transcript.MAX_UPLOAD_BYTES + 1)
+        courses, notes = await transcript.parse_transcript(data, file.content_type)
     except transcript.TranscriptError as e:
         raise HTTPException(status_code=e.status, detail=str(e)) from e
     # Course has no confidence field (frozen contract), so renumbering notes ride in a
