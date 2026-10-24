@@ -7,6 +7,7 @@ from app.models import HealthResponse
 from app.routers import agent, assist, profiles, webhooks
 from app.routers.profiles import TRANSCRIPT_NOTES_HEADER
 from app.services.claude_limits import RateLimited
+from app.services.db import StoreError
 
 app = FastAPI(title=f"{APP_NAME} API")
 
@@ -24,6 +25,11 @@ app.add_middleware(
 async def rate_limited(request: Request, exc: RateLimited) -> JSONResponse:
     return JSONResponse(status_code=429, content={"detail": exc.detail},
                         headers={"Retry-After": str(exc.retry_after)})
+
+
+@app.exception_handler(StoreError)
+async def store_error(request: Request, exc: StoreError) -> JSONResponse:
+    return JSONResponse(status_code=exc.status, content={"detail": str(exc)})
 
 app.include_router(profiles.router)
 app.include_router(assist.router)

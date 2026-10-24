@@ -1,33 +1,16 @@
-"""`opportunities` in Supabase (PROJECT.md §9), via PostgREST like articulation_cache."""
+"""`opportunities` and `profile_opportunities` in Supabase (PROJECT.md §9)."""
 
-import os
 from typing import Any
 
 import httpx
 
-from app.config import supabase_rest_url
-from app.models.contracts import Campus
+from app.models.contracts import Campus, RankedOpportunity
+from app.services.db import StoreError, StoreNotConfigured, client as _client  # noqa: F401 (re-exported)
 from app.services.radar.normalize import RadarItem
 
 UPSERT_CHUNK = 500
 # Ranking reads at most this many rows per campus; scans produce a few hundred.
 MAX_CANDIDATES = 2000
-
-
-class StoreError(Exception):
-    status = 502
-
-
-class StoreNotConfigured(StoreError):
-    status = 503
-
-
-def _client(transport: httpx.BaseTransport | None = None) -> httpx.Client:
-    rest_url, key = supabase_rest_url(), os.getenv("SUPABASE_SERVICE_ROLE_KEY")
-    if not rest_url or not key:
-        raise StoreNotConfigured("Radar storage is not configured (SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY)")
-    return httpx.Client(base_url=rest_url, headers={"apikey": key, "Authorization": f"Bearer {key}"},
-                        timeout=15.0, transport=transport)
 
 
 def upsert(items: list[RadarItem], transport: httpx.BaseTransport | None = None) -> int:
@@ -63,3 +46,23 @@ def candidates(campus: Campus, transport: httpx.BaseTransport | None = None) -> 
         raise StoreError(f"Supabase read failed ({e.response.status_code})") from e
     except (httpx.HTTPError, ValueError) as e:
         raise StoreError(f"Supabase unreachable: {e}") from e
+
+
+def record_ranked(profile_id: str, items: list[RankedOpportunity],
+                  transport: httpx.BaseTransport | None = None) -> int:
+    """Upsert the feed into profile_opportunities. `notified` isn't sent, so a re-rank
+    updates score/reason and leaves notified as it was. Returns rows sent."""
+    rows = [{"profile_id": profile_id, "opportunity_id": i.id, "score": i.score, "reason": i.reason}
+            for i in items]
+    if not rows:
+        return 0
+    try:
+        with _client(transport) as db:
+            res = db.post("/profile_opportunities", params={"on_conflict": "profile_id,opportunity_id"},
+                          json=rows, headers={"Prefer": "resolution=merge-duplicates,return=minimal"})
+            res.raise_for_status()
+    except httpx.HTTPStatusError as e:
+        raise StoreError(f"Supabase upsert failed ({e.response.status_code}): {e.response.text[:200]}") from e
+    except httpx.HTTPError as e:
+        raise StoreError(f"Supabase unreachable: {e}") from e
+    return len(rows)

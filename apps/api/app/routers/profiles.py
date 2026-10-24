@@ -1,7 +1,8 @@
 import json
-import uuid
+import logging
 
-from fastapi import APIRouter, Depends, File, HTTPException, Query, Response, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, Query, Response, UploadFile
+from fastapi.concurrency import run_in_threadpool
 
 from app.config import ASSIST_YEAR_ID
 from app.models import (
@@ -15,12 +16,16 @@ from app.models import (
     PlanResponse,
     Profile,
     ProfileResponse,
+    RankedOpportunity,
     UpdateCoursesRequest,
 )
-from app.services import claude_limits, mocks, planner, store, transcript
+from app.services import claude_limits, mocks, planner, profile_store, transcript
 from app.services.assist import AssistError, AssistNotFound, get_service
 from app.services.assist import limits as assist_limits
+from app.services.db import StoreError
 from app.services.radar import rank, store as radar_store
+
+log = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/profiles", tags=["profiles"])
 
@@ -29,7 +34,7 @@ TRANSCRIPT_NOTES_HEADER = "X-Transcript-Notes"
 
 
 def _get_profile(profile_id: str) -> Profile:
-    profile = store.profiles.get(profile_id)
+    profile = profile_store.get_profile(profile_id)
     if profile is None:
         raise HTTPException(status_code=404, detail="Profile not found")
     return profile
@@ -37,9 +42,7 @@ def _get_profile(profile_id: str) -> Profile:
 
 @router.post("", response_model=ProfileResponse)
 def create_profile(body: CreateProfileRequest) -> ProfileResponse:
-    profile = Profile(id=str(uuid.uuid4()), created_at=mocks.now_iso(), **body.model_dump())
-    store.profiles[profile.id] = profile
-    return ProfileResponse(profile=profile)
+    return ProfileResponse(profile=profile_store.create_profile(body))
 
 
 @router.get("/{profile_id}", response_model=ProfileResponse)
@@ -51,7 +54,7 @@ def get_profile(profile_id: str) -> ProfileResponse:
              response_model_exclude_none=True, dependencies=[Depends(claude_limits.per_ip)])
 async def upload_transcript(profile_id: str, response: Response,
                             file: UploadFile = File(...)) -> CoursesResponse:
-    _get_profile(profile_id)
+    await run_in_threadpool(_get_profile, profile_id)  # blocking Supabase read
     if file.content_type not in ALLOWED_UPLOAD_TYPES:
         raise HTTPException(status_code=415, detail="Upload a PDF or image")
     # TODO: also store the file in Supabase Storage `transcripts/` once Supabase is wired.
@@ -72,7 +75,7 @@ async def upload_transcript(profile_id: str, response: Response,
 def confirm_courses(profile_id: str, body: UpdateCoursesRequest) -> CoursesResponse:
     _get_profile(profile_id)
     confirmed = [c.model_copy(update={"confirmed": True}) for c in body.courses]
-    store.courses[profile_id] = confirmed
+    profile_store.replace_courses(profile_id, confirmed)
     return CoursesResponse(courses=confirmed)
 
 
@@ -80,7 +83,7 @@ def confirm_courses(profile_id: str, body: UpdateCoursesRequest) -> CoursesRespo
              response_model_exclude_none=True, dependencies=[Depends(assist_limits.per_ip)])
 def match(profile_id: str, body: MatchRequest) -> MatchResult:
     profile = _get_profile(profile_id)
-    courses = [c for c in store.courses.get(profile_id, []) if c.confirmed]
+    courses = profile_store.confirmed_courses(profile_id)
     try:
         return get_service().match(
             profile.sending_institution_id,
@@ -102,7 +105,7 @@ def plan(profile_id: str, majors: str | None = Query(None, description="Comma-se
         chosen = planner.resolve_majors(majors, profile.majors, profile.campus, planner.load_majors())
         # Match results aren't persisted yet; once /match stores them, add
         # planner.satisfied_from_match(result) for each chosen major here.
-        satisfied = planner.satisfied_from_courses(store.courses.get(profile_id, []))
+        satisfied = planner.satisfied_from_courses(profile_store.confirmed_courses(profile_id))
         semesters = planner.build_plan(chosen, satisfied)
     except planner.PlannerError as e:
         raise HTTPException(status_code=e.status, detail=str(e)) from e
@@ -111,13 +114,19 @@ def plan(profile_id: str, majors: str | None = Query(None, description="Comma-se
 
 @router.get("/{profile_id}/opportunities", response_model=OpportunitiesResponse,
             response_model_exclude_none=True, dependencies=[Depends(claude_limits.per_ip)])
-def opportunities(profile_id: str) -> OpportunitiesResponse:
+def opportunities(profile_id: str, background: BackgroundTasks) -> OpportunitiesResponse:
     profile = _get_profile(profile_id)
+    items = rank.ranked_opportunities(profile, radar_store.candidates(profile.campus))
+    background.add_task(_record_ranked, profile_id, items)
+    return OpportunitiesResponse(items=items)
+
+
+def _record_ranked(profile_id: str, items: list[RankedOpportunity]) -> None:
+    """After the response is sent; the feed is already served, so a failure is only logged."""
     try:
-        rows = radar_store.candidates(profile.campus)
-    except radar_store.StoreError as e:
-        raise HTTPException(status_code=e.status, detail=str(e)) from e
-    return OpportunitiesResponse(items=rank.ranked_opportunities(profile, rows))
+        radar_store.record_ranked(profile_id, items)
+    except StoreError as e:
+        log.warning("profile_opportunities write failed for %s: %s", profile_id, e)
 
 
 @router.post("/{profile_id}/counselor", response_model=CounselorResponse,
