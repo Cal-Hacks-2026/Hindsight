@@ -163,6 +163,13 @@ def test_match_fetches_the_agreement_for_each_course_year(assist_fake: FakeAssis
     assert sorted(keys) == sorted([ECON_BS_KEY, ECON_BS_2023_KEY])
 
 
+def test_out_of_range_course_years_never_reach_assist(assist_fake: FakeAssist):
+    junk = [course("ECON 1", "Principles of Macroeconomics", 4, year_id=y) for y in (-5, 1, 30)]
+    assert _match(junk).status_code == 200
+    years = {r.url.params.get("academicYearId") for r in assist_fake.requests if r.url.path == "/api/agreements"}
+    assert years == {"77"}
+
+
 def test_year_without_an_agreement_is_skipped_not_fatal():
     # The fake has no 1999 agreement; that course just falls back.
     res = _match([course("ECON 1", "Principles of Macroeconomics", 4, term="Fall 1999")])

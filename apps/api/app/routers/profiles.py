@@ -19,6 +19,7 @@ from app.models import (
 )
 from app.services import claude_limits, mocks, planner, store, transcript
 from app.services.assist import AssistError, AssistNotFound, get_service
+from app.services.assist import limits as assist_limits
 
 router = APIRouter(prefix="/profiles", tags=["profiles"])
 
@@ -75,7 +76,7 @@ def confirm_courses(profile_id: str, body: UpdateCoursesRequest) -> CoursesRespo
 
 
 @router.post("/{profile_id}/match", response_model=MatchResult,
-             response_model_exclude_none=True)
+             response_model_exclude_none=True, dependencies=[Depends(assist_limits.per_ip)])
 def match(profile_id: str, body: MatchRequest) -> MatchResult:
     profile = _get_profile(profile_id)
     courses = [c for c in store.courses.get(profile_id, []) if c.confirmed]

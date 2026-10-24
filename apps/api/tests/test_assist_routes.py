@@ -42,9 +42,52 @@ def test_majors_are_real_assist_reports():
     assert not any("MOCK" in m.key for m in majors)
 
 
-def test_majors_for_unknown_pair_is_empty():
-    res = client.get("/assist/majors", params={"sending": 113, "receiving": 1, "year": 77})
+def test_majors_for_pair_without_agreements_is_empty():
+    res = client.get("/assist/majors", params={"sending": 113, "receiving": 79, "year": 77})
     assert res.json() == {"majors": []}
+
+
+@pytest.mark.parametrize(("sending", "receiving", "year"), [
+    (113, 39, 0), (113, 39, -5), (113, 39, 30), (113, 39, 79), (113, 39, 10**9),  # year range
+    (999, 39, 77), (113, 999, 77),  # unknown institutions
+    (39, 113, 77), (113, 58, 77),  # wrong direction / CC → CC
+])
+def test_invalid_majors_queries_are_404_without_calling_assist(assist_fake: FakeAssist, sending, receiving, year):
+    res = client.get("/assist/majors", params={"sending": sending, "receiving": receiving, "year": year})
+    assert res.status_code == 404
+    assert assist_fake.count("/api/agreements") == 0
+
+
+def test_assist_routes_are_rate_limited_per_ip(assist_fake: FakeAssist):
+    from app.services.assist import limits
+
+    params = {"sending": 113, "receiving": 39, "year": 77}
+    for _ in range(limits.PER_IP_PER_MIN):
+        assert client.get("/assist/majors", params=params).status_code == 200
+    res = client.get("/assist/majors", params=params)
+    assert res.status_code == 429 and int(res.headers["Retry-After"]) >= 1
+    pid = profile_with()
+    assert client.post(f"/profiles/{pid}/match", json={"major_label": "Data Science, B.S."}).status_code == 429
+
+
+def test_majors_cache_is_size_capped(monkeypatch):
+    from app.services.assist import service as service_mod
+
+    monkeypatch.setattr(service_mod, "MAX_CACHED_MAJOR_LISTS", 2)
+    svc = service_mod.get_service()
+    for year in (75, 76, 77):
+        svc.majors(113, 39, year)
+    assert list(svc._majors) == [(113, 39, 76), (113, 39, 77)]
+
+
+def test_agreement_memory_cache_is_size_capped(monkeypatch):
+    from app.services.assist import cache as cache_mod
+
+    monkeypatch.setattr(cache_mod, "MAX_IN_MEMORY", 2)
+    cache = cache_mod.ArticulationCache()
+    for k in "abc":
+        cache.put(k, {"k": k}, sending_id=1, receiving_id=2, year_id=77, major_label="x")
+    assert cache.get("a") is None and cache.get("c") == {"k": "c"}
 
 
 def test_match_uses_confirmed_courses_and_real_agreement():

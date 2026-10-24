@@ -29,10 +29,10 @@ AGREEMENT_FILES = {
 }
 
 INSTITUTIONS = [
-    {"id": 39, "names": [{"name": "San Jose State University"}]},
-    {"id": 58, "names": [{"name": "Berkeley City College"}]},
-    {"id": 79, "names": [{"name": "University of California, Berkeley"}]},
-    {"id": 113, "names": [{"name": "De Anza College"}]},
+    {"id": 39, "names": [{"name": "San Jose State University"}], "isCommunityCollege": False},
+    {"id": 58, "names": [{"name": "Berkeley City College"}], "isCommunityCollege": True},
+    {"id": 79, "names": [{"name": "University of California, Berkeley"}], "isCommunityCollege": False},
+    {"id": 113, "names": [{"name": "De Anza College"}], "isCommunityCollege": True},
 ]
 
 

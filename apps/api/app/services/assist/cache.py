@@ -9,6 +9,7 @@ the request — the cache is an optimization, ASSIST is the source of truth.
 import logging
 import os
 import threading
+from collections import OrderedDict
 from datetime import datetime, timezone
 from typing import Any
 
@@ -17,10 +18,14 @@ import httpx
 log = logging.getLogger(__name__)
 
 
+# Raw agreements are ~40–60 KB each; Supabase keeps everything, memory keeps the hot set.
+MAX_IN_MEMORY = 256
+
+
 class ArticulationCache:
     def __init__(self, supabase_url: str | None = None, service_key: str | None = None,
                  transport: httpx.BaseTransport | None = None):
-        self._mem: dict[str, dict[str, Any]] = {}
+        self._mem: OrderedDict[str, dict[str, Any]] = OrderedDict()  # least recently used first
         self._lock = threading.Lock()
         self._db: httpx.Client | None = None
         if supabase_url and service_key:
@@ -38,6 +43,7 @@ class ArticulationCache:
     def get(self, key: str) -> dict[str, Any] | None:
         with self._lock:
             if key in self._mem:
+                self._mem.move_to_end(key)
                 return self._mem[key]
         if self._db is None:
             return None
@@ -51,14 +57,19 @@ class ArticulationCache:
         if not rows or not rows[0].get("payload"):
             return None
         payload = rows[0]["payload"]
+        self._remember(key, payload)
+        return payload
+
+    def _remember(self, key: str, payload: dict[str, Any]) -> None:
         with self._lock:
             self._mem[key] = payload
-        return payload
+            self._mem.move_to_end(key)
+            while len(self._mem) > MAX_IN_MEMORY:
+                self._mem.popitem(last=False)
 
     def put(self, key: str, payload: dict[str, Any], *, sending_id: int, receiving_id: int,
             year_id: int, major_label: str) -> None:
-        with self._lock:
-            self._mem[key] = payload
+        self._remember(key, payload)
         if self._db is None:
             return
         row = {
