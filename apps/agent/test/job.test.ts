@@ -74,9 +74,9 @@ function fakeDroid(dir: string, opts: { seen?: CreateSessionOptions[] } = {}) {
         yield { type: 'tool_call', name: 'Read', toolUseId: 't3', input: { file_path: file } } as never;
         // Blocked: a shell command, and an edit to an extractor that isn't failing.
         assert.equal(await ask({ type: T.Execute, command: 'curl', fullCommand: 'curl https://evil.example' }), O.Cancel);
-        assert.equal(await ask({ type: T.ApplyPatch, filePath: path.join(dir, 'devpost.py'), fileName: 'devpost.py', patchContent: `*** Update File: ${path.join(dir, 'devpost.py')}\n` }), O.Cancel);
+        assert.equal(await ask({ type: T.ApplyPatch, filePath: path.join(dir, 'devpost.py'), fileName: 'devpost.py', patchContent: `*** Update File: ${path.join(dir, 'devpost.py')}\n`, files: [{ filePath: path.join(dir, 'devpost.py'), operation: 'update' }] }), O.Cancel);
         // Allowed: the failing source's extractor, updated in place.
-        assert.equal(await ask({ type: T.ApplyPatch, filePath: file, fileName: 'localist.py', patchContent: `*** Update File: ${file}\n@@\n-events\n+items\n` }), O.ProceedOnce);
+        assert.equal(await ask({ type: T.ApplyPatch, filePath: file, fileName: 'localist.py', patchContent: `*** Update File: ${file}\n@@\n-events\n+items\n`, files: [{ filePath: file, operation: 'update' }] }), O.ProceedOnce);
         await writeFile(file, FIXED);
         yield { type: 'tool_result', toolUseId: 't4', toolName: 'ApplyPatch', content: 'ok', isError: false } as never;
         assert.match(await mcp('rescan'), /No source needs an extractor repair/);
