@@ -4,3 +4,7 @@ __pycache__/
 .venv/
 dist/
 .DS_Store
+.env.local
+.env.*.local
+*.tsbuildinfo
+.pytest_cache/
