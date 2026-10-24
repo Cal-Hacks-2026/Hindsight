@@ -119,7 +119,8 @@ def test_demo_question_runs_the_tools_and_cites_computed_results(counselor_claud
     data = student_data(counselor_claude.requests[0])
     assert data["profile"]["majors"] == [DS]
     assert {c["code"] for c in data["confirmed_courses"]} >= {"MATH 1A", "ECON 1"}
-    assert data["match_results"][0]["summary"] == {"satisfied": 3, "partial": 2, "missing": 3, "at_university": 0}
+    assert data["match_results"][0]["summary"] == {"satisfied": 3, "partial": 2, "missing": 3, "at_university": 0,
+                                                     "in_progress": 0}
     assert data["plan"]["semesters"] and data["plan"]["covers"] == counselor.PLAN_COVERS
     assert [o["title"] for o in data["top_opportunities"]] == ["AI Fellows Program"]
     assert "url" not in data["top_opportunities"][0]  # Claude cites by id; it never sees or writes URLs
@@ -388,7 +389,7 @@ def test_in_progress_counts_for_the_plan_but_is_reported_as_matched():
     s.courses = [c.model_copy(update={"grade": "IP"}) if c.number == "1B" else c for c in s.courses]
     match = counselor.match_facts(s.match(DS), s.sources)
     calc2 = next(r for r in match["requirements"] if r["receiving_course"].startswith("MATH 31"))
-    assert calc2["status"] == "partial"  # what the matcher says stays what Claude is told
+    assert calc2["status"] == "in_progress"  # what the matcher says stays what Claude is told
     plan = s.plan([DS], None)
     scheduled = {c["code"] for sem in plan["semesters"] for c in sem["courses"]}
     assert "MATH 31" not in scheduled and "MATH 31" in plan["already_done_by_code"]

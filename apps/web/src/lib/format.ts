@@ -44,6 +44,12 @@ export const countWord = (n: number, capital = false) => {
 
 export const plural = (n: number, one: string, many = `${one}s`) => (n === 1 ? one : many);
 
+/** Long lists keep their first few: "A, B, C +6 more". */
+export function collapse(items: string[], sep: string, max = 3): string {
+  const shown = items.slice(0, max).join(sep);
+  return items.length > max ? `${shown} +${items.length - max} more` : shown;
+}
+
 /** "A, B and C" */
 export function listing(items: string[]): string {
   if (items.length <= 1) return items.join("");

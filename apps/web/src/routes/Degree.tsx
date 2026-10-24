@@ -10,6 +10,7 @@ import {
   CAMPUS_SHORT,
   SENDING_LONG,
   bylineName,
+  collapse,
   countWord,
   formatLongDate,
   listing,
@@ -79,7 +80,8 @@ const SHORT_NAMES: Record<string, string> = {
   "San José State University": "SJSU",
 };
 
-type Agreement = { start: number; span: string; text: string; short: string };
+/** `college`: the sending college's short name, e.g. "De Anza", "Foothill". */
+type Agreement = { start: number; span: string; text: string; short: string; college: string };
 
 function agreementOf(label: string): Agreement | undefined {
   const m = AGREEMENT_RE.exec(label);
@@ -87,7 +89,13 @@ function agreementOf(label: string): Agreement | undefined {
   const [, from, to, major, start, end] = m;
   const span = `${start}–${end!.slice(2)}`;
   const name = (s: string) => SHORT_NAMES[s] ?? s;
-  return { start: Number(start), span, text: `ASSIST · ${name(from!)} → ${name(to!)} · ${major} · ${span} agreement`, short: `ASSIST ${span}` };
+  return {
+    start: Number(start),
+    span,
+    text: `ASSIST · ${name(from!)} → ${name(to!)} · ${major} · ${span} agreement`,
+    short: `ASSIST ${span}`,
+    college: SHORT_NAMES[from!] ?? from!.replace(/ College$/, ""),
+  };
 }
 
 // ---- Requirements, merged across majors ----
@@ -103,7 +111,7 @@ type Row = {
   units?: number;
 };
 
-const STATUS_ORDER: Requirement["status"][] = ["satisfied", "partial", "missing", "at_university"];
+const STATUS_ORDER: Requirement["status"][] = ["satisfied", "in_progress", "partial", "missing", "at_university"];
 
 function buildRows(matches: MatchResult[], courses: Course[] | undefined, sources: Sources): Row[] {
   const rows = new Map<string, Row>();
@@ -137,6 +145,8 @@ function tone(req: Requirement): { tone: StatusTone; label: string } {
   switch (req.status) {
     case "satisfied":
       return req.confidence === "high" ? { tone: "ok", label: "Counts" } : { tone: "check", label: "Counts · confirm" };
+    case "in_progress":
+      return { tone: "check", label: "In progress" };
     case "partial":
       return { tone: "check", label: "Partial" };
     case "missing":
@@ -237,7 +247,7 @@ function Report({ profile, matches, courses }: { profile: Profile; matches: Matc
 
       {plans.status === "ready" && <GoalCheck goals={profile.goals} majors={planned} plans={plans.plans} />}
 
-      <Credits rows={rows} courses={courses} majors={majors} campus={campus} plans={plans.status === "ready" ? plans.plans : undefined} />
+      <Credits rows={rows} courses={courses} majors={majors} campus={campus} />
 
       <Section num={2} label="Plan" title="The books still to collect, term by term." notes={<PlanNotes majors={planned} plans={plans.status === "ready" ? plans.plans : undefined} />}>
         <NotPlanned majors={uncurated} campus={campus} />
@@ -295,6 +305,7 @@ function Abstract({
 }) {
   const done = rows.filter((r) => r.req.status === "satisfied");
   const partial = rows.filter((r) => r.req.status === "partial");
+  const inProgress = rows.filter((r) => r.req.status === "in_progress");
   const open = rows.filter((r) => r.req.status === "missing" || r.req.status === "at_university");
   const counted = new Set(done.flatMap((r) => r.req.satisfied_by));
   const older = done.filter((r) => r.older);
@@ -303,7 +314,8 @@ function Abstract({
   if (done.length) {
     counts.push(
       <Fragment key="done">
-        {countWord(counted.size, true)} of your De Anza courses already satisfy {countWord(done.length)} {campus}{" "}
+        {countWord(counted.size, true)} of your De Anza courses already {counted.size === 1 ? "satisfies" : "satisfy"}{" "}
+        {countWord(done.length)} {campus}{" "}
         {plural(done.length, "requirement")}
         {older.length > 0 &&
           `, ${older.length === done.length ? "all" : countWord(older.length)} of them through an older agreement`}
@@ -329,7 +341,14 @@ function Abstract({
       </Fragment>,
     );
   }
-
+  if (inProgress.length) {
+    counts.push(
+      <Fragment key="in-progress">
+        {" "}
+        {countWord(inProgress.length, true)} more {inProgress.length === 1 ? "is" : "are"} in progress.
+      </Fragment>,
+    );
+  }
   const combined = plans && lastTerm(plans.combined);
   let finish: ReactNode = null;
   if (combined) {
@@ -414,6 +433,8 @@ function spineFor(row: Row, campus: string): { kind: SpineKind; color: string; s
   switch (row.req.status) {
     case "satisfied":
       return { kind: "solid", color: departmentColor(via[0] && row.parsed.choose ? via[0] : row.parsed.code), sub: via.length ? `via ${shortCodes(via)}` : "" };
+    case "in_progress":
+      return { kind: "dashed", color: "var(--check)", sub: "in progress" };
     case "partial":
       return { kind: "dashed", color: "var(--check)", sub: "partly done" };
     case "missing":
@@ -423,8 +444,7 @@ function spineFor(row: Row, campus: string): { kind: SpineKind; color: string; s
   }
 }
 
-function Credits({ rows, courses, majors, campus, plans }: { rows: Row[]; courses?: Course[]; majors: string[]; campus: string; plans?: Plans }) {
-  const planned = plannedTerms(plans);
+function Credits({ rows, courses, majors, campus }: { rows: Row[]; courses?: Course[]; majors: string[]; campus: string }) {
   const onShelf = rows.filter((r) => r.req.status === "satisfied");
   const gaps = rows.filter((r) => r.req.status !== "satisfied");
   const present = new Set(rows.map((r) => r.req.status));
@@ -459,6 +479,7 @@ function Credits({ rows, courses, majors, campus, plans }: { rows: Row[]; course
             <em className="fig">Fig. 1.</em> Your lower-division preparation, as {campus} sees it.
           </span>
           <span>▮ Solid — counts</span>
+          {present.has("in_progress") && <span style={{ color: "var(--check)" }}>┆ Dashed — in progress</span>}
           {present.has("partial") && <span style={{ color: "var(--check)" }}>┆ Dashed — partly done</span>}
           {present.has("missing") && <span style={{ color: "var(--missing)" }}>┆ Dashed — still needed</span>}
           {present.has("at_university") && <span style={{ color: "var(--sjsu)" }}>⋮ Dotted — must be taken at {campus}</span>}
@@ -479,7 +500,7 @@ function Credits({ rows, courses, majors, campus, plans }: { rows: Row[]; course
           <tbody>
             {rows.map((r) => (
               // A row only for majors the planner doesn't cover can't be "not in your plan yet".
-              <RequirementRow key={r.key} row={r} courses={courses} majors={majors} planned={planned} plansReady={!!plans && r.majors.some((m) => !!catalogMajor(m))} />
+              <RequirementRow key={r.key} row={r} courses={courses} majors={majors} />
             ))}
           </tbody>
         </table>
@@ -517,39 +538,15 @@ function Missed({ rows, courses }: { rows: Row[]; courses?: Course[] }) {
   );
 }
 
-/** Where each planned course lands, by normalized code. */
-function plannedTerms(plans?: Plans): Map<string, string> {
-  const out = new Map<string, string>();
-  for (const sem of plans?.combined ?? []) {
-    for (const c of sem.courses) out.set(c.code.replace(/\s+/g, " ").trim().toUpperCase(), sem.term);
-  }
-  return out;
-}
-
-/** One line on what to do about a row that isn't plainly done; null when nothing is needed. */
-function nextStep(row: Row, via: string[], planned: Map<string, string>, plansReady: boolean): string | null {
+/** For a credit that counts with doubt, the question to take to an advisor. */
+function advisorQuestion(row: Row): string | null {
   const { req, parsed } = row;
-  const term = planned.get(parsed.code.replace(/\s+/g, " ").trim().toUpperCase());
-  const where = term ? ` Your plan puts it in ${term}.` : plansReady ? " It isn't in your plan yet; ask your advisor." : "";
-  switch (req.status) {
-    case "missing":
-      return parsed.choose
-        ? `Take one of: ${parsed.alternatives.join(", ")}.`
-        : `Take ${parsed.code} before or after transferring.${where}`;
-    case "at_university":
-      return `Take ${parsed.code} at SJSU; no De Anza course counts for it.${where}`;
-    case "partial":
-      return req.flags.includes("sequence_rule")
-        ? "Finish the whole De Anza sequence before you transfer, or none of it counts."
-        : "Take one more course from this list to finish it.";
-    case "satisfied":
-      return req.confidence === "high"
-        ? null
-        : `Ask your advisor: "Does ${via.join(" + ") || "my course"} satisfy ${parsed.code} for ${row.majors.map(shortMajor).join(" and ")}?"`;
-  }
+  if (req.status !== "satisfied" || req.confidence === "high") return null;
+  const via = req.satisfied_by.join(" + ") || "my course";
+  return `Ask your advisor: "Does ${via} satisfy ${parsed.code} for ${row.majors.map(shortMajor).join(" and ")}?"`;
 }
 
-function RequirementRow({ row, courses, majors, planned, plansReady }: { row: Row; courses?: Course[]; majors: string[]; planned: Map<string, string>; plansReady: boolean }) {
+function RequirementRow({ row, courses, majors }: { row: Row; courses?: Course[]; majors: string[] }) {
   const { req, parsed } = row;
   const t = tone(req);
   const via = req.satisfied_by.map((code) => {
@@ -557,29 +554,39 @@ function RequirementRow({ row, courses, majors, planned, plansReady }: { row: Ro
     return term ? `${code} · ${term}` : code;
   });
   const onlySome = majors.length > 1 && row.majors.length < majors.length;
-  const next = nextStep(row, req.satisfied_by, planned, plansReady);
+  const takeAt = takeAtLead(req);
+  const ask = advisorQuestion(row);
   return (
     <tr>
       <td>
         {parsed.choose ? (
-          <>
-            <strong>Elective</strong> · choose from {parsed.alternatives.join(", ")}
-          </>
+          <span title={parsed.alternatives.join(", ")}>
+            <strong>Elective</strong> · {parsed.choose} {collapse(parsed.alternatives, ", ")}
+          </span>
         ) : (
           <>
             <strong>{parsed.code}</strong>
             {parsed.title && ` · ${parsed.title}`}
-            {parsed.alternatives.length > 0 && <span className="req-sub">or {parsed.alternatives.join(", ")}</span>}
+            {parsed.alternatives.length > 0 && (
+              <span className="req-sub" title={parsed.alternatives.join(", ")}>
+                or {collapse(parsed.alternatives, ", ")}
+              </span>
+            )}
           </>
         )}
         {onlySome && <span className="req-sub">{row.majors.map(shortMajor).join(", ")}</span>}
       </td>
-      <td className={via.length ? undefined : "muted"}>
-        {via.length ? via.join(", ") : req.status === "at_university" ? "No current articulation" : "—"}
+      <td className={via.length || takeAt ? undefined : "muted"}>
+        {via.length ? via.join(", ") : takeAt ? null : req.status === "at_university" ? "No current articulation" : "—"}
+        {takeAt && (
+          <span className="take-at" title={req.options!.join(" · ")}>
+            <span className="take-at-lead">{takeAt}</span> {collapse(req.options!.map(keepCodes), " · ")}
+          </span>
+        )}
       </td>
       <td>
         <StatusMark tone={t.tone}>{t.label}</StatusMark>
-        {next && <span className="req-sub next-step">{next}</span>}
+        {ask && <span className="req-sub next-step">{ask}</span>}
       </td>
       <td className="muted nowrap">
         <a href={req.citation.url} target="_blank" rel="noreferrer" title={req.citation.ref} style={{ color: "inherit", textDecoration: "none" }}>
@@ -589,6 +596,23 @@ function RequirementRow({ row, courses, majors, planned, plansReady }: { row: Ro
       </td>
     </tr>
   );
+}
+
+/** "MATH 1A" never breaks across lines. */
+const keepCodes = (text: string) => text.replace(/\b([A-Z][A-Z0-9]{1,5}) (?=C?\d)/g, "$1\u00a0");
+
+/** "Take at De Anza:" for rows still open, with how many of the listed options it takes. */
+function takeAtLead(req: Requirement): string | undefined {
+  if (!req.options?.length || (req.status !== "missing" && req.status !== "partial")) return undefined;
+  const college = agreementOf(req.citation.label)?.college ?? "your college";
+  if (req.options.length === 1) return `Take at ${college}:`;
+  const how =
+    req.rule === "n_of" && req.n && req.flags.includes("n_units")
+      ? `toward ${req.n} units`
+      : req.rule === "n_of" && req.n && req.n > 1
+        ? `${countWord(req.n)} of`
+        : "one of";
+  return `Take at ${college}, ${how}:`;
 }
 
 function CreditNotes({ rows }: { rows: Row[] }) {

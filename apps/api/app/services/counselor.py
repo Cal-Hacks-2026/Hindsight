@@ -106,6 +106,7 @@ def match_facts(result: MatchResult, sources: Sources) -> dict[str, Any]:
             "source": sid, "receiving_course": r.receiving_course, "group": r.group_title,
             "rule": r.rule if r.n is None else f"{r.rule} (n={r.n})", "status": r.status,
             "satisfied_by": r.satisfied_by, "flags": r.flags, "confidence": r.confidence,
+            **({"take_at_community_college": r.options} if r.options else {}),
         })
     return {"major_label": result.major_label, "summary": result.summary.model_dump(), "requirements": reqs}
 

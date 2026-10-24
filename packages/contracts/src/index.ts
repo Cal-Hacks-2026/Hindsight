@@ -41,9 +41,13 @@ export type Requirement = {
   rule: "all" | "n_of";
   n?: number;
   receiving_course: string;
-  status: "satisfied" | "partial" | "missing" | "at_university";
+  // "in_progress": the only gap is a course with an IP grade.
+  status: "satisfied" | "partial" | "missing" | "at_university" | "in_progress";
   satisfied_by: string[];
   flags: string[]; // e.g. "sequence_rule", "min_grade_C"
+  // What to take at the sending college, for rows not yet satisfied:
+  // ["MATH 1A or MATH 1AH"], ["CIS 35A", "CIS 22A + CIS 22B"].
+  options?: string[];
   citation: Citation;
   confidence: "high" | "medium" | "low";
 };
@@ -52,7 +56,7 @@ export type MatchResult = {
   major_label: string;
   agreement_key: string;
   requirements: Requirement[];
-  summary: { satisfied: number; partial: number; missing: number; at_university: number };
+  summary: { satisfied: number; partial: number; missing: number; at_university: number; in_progress?: number };
 };
 
 export type SemesterCourse = {

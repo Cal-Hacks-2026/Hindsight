@@ -25,6 +25,14 @@ effect when it was taken. A transcript course no loaded agreement knows by
 code may still match a sending course by title + units — low confidence,
 flagged `renumbered_match`.
 
+Options (I-02): every unsatisfied requirement lists what to take at the
+sending college, from the current agreement — one string per alternative,
+"A + B" for courses taken together, "A or B" for interchangeable ones.
+
+In progress (I-09): an `IP` grade never counts, but a requirement that the
+student's IP courses alone would complete is reported `in_progress` instead
+of missing/partial.
+
 Flags emitted (UI copy for unknown ones falls through as-is):
   min_grade_<X>, below_min_grade, sequence_rule, no_current_articulation,
   pass_no_pass, denied_course, course_year_mismatch, renumbered_match,
@@ -40,7 +48,7 @@ from app.models import Citation, Course, MatchResult, MatchSummary, Requirement
 
 from .parser import Agreement, Articulation, Cell, CourseGroup, RequirementGroup, Row, Section, SendingCourse
 
-Status = Literal["satisfied", "partial", "missing", "at_university"]
+Status = Literal["satisfied", "partial", "missing", "at_university", "in_progress"]
 Confidence = Literal["high", "medium", "low"]
 
 _CONFIDENCE_RANK = {"high": 2, "medium": 1, "low": 0}
@@ -180,6 +188,7 @@ class Eval:
     confidence: Confidence = "high"
     units: float = 0.0  # receiving units, for N-units rules
     source: Agreement | None = None  # prior-year agreement that satisfied it; None = current
+    options: list[str] = field(default_factory=list)  # what to take at the sending college
 
 
 def _add(flags: list[str], *new: str) -> None:
@@ -328,6 +337,51 @@ def _hit_flags(hits: list[_CourseHit]) -> list[str]:
     return flags
 
 
+def _group_text(g: CourseGroup, nested: bool) -> str:
+    joiner = " or " if g.conjunction.lower() == "or" else " + "
+    text = joiner.join(c.code for c in g.courses)
+    return f"({text})" if nested and joiner == " or " and len(g.courses) > 1 else text
+
+
+_HONORS_RE = re.compile(r"\b(C?\d+[A-Z]*?)H\b")
+
+
+def _merge_honors(options: list[str]) -> list[str]:
+    """Fold honors twins into their regular option: "MATH 1A or MATH 1AH",
+    "MATH 1B + MATH 1C (or honors)". Only when the regular option is listed too."""
+    groups: dict[str, list[str]] = {}
+    for o in options:
+        groups.setdefault(_HONORS_RE.sub(r"\1", o), []).append(o)
+    out: list[str] = []
+    for base, group in groups.items():
+        if len(group) == 1 or base not in group:
+            out += group
+        elif " + " in base:
+            out.append(f"{base} (or honors)")
+        else:
+            out.append(" or ".join([base] + [o for o in group if o != base]))
+    return out
+
+
+def articulation_options(art: Articulation | None) -> list[str]:
+    """Sending-side alternatives, e.g. ["CIS 35A", "CIS 22A + CIS 22B"]."""
+    if art is None or art.no_articulation_reason:
+        return []
+    alts: list[str] = []
+    for b in _blocks(art):
+        if len(b) == 1 and b[0].conjunction.lower() == "or":
+            _add(alts, *(c.code for c in b[0].courses))
+        else:
+            _add(alts, " + ".join(_group_text(g, len(b) > 1) for g in b))
+    return _merge_honors(alts)
+
+
+def _either(options: list[str], nested: bool) -> str:
+    """Several alternatives as one string: "A or B", parenthesized when joined to more."""
+    text = " or ".join(options)
+    return f"({text})" if nested and len(options) > 1 else text
+
+
 def _eval_sending(art: Articulation | None, ctx: Ctx) -> Eval | None:
     """One receiving course against one year's articulation; None = nothing articulates."""
     if art is None or art.no_articulation_reason or not art.groups:
@@ -389,6 +443,7 @@ def _eval_cell(cell: Cell, ctx: Ctx, priors: Sequence[tuple[Agreement, Cell]] = 
     best.flags = _union([flags, best.flags])
     best.units = units
     best.source = src
+    best.options = articulation_options(art)
     return best
 
 
@@ -399,6 +454,8 @@ def _all_of(evals: list[Eval]) -> Eval:
     """Every part required (cells in a row, rows in a section, rows in a sequence)."""
     if len(evals) == 1:
         return evals[0]
+    todo = [e.options for e in evals if e.status in ("partial", "missing") and e.options]
+    options = todo[0] if len(todo) == 1 else [" + ".join(_either(o, True) for o in todo)] if todo else []
     statuses = {e.status for e in evals}
     if statuses == {"satisfied"}:
         status: Status = "satisfied"
@@ -417,6 +474,7 @@ def _all_of(evals: list[Eval]) -> Eval:
         _min_conf(*(e.confidence for e in evals)),
         sum(e.units for e in evals),
         _source(evals),
+        options,
     )
 
 
@@ -444,6 +502,7 @@ def _n_of(options: list[Eval], n: float, by_units: bool = False) -> Eval:
     if options and all(o.status == "at_university" for o in options):
         return Eval("at_university", [], _union([min_grade_flags, ["no_current_articulation"]]))
     progress = [o for o in options if o.status in ("satisfied", "partial")]
+    todo = _union(o.options for o in options if o.status in ("partial", "missing"))
     # Options that can't be taken here are expected noise in an "N of" list.
     flags = _union([min_grade_flags] + [[f for f in o.flags if f != "no_current_articulation"] for o in options])
     return Eval(
@@ -452,6 +511,7 @@ def _n_of(options: list[Eval], n: float, by_units: bool = False) -> Eval:
         flags,
         "high",
         source=_source(progress),
+        options=todo,
     )
 
 
@@ -621,15 +681,31 @@ def _citation_label(agreement: Agreement) -> str:
     return f"{agreement.sending.name} → {agreement.receiving.name} · {agreement.name} ({year})"
 
 
+def _ip_as_passed(courses: list[Course]) -> list[Course]:
+    """The transcript as it will read once every in-progress course passes."""
+    return [c.model_copy(update={"grade": "P" if c.grade.strip().upper() == "IP" else c.grade}) for c in courses]
+
+
 def evaluate(agreement: Agreement, courses: list[Course],
              prior: Sequence[Agreement] = ()) -> MatchResult:
     """`prior`: the same major's agreements for the academic years courses were taken.
     A requirement met under one of them cites that year's agreement."""
     ev = _Evaluator(agreement, courses, prior)
+    has_ip = any(c.grade.strip().upper() == "IP" for c in courses)
+    ev_ip = _Evaluator(agreement, _ip_as_passed(courses), prior) if has_ip else None
 
     requirements: list[Requirement] = []
     for group in agreement.groups:
-        for unit in ev.group_units(group):
+        units = ev.group_units(group)
+        ip_units = ev_ip.group_units(group) if ev_ip else [None] * len(units)
+        for unit, ip_unit in zip(units, ip_units, strict=True):
+            e = unit.eval
+            if ip_unit and e.status in ("partial", "missing") and ip_unit.eval.status == "satisfied":
+                # The only gap is an in-progress course: report it as it will count, minus
+                # the pass/no-pass doubt that standing in "P" for "IP" adds.
+                ip = ip_unit.eval
+                flags = [f for f in ip.flags if f != "pass_no_pass" or f in e.flags]
+                e = replace(ip, status="in_progress", flags=flags, confidence=e.confidence, options=[])
             requirements.append(
                 Requirement(
                     id=unit.id,
@@ -637,16 +713,17 @@ def evaluate(agreement: Agreement, courses: list[Course],
                     rule=unit.rule,
                     n=unit.n,
                     receiving_course=unit.label,
-                    status=unit.eval.status,
-                    satisfied_by=unit.eval.satisfied_by,
-                    flags=unit.eval.flags,
+                    status=e.status,
+                    satisfied_by=e.satisfied_by,
+                    flags=e.flags,
+                    options=e.options if e.status in ("partial", "missing") and e.options else None,
                     citation=Citation(
                         source="assist",
-                        label=_citation_label(unit.eval.source or agreement),
-                        url=assist_url(unit.eval.source or agreement),
+                        label=_citation_label(e.source or agreement),
+                        url=assist_url(e.source or agreement),
                         ref=f"{group.title} › {unit.label}",
                     ),
-                    confidence=unit.eval.confidence,
+                    confidence=e.confidence,
                 )
             )
     return MatchResult(
@@ -658,5 +735,6 @@ def evaluate(agreement: Agreement, courses: list[Course],
             partial=sum(r.status == "partial" for r in requirements),
             missing=sum(r.status == "missing" for r in requirements),
             at_university=sum(r.status == "at_university" for r in requirements),
+            in_progress=sum(r.status == "in_progress" for r in requirements),
         ),
     )
