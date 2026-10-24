@@ -206,6 +206,16 @@ def test_candidates_filters_campus_or_hackathon(supabase_env):
     assert real_candidates("sjsu", transport=httpx.MockTransport(handler)) == [{"id": "1"}]
 
 
+def test_candidates_drop_hackathons_from_other_campus_event_sites(supabase_env):
+    rows = [
+        {"id": "1", "campus": "sjsu", "type": "event", "url": "https://events.sjsu.edu/e/1"},
+        {"id": "2", "campus": "berkeley", "type": "hackathon", "url": "https://events.berkeley.edu/h/2"},
+        {"id": "3", "campus": "berkeley", "type": "hackathon", "url": "https://calhacks.devpost.com/"},
+    ]
+    got = real_candidates("sjsu", transport=httpx.MockTransport(lambda r: httpx.Response(200, json=rows)))
+    assert [r["id"] for r in got] == ["1", "3"]
+
+
 def test_store_errors(supabase_env, monkeypatch):
     with pytest.raises(StoreError, match="409"):
         real_upsert([ITEM], transport=httpx.MockTransport(lambda r: httpx.Response(409, text="conflict")))

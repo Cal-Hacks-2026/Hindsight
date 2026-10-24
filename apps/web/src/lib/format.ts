@@ -49,3 +49,10 @@ export function listing(items: string[]): string {
   if (items.length <= 1) return items.join("");
   return `${items.slice(0, -1).join(", ")} and ${items.at(-1)}`;
 }
+
+// A host on a campus's own domain gets that campus beside it; open hackathon sites stay bare.
+export function hostWithCampus(host: string): string {
+  if (host.endsWith("sjsu.edu")) return `${host} (SJSU)`;
+  if (host.endsWith("berkeley.edu")) return `${host} (Berkeley)`;
+  return host;
+}

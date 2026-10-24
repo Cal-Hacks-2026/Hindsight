@@ -1,11 +1,13 @@
 """`opportunities` and `profile_opportunities` in Supabase (PROJECT.md §9)."""
 
 from typing import Any
+from urllib.parse import urlparse
 
 import httpx
 
 from app.models.contracts import Campus, RankedOpportunity
 from app.services.db import StoreError, StoreNotConfigured, client as _client  # noqa: F401 (re-exported)
+from app.services.radar import sources
 from app.services.radar.normalize import RadarItem
 
 UPSERT_CHUNK = 500
@@ -41,11 +43,21 @@ def candidates(campus: Campus, transport: httpx.BaseTransport | None = None) -> 
                 "limit": str(MAX_CANDIDATES),
             })
             res.raise_for_status()
-            return res.json()
+            return _drop_other_campus_sites(campus, res.json())
     except httpx.HTTPStatusError as e:
         raise StoreError(f"Supabase read failed ({e.response.status_code})") from e
     except (httpx.HTTPError, ValueError) as e:
         raise StoreError(f"Supabase unreachable: {e}") from e
+
+
+def _drop_other_campus_sites(campus: Campus, rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """A hackathon found on another campus's event site (e.g. events.berkeley.edu) isn't open to this campus."""
+    foreign = sources.other_campus_hosts(campus)
+    return [
+        r for r in rows
+        if r.get("campus") == campus
+        or (urlparse(r.get("url") or "").hostname or "").removeprefix("www.") not in foreign
+    ]
 
 
 def record_ranked(profile_id: str, items: list[RankedOpportunity],

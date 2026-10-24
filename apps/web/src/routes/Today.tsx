@@ -4,7 +4,7 @@ import { Listing, hostOf, safeUrl, typeLabel } from "../components/Listing";
 import { Masthead, Note, Ref, Section } from "../components/Paper";
 import { NoProfile, RadarEmpty, RadarError, RadarLoading } from "../components/RadarStates";
 import { Shelf, Spine } from "../components/Spine";
-import { CAMPUS_SHORT, countWord, formatDateline, listing, plural } from "../lib/format";
+import { CAMPUS_SHORT, countWord, formatDateline, hostWithCampus, listing, plural } from "../lib/format";
 import { useOpportunities } from "../lib/opportunities";
 import { loadSession } from "../lib/session";
 import { LISTING_LEGEND, listingColor, spineHeight } from "../lib/shelf";
@@ -67,7 +67,7 @@ function Edition({ profile, items, now }: { profile: Profile; items: RankedOppor
   const thisWeek = items.filter((i) => upcoming(i) && Date.parse(i.deadline!) - now < WEEK).length;
   const hosts = [...new Set(items.flatMap((i) => {
     const u = safeUrl(i.url);
-    return u ? [hostOf(u)] : [];
+    return u ? [hostWithCampus(hostOf(u))] : [];
   }))];
   const campus = CAMPUS_SHORT[profile.campus];
 

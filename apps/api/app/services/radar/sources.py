@@ -5,6 +5,7 @@ import os
 from functools import lru_cache
 from pathlib import Path
 from typing import Literal
+from urllib.parse import urlparse
 
 from pydantic import BaseModel, HttpUrl
 
@@ -50,3 +51,17 @@ def by_id(source_id: str) -> Source | None:
         if source.id == source_id:
             return source
     return None
+
+
+CAMPUS_ONLY_KINDS: tuple[Kind, ...] = ("localist", "livewhale", "campusgroups_rss")
+
+
+def other_campus_hosts(campus: Campus) -> set[str]:
+    """Hosts of another campus's own event sites. Hackathon sites (Devpost, MLH) are open
+    to every campus; these aren't, so their items stay out of this campus's feed."""
+    data = load()
+    return {
+        (urlparse(str(s.url)).hostname or "").removeprefix("www.")
+        for c, group in data.campuses.items() if c != campus
+        for s in group if s.kind in CAMPUS_ONLY_KINDS
+    }
