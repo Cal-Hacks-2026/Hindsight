@@ -53,7 +53,7 @@ FACULTY_ORG = re.compile(r"\bfaculty\b", re.I)
 FACULTY_TEXT = re.compile(
     r"\bfaculty[- ]only\b"
     r"|\b(?:for|open to|intended for|designed for|calling all)\s+(?:all\s+|sjsu\s+)?faculty\b"
-    r"(?!(?:\s*(?:,|&|/|\band\b|\bor\b|\bstaff\b)\s*)*\s*(?:and\s+)?students\b)",
+    r"(?!(?:\s*(?:,|&|/|\band\b|\bor\b|\bstaff\b))*\s*(?:and\s+)?students\b)",
     re.I,
 )
 
