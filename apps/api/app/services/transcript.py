@@ -18,6 +18,7 @@ import anthropic
 from pydantic import BaseModel
 
 from app.models import Course
+from app.services import claude_limits
 
 DEFAULT_MODEL = "claude-opus-5-5"
 # Models that accept server-side refusal fallbacks (`fallbacks: "default"`).
@@ -241,6 +242,7 @@ async def parse_transcript(data: bytes, media_type: str) -> tuple[list[Course], 
     if not data:
         raise UnreadableTranscript("The uploaded file is empty")
 
+    claude_limits.limiter.take_daily()
     rows = await extract_rows(data, media_type)
     courses = [to_course(r) for r in rows]
     notes = [assess(c, legible=r.legible) for c, r in zip(courses, rows)]

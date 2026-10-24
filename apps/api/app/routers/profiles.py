@@ -1,7 +1,7 @@
 import json
 import uuid
 
-from fastapi import APIRouter, File, HTTPException, Query, Response, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, Query, Response, UploadFile
 
 from app.models import (
     CounselorRequest,
@@ -16,7 +16,7 @@ from app.models import (
     ProfileResponse,
     UpdateCoursesRequest,
 )
-from app.services import mocks, planner, store, transcript
+from app.services import claude_limits, mocks, planner, store, transcript
 
 router = APIRouter(prefix="/profiles", tags=["profiles"])
 
@@ -44,7 +44,7 @@ def get_profile(profile_id: str) -> ProfileResponse:
 
 
 @router.post("/{profile_id}/transcript", response_model=CoursesResponse,
-             response_model_exclude_none=True)
+             response_model_exclude_none=True, dependencies=[Depends(claude_limits.per_ip)])
 async def upload_transcript(profile_id: str, response: Response,
                             file: UploadFile = File(...)) -> CoursesResponse:
     _get_profile(profile_id)
