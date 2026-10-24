@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router";
 import type { AssistMajor, Campus, Course, Profile } from "@hindsight/contracts";
+import { Masthead, Note, Section } from "../components/Paper";
 import { api } from "../lib/api";
 import { ASSIST_YEAR_2026_27, DE_ANZA_ID, SJSU_ID } from "../lib/config";
 import { saveSession } from "../lib/session";
@@ -8,10 +9,34 @@ import { saveSession } from "../lib/session";
 type Step = "profile" | "upload" | "confirm";
 type Row = { key: number; course: Course };
 
-const STEPS: { id: Step; label: string }[] = [
-  { id: "profile", label: "1. About you" },
-  { id: "upload", label: "2. Transcript" },
-  { id: "confirm", label: "3. Confirm courses" },
+const STEPS: { id: Step; label: string; title: string; note: { lead: string; body: string } }[] = [
+  {
+    id: "profile",
+    label: "About you",
+    title: "Who this report is for.",
+    note: {
+      lead: "Why we ask.",
+      body: "Your majors decide which ASSIST agreements and catalog requirements are checked. Goals and interests rank your Radar.",
+    },
+  },
+  {
+    id: "upload",
+    label: "Transcript",
+    title: "Your transcript, as you have it.",
+    note: {
+      lead: "What happens next.",
+      body: "Claude reads the courses off the page. Nothing is matched until you've checked every row.",
+    },
+  },
+  {
+    id: "confirm",
+    label: "Confirm courses",
+    title: "Check every row against your transcript.",
+    note: {
+      lead: "Only what you confirm counts.",
+      body: "Matching against ASSIST is deterministic and uses exactly these rows. Fix anything we misread.",
+    },
+  },
 ];
 
 const errorText = (e: unknown) => (e instanceof Error ? e.message : "Something went wrong");
@@ -21,37 +46,52 @@ export function Onboarding() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [rows, setRows] = useState<Row[]>([]);
 
-  return (
-    <section>
-      <h1>Get started</h1>
-      <ol className="steps">
-        {STEPS.map((s) => (
-          <li key={s.id} className={s.id === step ? "current" : undefined}>
-            {s.label}
-          </li>
-        ))}
-      </ol>
+  const index = STEPS.findIndex((s) => s.id === step);
+  const current = STEPS[index]!;
 
-      {step === "profile" && (
-        <ProfileStep
-          onDone={(p) => {
-            setProfile(p);
-            saveSession({ profile: p, matches: undefined });
-            setStep("upload");
-          }}
-        />
-      )}
-      {step === "upload" && profile && (
-        <UploadStep
-          profileId={profile.id}
-          onDone={(courses) => {
-            setRows(courses.map((course, i) => ({ key: i, course })));
-            setStep("confirm");
-          }}
-        />
-      )}
-      {step === "confirm" && profile && <ConfirmStep profile={profile} rows={rows} setRows={setRows} />}
-    </section>
+  return (
+    <>
+      <Masthead kicker="Intake · Three steps" byline="De Anza College → San José State University">
+        Begin with your
+        <br />
+        <em>transcript</em>.
+      </Masthead>
+      <Section
+        num={index + 1}
+        label={current.label}
+        title={current.title}
+        last
+        notes={<Note lead={current.note.lead}>{current.note.body}</Note>}
+      >
+        <ol className="steps" aria-label="Steps">
+          {STEPS.map((s, i) => (
+            <li key={s.id} aria-current={s.id === step ? "step" : undefined} className={i < index ? "done" : undefined}>
+              {String(i + 1).padStart(2, "0")} · {s.label}
+            </li>
+          ))}
+        </ol>
+
+        {step === "profile" && (
+          <ProfileStep
+            onDone={(p) => {
+              setProfile(p);
+              saveSession({ profile: p, courses: undefined, matches: undefined });
+              setStep("upload");
+            }}
+          />
+        )}
+        {step === "upload" && profile && (
+          <UploadStep
+            profileId={profile.id}
+            onDone={(courses) => {
+              setRows(courses.map((course, i) => ({ key: i, course })));
+              setStep("confirm");
+            }}
+          />
+        )}
+        {step === "confirm" && profile && <ConfirmStep profile={profile} rows={rows} setRows={setRows} />}
+      </Section>
+    </>
   );
 }
 
@@ -62,15 +102,23 @@ function ProfileStep({ onDone }: { onDone: (p: Profile) => void }) {
   const [goals, setGoals] = useState("");
   const [interests, setInterests] = useState("");
   const [options, setOptions] = useState<AssistMajor[]>([]);
+  const [filter, setFilter] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     api
       .assistMajors(DE_ANZA_ID, SJSU_ID, ASSIST_YEAR_2026_27)
-      .then((r) => setOptions(r.majors))
+      .then((r) => setOptions([...r.majors].sort((a, b) => a.label.localeCompare(b.label))))
       .catch((e) => setError(`Couldn't load majors: ${errorText(e)}`));
   }, []);
+
+  // ASSIST lists ~180 majors: chosen ones stay on top, the rest narrow as you type.
+  const needle = filter.trim().toLowerCase();
+  const shown = [
+    ...options.filter((m) => majors.includes(m.label)),
+    ...options.filter((m) => !majors.includes(m.label) && m.label.toLowerCase().includes(needle)),
+  ];
 
   const toggleMajor = (label: string) =>
     setMajors((m) => (m.includes(label) ? m.filter((x) => x !== label) : [...m, label]));
@@ -98,46 +146,59 @@ function ProfileStep({ onDone }: { onDone: (p: Profile) => void }) {
   }
 
   return (
-    <form className="card stack" onSubmit={submit}>
-      <label>
-        Name
-        <input value={name} onChange={(e) => setName(e.target.value)} required />
+    <form className="form" onSubmit={submit}>
+      <label className="field">
+        <span className="label">Name</span>
+        <input value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" required />
       </label>
-      <label>
-        Transferring from
-        <select disabled value="deanza">
-          <option value="deanza">De Anza College</option>
-        </select>
-      </label>
-      <label>
-        Transferring to
-        <select value={campus} onChange={(e) => setCampus(e.target.value as Campus)}>
-          <option value="sjsu">San José State University</option>
-          <option value="berkeley" disabled>
-            UC Berkeley (coming soon)
-          </option>
-        </select>
-      </label>
-      <fieldset className="choices">
+      <div className="field-row">
+        <label className="field">
+          <span className="label">Transferring from</span>
+          <select disabled value="deanza">
+            <option value="deanza">De Anza College</option>
+          </select>
+        </label>
+        <label className="field">
+          <span className="label">Transferring to</span>
+          <select value={campus} onChange={(e) => setCampus(e.target.value as Campus)}>
+            <option value="sjsu">San José State University</option>
+            <option value="berkeley" disabled>
+              UC Berkeley (coming soon)
+            </option>
+          </select>
+        </label>
+      </div>
+      <fieldset className="field">
         <legend>Majors</legend>
-        {options.length === 0 && !error && <span className="muted">Loading majors…</span>}
-        {options.map((m) => (
-          <label key={m.key} className="inline">
-            <input type="checkbox" checked={majors.includes(m.label)} onChange={() => toggleMajor(m.label)} />
-            {m.label}
-          </label>
-        ))}
+        <input
+          type="search"
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          placeholder="Filter majors, e.g. data science"
+          aria-label="Filter majors"
+        />
+        <div className="choices scroll">
+          {options.length === 0 && !error && <span className="muted">Loading majors…</span>}
+          {options.length > 0 && shown.length === 0 && <span className="muted">No major matches “{filter}”.</span>}
+          {shown.map((m) => (
+            <label key={m.key} className="choice">
+              <input type="checkbox" checked={majors.includes(m.label)} onChange={() => toggleMajor(m.label)} />
+              {m.label}
+            </label>
+          ))}
+        </div>
       </fieldset>
-      <label>
-        Goals
+      <label className="field">
+        <span className="label">Goals</span>
         <textarea rows={2} value={goals} onChange={(e) => setGoals(e.target.value)} placeholder="e.g. Graduate by Spring 2028, land an ML internship" />
       </label>
-      <label>
-        Interests <span className="muted">(comma-separated)</span>
+      <label className="field">
+        <span className="label">Interests</span>
         <input value={interests} onChange={(e) => setInterests(e.target.value)} placeholder="ai, hackathons, finance" />
+        <span className="field-hint">Separate with commas.</span>
       </label>
       {error && <p className="error">{error}</p>}
-      <div>
+      <div className="actions">
         <button className="primary" type="submit" disabled={busy || !name.trim() || majors.length === 0}>
           {busy ? "Saving…" : "Continue"}
         </button>
@@ -167,17 +228,17 @@ function UploadStep({ profileId, onDone }: { profileId: string; onDone: (courses
   }
 
   return (
-    <form className="card stack" onSubmit={upload}>
-      <p className="muted">
-        Upload your community-college transcript (PDF or photo). We'll read the courses, then you check them before
-        anything is matched.
+    <form className="form" onSubmit={upload}>
+      <p className="lede">
+        Upload your community-college transcript, as a PDF or a photo. We'll read the courses, then you check them
+        before anything is matched.
       </p>
-      <label>
-        Transcript
+      <label className="field">
+        <span className="label">Transcript</span>
         <input type="file" accept="application/pdf,image/*" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
       </label>
       {error && <p className="error">{error}</p>}
-      <div>
+      <div className="actions">
         <button className="primary" type="submit" disabled={!file || busy}>
           {busy ? "Reading transcript…" : "Upload"}
         </button>
@@ -213,7 +274,7 @@ function ConfirmStep({
     try {
       await api.confirmCourses(profile.id, rows.map((r) => r.course));
       const matches = await Promise.all(profile.majors.map((m) => api.match(profile.id, m)));
-      saveSession({ profile, matches });
+      saveSession({ profile, courses: rows.map((r) => r.course), matches });
       navigate("/degree", { state: { matches } });
     } catch (e) {
       setError(errorText(e));
@@ -224,12 +285,10 @@ function ConfirmStep({
   const text = (key: number, field: keyof Course, value: string) => update(key, { [field]: value });
 
   return (
-    <div className="card stack">
-      <p className="muted">
-        Check every row against your transcript. Fix anything we misread — matching only uses what you confirm here.
-      </p>
+    <div className="form">
       <div className="table-scroll">
-        <table className="courses">
+        <table className="paper confirm">
+          <caption>Table 1. Courses read from your transcript.</caption>
           <thead>
             <tr>
               <th className="w-xs">Prefix</th>
@@ -269,13 +328,11 @@ function ConfirmStep({
           </tbody>
         </table>
       </div>
-      <div className="row">
+      {error && <p className="error">{error}</p>}
+      <div className="actions">
         <button type="button" onClick={add}>
           + Add course
         </button>
-      </div>
-      {error && <p className="error">{error}</p>}
-      <div>
         <button className="primary" type="button" onClick={confirmAndMatch} disabled={busy || rows.length === 0}>
           {busy ? "Matching…" : "These are right — match my credits"}
         </button>
