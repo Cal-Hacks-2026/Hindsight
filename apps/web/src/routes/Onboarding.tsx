@@ -16,7 +16,7 @@ const STEPS: { id: Step; label: string; title: string; note: { lead: string; bod
     title: "Who this report is for.",
     note: {
       lead: "Why we ask.",
-      body: "Your majors decide which ASSIST agreements and catalog requirements are checked. Goals and interests rank your Radar.",
+      body: "Your majors decide which ASSIST agreements and catalog requirements are checked. Goals and interests rank your opportunities.",
     },
   },
   {

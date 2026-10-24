@@ -89,7 +89,7 @@ function Edition({ profile, items, now }: { profile: Profile; items: RankedOppor
   return (
     <>
       <Section
-        label="Abstract"
+        label="Summary"
         notesFlush
         notes={
           <p id="source-1">
@@ -129,7 +129,7 @@ function Edition({ profile, items, now }: { profile: Profile; items: RankedOppor
       </Section>
 
       {rest.length > 0 && (
-        <Section num={2} label="On your radar" title="Further reading, shelved by kind.">
+        <Section num={2} label="More opportunities" title="The rest of your list, by kind.">
           <figure>
             <Shelf wide label="More listings, as shelved books">
               {rest.map((item) => {
@@ -162,20 +162,20 @@ function Edition({ profile, items, now }: { profile: Profile; items: RankedOppor
             </figcaption>
           </figure>
           <p style={{ margin: "28px 0 0" }}>
-            <Link to="/radar">See all {items.length} on Radar →</Link>
+            <Link to="/radar">See all {items.length} opportunities →</Link>
           </p>
         </Section>
       )}
 
       <Section
         num={rest.length > 0 ? 3 : 2}
-        label="Methods"
-        title="How this edition was made."
+        label="How it was made"
+        title="How this page was put together."
         last
         notes={
-          <Note lead="Run by Droid.">
-            The agent rescans campus sources on a schedule. When a site changes and a reader breaks, it repairs only
-            that reader. <Link to="/agent">See the latest run →</Link>
+          <Note lead="Automated scan.">
+            Droid, our agent, rescans campus sources on a schedule. When a site changes and a reader breaks, it repairs only
+            that reader. <Link to="/agent">See the Droid activity log →</Link>
           </Note>
         }
       >

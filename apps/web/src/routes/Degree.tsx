@@ -174,7 +174,7 @@ function NoResults({ hasProfile }: { hasProfile: boolean }) {
         <br />
         in <em>hindsight</em>.
       </Masthead>
-      <Section label="Abstract" last>
+      <Section label="Summary" last>
         <p className="lede">
           No results yet. Upload your {SENDING_LONG} transcript and confirm your courses; this report then shows what
           already counts, what's missing, and a plan term by term.
@@ -221,7 +221,7 @@ function Report({ profile, matches, courses }: { profile: Profile; matches: Matc
       {missed.length > 0 && <Missed rows={missed} courses={courses} />}
 
       <Section
-        label="Abstract"
+        label="Summary"
         notesFlush
         notes={sources.list.map((s) => (
           <p key={s.n} id={`source-${s.n}`}>

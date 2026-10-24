@@ -8,9 +8,9 @@ import { loadSession } from "../lib/session";
 const NAV = [
   { to: "/", label: "Today" },
   { to: "/degree", label: "Degree" },
-  { to: "/radar", label: "Radar" },
+  { to: "/radar", label: "Opportunities" },
   { to: "/counselor", label: "Counselor" },
-  { to: "/agent", label: "Agent" },
+  { to: "/agent", label: "Droid activity" },
 ];
 
 // The footer's right-hand note, per page (design/mockups).

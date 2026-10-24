@@ -16,10 +16,10 @@ export function Radar() {
 
   return (
     <>
-      <Masthead kicker={`Campus Radar${profile ? ` · ${CAMPUS_SHORT[profile.campus]}` : ""}`}>
-        Everything on
+      <Masthead kicker={`Campus opportunities${profile ? ` · ${CAMPUS_SHORT[profile.campus]}` : ""}`}>
+        Opportunities,
         <br />
-        your <em>radar</em>.
+        <em>ranked</em> for you.
       </Masthead>
       <Section
         num={1}
