@@ -107,3 +107,31 @@ def profile_fake(monkeypatch) -> FakeProfileStore:
     for name in ("create_profile", "get_profile", "replace_courses", "confirmed_courses"):
         monkeypatch.setattr(profile_store, name, getattr(fake, name))
     return fake
+
+
+class FakeCounselorClaude:
+    """Stands in for `anthropic.Anthropic()` in the counselor. Each scripted step is a
+    function of the request kwargs that returns a parse() response (see test_counselor)."""
+
+    def __init__(self):
+        self.steps: list = []
+        self.requests: list[dict] = []
+        self.beta = self
+        self.messages = self
+
+    def parse(self, **kwargs):
+        # Snapshot: the counselor appends to the same list after each call.
+        self.requests.append({**kwargs, "messages": list(kwargs["messages"])})
+        if not self.steps:
+            raise AssertionError("counselor called Claude more times than the test scripted")
+        return self.steps.pop(0)(kwargs)
+
+
+@pytest.fixture(autouse=True)
+def counselor_claude(monkeypatch) -> FakeCounselorClaude:
+    """No test reaches Claude for the counselor; tests script its responses."""
+    from app.services import counselor
+
+    fake = FakeCounselorClaude()
+    monkeypatch.setattr(counselor, "_client", lambda: fake)
+    return fake
