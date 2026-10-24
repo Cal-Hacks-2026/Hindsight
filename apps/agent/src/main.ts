@@ -1,4 +1,4 @@
-// apps/agent: Hindsight's Droid service (README › "Where Droid runs", DECISIONS.md D-006).
+// apps/agent: Hindsight's Droid service (README › "How Droid is used", DECISIONS.md D-006).
 // Triggers: a schedule (AGENT_INTERVAL_MINUTES, default 120) and HTTP from the API
 // (POST /agent/run → manual; POST /profiles → profile_created).
 import { randomUUID } from 'node:crypto';
