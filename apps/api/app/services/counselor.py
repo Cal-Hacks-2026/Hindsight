@@ -167,6 +167,7 @@ class Student:
     sources: Sources = field(default_factory=Sources)
     matches: dict[str, MatchResult] = field(default_factory=dict)  # by major label, as computed
     match_errors: dict[str, str] = field(default_factory=dict)
+    planning_matches: dict[str, MatchResult | None] = field(default_factory=dict)
 
     def match(self, label: str) -> MatchResult | None:
         """ASSIST match for one major, computed once per question."""
@@ -186,18 +187,38 @@ class Student:
             self.match_errors[label] = "ASSIST is unavailable right now"
         return None
 
+    def in_progress(self) -> list[str]:
+        return [f"{c.prefix} {c.number}" for c in self.courses if c.grade.strip().upper() == planner.IN_PROGRESS]
+
+    def planning_match(self, label: str) -> MatchResult | None:
+        """ASSIST match for the planner, with in-progress courses as passed. Never shown as a match result."""
+        if not self.in_progress():
+            return self.match(label)
+        if label not in self.planning_matches:
+            p = self.profile
+            try:
+                self.planning_matches[label] = get_service().match(
+                    p.sending_institution_id, p.receiving_institution_id, ASSIST_YEAR_ID, label,
+                    planner.assume_in_progress_passed(self.courses))
+            except AssistError as e:
+                log.warning("counselor: ASSIST planning match for %r failed: %s", label, e)
+                self.planning_matches[label] = None
+        return self.planning_matches[label]
+
     def plan(self, labels: list[str] | None, target_term: str | None = None) -> dict[str, Any]:
         """The planner's semesters for `labels` (default: the profile's majors), with sources.
 
-        A course counts as done when it's on the transcript or the ASSIST match for
-        one of the chosen majors marked it satisfied.
+        A course counts as done when it's passed or in progress on the transcript, or the
+        ASSIST match for one of the chosen majors marked it satisfied (in-progress courses
+        matched as passed). Chosen majors without curated requirements are left out and named.
         """
         try:
-            majors = planner.resolve_majors(",".join(labels) if labels else None, self.profile.majors,
-                                            self.profile.campus, planner.load_majors())
+            majors, uncurated = planner.resolve_majors(",".join(labels) if labels else None, self.profile.majors,
+                                                       self.profile.campus, planner.load_majors())
         except planner.PlannerError as e:
             return {"error": str(e)}
-        satisfied = planner.satisfied(self.courses, filter(None, (self.match(m.major_label) for m in majors)))
+        satisfied = planner.satisfied(
+            self.courses, filter(None, (self.planning_match(m.major_label) for m in majors)), majors)
         try:
             semesters = planner.build_plan(majors, satisfied, today=self.today)
         except planner.PlannerError as e:
@@ -244,6 +265,11 @@ class Student:
             "terms_needed": len(semesters),
             "already_done_by_code": sorted(satisfied),
         }
+        if uncurated:
+            out["not_planned_majors"] = uncurated
+            out["not_planned_why"] = planner.uncurated_message(self.profile.campus, uncurated)
+        if in_progress := self.in_progress():
+            out["in_progress_counted_as_done"] = in_progress
         if target_term is not None:
             verdict = finishes_by(last_term, target_term)
             out["target_term"] = target_term
@@ -305,8 +331,9 @@ TOOLS = [
             "Run the deterministic semester planner for a set of majors (e.g. the student's majors plus one "
             "they are considering) and, if target_term is given, report whether every scheduled course "
             "finishes by then. Use it for every 'can I finish/graduate by <term>' or 'what if I add/drop a "
-            "major' question; never estimate terms yourself. Labels must be from "
-            "curated_majors_for_planning; an unknown label returns an error listing the available ones."
+            "major' question; never estimate terms yourself. Labels should be from "
+            "curated_majors_for_planning; others are left out and listed in not_planned_majors, and if none "
+            "is curated it returns an error naming the available ones."
         ),
         "strict": True,
         "input_schema": {
@@ -384,9 +411,15 @@ class _Answer(BaseModel):
     advisor_question: str | None
 
 
-SYSTEM = """You are the counselor in Hindsight, an app for California community college students who have
-transferred to a four-year university. You explain this one student's computed results so they can act
-on them. You answer from the data in <student_data> and from your tool results, nothing else.
+SYSTEM = """You are the counselor in Hindsight, an app for California community college students who are
+transferring to or attending a four-year university. You explain this one student's computed results so
+they can act on them. You answer from the data in <student_data> and from your tool results, nothing else.
+
+Where the student is:
+- The app doesn't record whether the student has transferred or been admitted. Never say or imply they
+  have, or that they are enrolled at the university. Base anything you say about their progress on
+  confirmed_courses: the courses, grades, and terms actually listed. Grade IP means in progress.
+- Plans count in-progress courses as done (in_progress_counted_as_done); say so when it matters.
 
 What is decided for you:
 - Whether a course counts toward a requirement is decided by the app's ASSIST matcher (match_results,
@@ -401,7 +434,8 @@ What is decided for you:
   not_scheduled are part of the degree but in no semester, so last_term doesn't include them; name them.
 - If a tool returns an error (for example a major whose requirements aren't loaded), say plainly what
   could not be computed. Don't estimate it. You may still report what was computed, such as the ASSIST
-  lower-division match for that major.
+  lower-division match for that major. A plan with not_planned_majors leaves those majors out for the
+  reason in not_planned_why; say so.
 
 Citations:
 - Every academic claim (a requirement, its status, a course, a prerequisite, a term in a plan, an

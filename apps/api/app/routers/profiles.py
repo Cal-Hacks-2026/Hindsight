@@ -30,7 +30,6 @@ log = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/profiles", tags=["profiles"])
 
-ALLOWED_UPLOAD_TYPES = {"application/pdf", "image/png", "image/jpeg", "image/webp", "image/heic"}
 TRANSCRIPT_NOTES_HEADER = "X-Transcript-Notes"
 
 
@@ -59,8 +58,10 @@ def get_profile(profile_id: str) -> ProfileResponse:
 async def upload_transcript(profile_id: str, response: Response,
                             file: UploadFile = File(...)) -> CoursesResponse:
     await run_in_threadpool(_get_profile, profile_id)  # blocking Supabase read
-    if file.content_type not in ALLOWED_UPLOAD_TYPES:
-        raise HTTPException(status_code=415, detail="Upload a PDF or image")
+    try:
+        transcript.check_upload_type(file.content_type)  # before reading the body
+    except transcript.TranscriptError as e:
+        raise HTTPException(status_code=e.status, detail=str(e)) from e
     # TODO: also store the file in Supabase Storage `transcripts/` once Supabase is wired.
     try:
         # Read at most one byte past the cap so an oversized upload is rejected without buffering it.
@@ -102,29 +103,32 @@ def match(profile_id: str, body: MatchRequest) -> MatchResult:
         raise HTTPException(status_code=502, detail=f"ASSIST unavailable: {e}") from e
 
 
-@router.get("/{profile_id}/plan", response_model=PlanResponse, dependencies=[Depends(assist_limits.per_ip)])
+@router.get("/{profile_id}/plan", response_model=PlanResponse,
+            response_model_exclude_none=True, dependencies=[Depends(assist_limits.per_ip)])
 def plan(profile_id: str, majors: str | None = Query(None, description="Comma-separated major labels")) -> PlanResponse:
     profile = _get_profile(profile_id)
     try:
-        chosen = planner.resolve_majors(majors, profile.majors, profile.campus, planner.load_majors())
+        chosen, uncurated = planner.resolve_majors(majors, profile.majors, profile.campus, planner.load_majors())
     except planner.PlannerError as e:
         raise HTTPException(status_code=e.status, detail=str(e)) from e
-    # Same rule as the counselor: done = on the transcript, or satisfied per ASSIST for a chosen major.
+    # Same rule as the counselor: done = passed (or in progress) on the transcript, or satisfied
+    # per ASSIST for a chosen major, matching in-progress courses as if passed.
     courses = profile_store.confirmed_courses(profile_id)
+    planning = planner.assume_in_progress_passed(courses)
     matches = []
     for major in chosen:
         try:
             matches.append(get_service().match(profile.sending_institution_id, profile.receiving_institution_id,
-                                               ASSIST_YEAR_ID, major.major_label, courses))
+                                               ASSIST_YEAR_ID, major.major_label, planning))
         except AssistNotFound:
             pass  # no agreement for this major: only the transcript counts
         except AssistError as e:
             log.warning("plan: ASSIST match for %r failed: %s", major.major_label, e)
     try:
-        semesters = planner.build_plan(chosen, planner.satisfied(courses, matches))
+        semesters = planner.build_plan(chosen, planner.satisfied(courses, matches, chosen))
     except planner.PlannerError as e:
         raise HTTPException(status_code=e.status, detail=str(e)) from e
-    return PlanResponse(semesters=semesters)
+    return PlanResponse(semesters=semesters, uncurated_majors=uncurated or None)
 
 
 @router.get("/{profile_id}/opportunities", response_model=OpportunitiesResponse,

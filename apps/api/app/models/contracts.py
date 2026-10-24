@@ -140,6 +140,7 @@ class MatchRequest(BaseModel):
 
 class PlanResponse(BaseModel):
     semesters: list[Semester]
+    uncurated_majors: list[str] | None = None  # chosen majors left out: no curated requirements yet
 
 
 class OpportunitiesResponse(BaseModel):

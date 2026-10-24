@@ -19,6 +19,7 @@ from typing import Literal
 from pydantic import BaseModel
 
 from app.models import Course, MatchResult, Semester, SemesterCourse
+from app.services.assist.evaluator import LETTER_GRADES, grade_verdict
 
 REQUIREMENTS_DIR = Path(
     os.getenv("REQUIREMENTS_DIR") or Path(__file__).resolve().parents[4] / "data" / "requirements"
@@ -124,30 +125,57 @@ def load_majors(directory: Path = REQUIREMENTS_DIR) -> list[Major]:
     return majors
 
 
-def resolve_majors(raw: str | None, default: list[str], campus: str, majors: list[Major]) -> list[Major]:
-    """Pick majors by label for the profile's campus.
+CAMPUS_NAMES = {"sjsu": "SJSU", "berkeley": "UC Berkeley"}
+# The last comma-separated piece of an ASSIST label: "B.S.", "B.F.A.", "B.A. (SJSU Online)".
+DEGREE_PIECE = re.compile(r"^B\.[A-Z.]*\s*(\(.*\))?$")
 
-    `raw` is the comma-separated ?majors= value. Labels contain commas themselves
-    ("Data Science, B.S."), so pieces are re-joined until they form a known label.
+
+def join_labels(labels: list[str]) -> str:
+    """Labels for a sentence. They contain commas themselves, so a longer list uses semicolons."""
+    if len(labels) <= 2:
+        return " and ".join(labels)
+    return "; ".join(labels[:-1]) + "; and " + labels[-1]
+
+
+def uncurated_message(campus: str, labels: list[str]) -> str:
+    return (f"We don't have {CAMPUS_NAMES.get(campus, campus.upper())}'s {join_labels(labels)} requirements yet, "
+            "so lower-division only (from ASSIST).")
+
+
+def _split_labels(raw: str, known: set[str]) -> list[str]:
+    """`raw` is the comma-separated ?majors= value. Labels contain commas themselves
+    ("Data Science, B.S."), so pieces are re-joined until they form a known label or end
+    in a degree ("…, B.S."), the way every ASSIST label does."""
+    labels, pending = [], ""
+    for piece in raw.split(","):
+        pending = f"{pending},{piece}" if pending else piece
+        if pending.strip().casefold() in known or DEGREE_PIECE.match(piece.strip()):
+            labels.append(pending.strip())
+            pending = ""
+    if pending.strip():
+        labels.append(pending.strip())
+    return labels
+
+
+def resolve_majors(raw: str | None, default: list[str], campus: str,
+                   majors: list[Major]) -> tuple[list[Major], list[str]]:
+    """Pick majors by label for the profile's campus: (curated majors, labels with no curated requirements).
+
+    Raises UnknownMajor only when none of the labels is curated.
     """
     by_label = {m.major_label.casefold(): m for m in majors if m.campus == campus}
-    if raw is None:
-        labels = default
-    else:
-        labels, pending = [], ""
-        for piece in raw.split(","):
-            pending = f"{pending},{piece}" if pending else piece
-            if pending.strip().casefold() in by_label:
-                labels.append(pending.strip())
-                pending = ""
-        if pending.strip():
-            labels.append(pending.strip())
-
-    unknown = [label for label in labels if label.casefold() not in by_label]
-    if unknown or not labels:
-        available = sorted(m.major_label for m in by_label.values())
-        raise UnknownMajor(f"No curated requirements for {unknown or 'any major'} at {campus}; available: {available}")
-    return list({by_label[label.casefold()].major_label: by_label[label.casefold()] for label in labels}.values())
+    labels = default if raw is None else _split_labels(raw, set(by_label))
+    labels = list(dict.fromkeys(label for label in labels if label.strip()))
+    uncurated = [label for label in labels if label.casefold() not in by_label]
+    if len(uncurated) == len(labels):
+        available = join_labels(sorted(m.major_label for m in by_label.values()))
+        if not labels:
+            raise UnknownMajor("Choose a major to plan." + (f" Plans are available for {available}." if available else ""))
+        raise UnknownMajor(uncurated_message(campus, uncurated)
+                           + (f" Plans are available for {available}." if available else ""))
+    curated = {by_label[label.casefold()].major_label: by_label[label.casefold()]
+               for label in labels if label.casefold() in by_label}
+    return list(curated.values()), uncurated
 
 
 # ---- What's already done ----
@@ -165,14 +193,62 @@ def satisfied_from_match(result: MatchResult) -> set[str]:
     return codes
 
 
-def satisfied_from_courses(courses: Iterable[Course]) -> set[str]:
-    """Courses taken directly at the university appear on the transcript under the same code."""
-    return {f"{c.prefix} {c.number}" for c in courses if c.confirmed}
+IN_PROGRESS = "IP"
+# 'minimum grade of "C-"', 'A grade of "C-" or better', 'Grade of "C" or better.'
+_CATALOG_MIN_GRADE = re.compile(r'\bgrade of\s*"?([A-D][+-]?)"?', re.I)
 
 
-def satisfied(courses: Iterable[Course], matches: Iterable[MatchResult]) -> set[str]:
-    """Done = on the transcript, or marked satisfied by the ASSIST match for one of the planned majors."""
-    codes = satisfied_from_courses(courses)
+def _min_grade_in(notes: list[str]) -> str | None:
+    found = [m.upper() for note in notes for m in _CATALOG_MIN_GRADE.findall(note)]
+    return max(found, key=LETTER_GRADES.index) if found else None
+
+
+def minimum_grades(majors: Iterable[Major]) -> dict[str, str]:
+    """Lowest passing grade per course code, from the catalog notes of the major and of the
+    groups listing the course. Strictest wins when planned majors disagree."""
+    out: dict[str, str] = {}
+
+    def require(code: str, grade: str | None) -> None:
+        if grade and (code not in out or LETTER_GRADES.index(grade) > LETTER_GRADES.index(out[code])):
+            out[code] = grade
+
+    for major in majors:
+        for code in major.courses:
+            require(code, _min_grade_in(major.notes))
+        for group in major.groups:
+            for code in group.courses:
+                require(code, _min_grade_in(group.notes))
+    return out
+
+
+def _passed(course: Course, min_grade: str | None) -> bool:
+    """IP counts: the plan assumes the student passes what they're taking now."""
+    if course.grade.strip().upper() == IN_PROGRESS:
+        return True
+    return grade_verdict(course.grade, min_grade, letter_required=False) in ("ok", "pass_no_pass")
+
+
+def satisfied_from_courses(courses: Iterable[Course], majors: Iterable[Major] = ()) -> set[str]:
+    """Courses taken directly at the university appear on the transcript under the same code.
+    W, F, NP and grades below the requirement's minimum don't count."""
+    mins = minimum_grades(majors)
+    codes = set()
+    for c in courses:
+        code = f"{c.prefix} {c.number}"
+        if c.confirmed and _passed(c, mins.get(code)):
+            codes.add(code)
+    return codes
+
+
+def assume_in_progress_passed(courses: Iterable[Course]) -> list[Course]:
+    """Courses to match against ASSIST for planning: an IP course is treated as passed (P), so
+    the plan doesn't reschedule what the student is taking now. Not for reporting a match."""
+    return [c.model_copy(update={"grade": "P"}) if c.grade.strip().upper() == IN_PROGRESS else c for c in courses]
+
+
+def satisfied(courses: Iterable[Course], matches: Iterable[MatchResult], majors: Iterable[Major] = ()) -> set[str]:
+    """Done = passed on the transcript, or marked satisfied by the ASSIST match for one of the planned majors."""
+    codes = satisfied_from_courses(courses, majors)
     for result in matches:
         codes |= satisfied_from_match(result)
     return codes
@@ -310,7 +386,8 @@ def build_plan(
         if not remaining:
             break
         if len(semesters) >= MAX_TERMS or idle_terms >= len(PLAN_SEASONS):
-            raise PlannerError(f"Couldn't schedule {sorted(remaining)}; check prerequisites and terms offered")
+            raise PlannerError(f"Couldn't schedule {', '.join(sorted(remaining))}; "
+                               "check prerequisites and terms offered")
         eligible = sorted(
             (c for c in remaining if season in catalog[c].terms_offered and all(p in done for p in open_prereqs(c))),
             key=lambda c: (-height(c), c),

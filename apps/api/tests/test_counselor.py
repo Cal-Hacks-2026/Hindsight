@@ -360,3 +360,36 @@ def test_live_demo_question(monkeypatch, capsys):
             print(f"[{i}] {c.source} · {c.label} · {c.ref or ''}")
     assert citations and "[S" not in reply and "http" not in reply
     assert "Confirm with your advisor" in reply  # the curated data is flagged as not checked against 2026-27
+
+
+# ---- framing and partial plans (AUDIT I-04, I-06, I-09) ----
+
+
+def test_prompt_does_not_assume_the_student_already_transferred():
+    prompt = " ".join(counselor.SYSTEM.split())
+    assert "who have transferred" not in prompt
+    assert "transferring to or attending a four-year university" in prompt
+    assert "confirmed_courses" in prompt.split("Where the student is:")[1]
+
+
+def test_plan_covers_curated_majors_and_names_the_rest():
+    s = student()
+    plan = s.plan(["Computer Science, B.S.", DS], None)
+    assert "error" not in plan and plan["majors"] == [DS] and plan["semesters"]
+    assert plan["not_planned_majors"] == ["Computer Science, B.S."]
+    assert plan["not_planned_why"].startswith("We don't have SJSU's Computer Science, B.S. requirements yet")
+    assert "not_planned_majors" not in s.plan([DS], None)
+    out = counselor.run_tool(s, "plan_with_majors", {"majors": ["Computer Science, B.S."], "target_term": None})
+    assert "[" not in out["error"] and "Plans are available for Data Science, B.S. and Economics, B.S." in out["error"]
+
+
+def test_in_progress_counts_for_the_plan_but_is_reported_as_matched():
+    s = student()
+    s.courses = [c.model_copy(update={"grade": "IP"}) if c.number == "1B" else c for c in s.courses]
+    match = counselor.match_facts(s.match(DS), s.sources)
+    calc2 = next(r for r in match["requirements"] if r["receiving_course"].startswith("MATH 31"))
+    assert calc2["status"] == "partial"  # what the matcher says stays what Claude is told
+    plan = s.plan([DS], None)
+    scheduled = {c["code"] for sem in plan["semesters"] for c in sem["courses"]}
+    assert "MATH 31" not in scheduled and "MATH 31" in plan["already_done_by_code"]
+    assert plan["in_progress_counted_as_done"] == ["MATH 1B"]
