@@ -1,9 +1,9 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router";
-import type { AssistMajor, Campus, Course, Profile } from "@hindsight/contracts";
+import type { AssistMajor, Course, Profile } from "@hindsight/contracts";
 import { Masthead, Note, Section } from "../components/Paper";
 import { api } from "../lib/api";
-import { ASSIST_YEAR_2026_27, DE_ANZA_ID, SJSU_ID } from "../lib/config";
+import { ASSIST_YEAR_2026_27, DE_ANZA_ID, DE_ANZA_NAME, SJSU_ID, SJSU_NAME } from "../lib/config";
 import { saveSession } from "../lib/session";
 
 type Step = "profile" | "upload" | "confirm";
@@ -39,6 +39,8 @@ const STEPS: { id: Step; label: string; title: string; note: { lead: string; bod
   },
 ];
 
+const GOALS_MIN = 8;
+
 const errorText = (e: unknown) => (e instanceof Error ? e.message : "Something went wrong");
 
 export function Onboarding() {
@@ -51,7 +53,7 @@ export function Onboarding() {
 
   return (
     <>
-      <Masthead kicker="Intake · Three steps" byline="De Anza College → San José State University">
+      <Masthead kicker="Intake · Three steps" byline={`${DE_ANZA_NAME} → ${SJSU_NAME}`}>
         Begin with your
         <br />
         <em>transcript</em>.
@@ -97,7 +99,6 @@ export function Onboarding() {
 
 function ProfileStep({ onDone }: { onDone: (p: Profile) => void }) {
   const [name, setName] = useState("");
-  const [campus, setCampus] = useState<Campus>("sjsu");
   const [majors, setMajors] = useState<string[]>([]);
   const [goals, setGoals] = useState("");
   const [interests, setInterests] = useState("");
@@ -113,24 +114,24 @@ function ProfileStep({ onDone }: { onDone: (p: Profile) => void }) {
       .catch((e) => setError(`Couldn't load majors: ${errorText(e)}`));
   }, []);
 
-  // ASSIST lists ~180 majors: chosen ones stay on top, the rest narrow as you type.
+  // ASSIST lists ~180 majors: keep them alphabetical and narrow as you type; picks show as chips.
   const needle = filter.trim().toLowerCase();
-  const shown = [
-    ...options.filter((m) => majors.includes(m.label)),
-    ...options.filter((m) => !majors.includes(m.label) && m.label.toLowerCase().includes(needle)),
-  ];
+  const shown = options.filter((m) => m.label.toLowerCase().includes(needle));
 
   const toggleMajor = (label: string) =>
     setMajors((m) => (m.includes(label) ? m.filter((x) => x !== label) : [...m, label]));
 
+  const goalsTooShort = goals.trim().length > 0 && goals.trim().length < GOALS_MIN;
+
   async function submit(e: FormEvent) {
     e.preventDefault();
+    if (goalsTooShort) return;
     setBusy(true);
     setError(null);
     try {
       const { profile } = await api.createProfile({
         name: name.trim(),
-        campus,
+        campus: "sjsu",
         sending_institution_id: DE_ANZA_ID,
         receiving_institution_id: SJSU_ID,
         majors,
@@ -151,23 +152,10 @@ function ProfileStep({ onDone }: { onDone: (p: Profile) => void }) {
         <span className="label">Name</span>
         <input value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" required />
       </label>
-      <div className="field-row">
-        <label className="field">
-          <span className="label">Transferring from</span>
-          <select disabled value="deanza">
-            <option value="deanza">De Anza College</option>
-          </select>
-        </label>
-        <label className="field">
-          <span className="label">Transferring to</span>
-          <select value={campus} onChange={(e) => setCampus(e.target.value as Campus)}>
-            <option value="sjsu">San José State University</option>
-            <option value="berkeley" disabled>
-              UC Berkeley (coming soon)
-            </option>
-          </select>
-        </label>
-      </div>
+      <p className="route-line">
+        <span className="label">Transfer path</span>
+        {DE_ANZA_NAME} → {SJSU_NAME}
+      </p>
       <fieldset className="field">
         <legend>Majors</legend>
         <input
@@ -177,6 +165,15 @@ function ProfileStep({ onDone }: { onDone: (p: Profile) => void }) {
           placeholder="Filter majors, e.g. data science"
           aria-label="Filter majors"
         />
+        {majors.length > 0 && (
+          <div className="chips" aria-label="Selected majors">
+            {majors.map((label) => (
+              <button type="button" key={label} className="chip" onClick={() => toggleMajor(label)}>
+                {label} <span aria-hidden>×</span>
+              </button>
+            ))}
+          </div>
+        )}
         <div className="choices scroll">
           {options.length === 0 && !error && <span className="muted">Loading majors…</span>}
           {options.length > 0 && shown.length === 0 && <span className="muted">No major matches “{filter}”.</span>}
@@ -189,8 +186,9 @@ function ProfileStep({ onDone }: { onDone: (p: Profile) => void }) {
         </div>
       </fieldset>
       <label className="field">
-        <span className="label">Goals</span>
+        <span className="label">Goals (optional)</span>
         <textarea rows={2} value={goals} onChange={(e) => setGoals(e.target.value)} placeholder="e.g. Graduate by Spring 2028, land an ML internship" />
+        {goalsTooShort && <span className="field-hint">Say a bit more, or leave this blank.</span>}
       </label>
       <label className="field">
         <span className="label">Interests</span>
@@ -199,7 +197,7 @@ function ProfileStep({ onDone }: { onDone: (p: Profile) => void }) {
       </label>
       {error && <p className="error">{error}</p>}
       <div className="actions">
-        <button className="primary" type="submit" disabled={busy || !name.trim() || majors.length === 0}>
+        <button className="primary" type="submit" disabled={busy || !name.trim() || majors.length === 0 || goalsTooShort}>
           {busy ? "Saving…" : "Continue"}
         </button>
       </div>

@@ -1111,3 +1111,33 @@ table.confirm button {
     font-size: 32px;
   }
 }
+
+.route-line {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  font-size: 16px;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.chip {
+  font: inherit;
+  font-size: 13px;
+  padding: 4px 10px;
+  border: 1px solid var(--ink);
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.chip:hover {
+  background: var(--ink);
+  color: var(--paper);
+}
