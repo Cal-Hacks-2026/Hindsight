@@ -102,15 +102,26 @@ def match(profile_id: str, body: MatchRequest) -> MatchResult:
         raise HTTPException(status_code=502, detail=f"ASSIST unavailable: {e}") from e
 
 
-@router.get("/{profile_id}/plan", response_model=PlanResponse)
+@router.get("/{profile_id}/plan", response_model=PlanResponse, dependencies=[Depends(assist_limits.per_ip)])
 def plan(profile_id: str, majors: str | None = Query(None, description="Comma-separated major labels")) -> PlanResponse:
     profile = _get_profile(profile_id)
     try:
         chosen = planner.resolve_majors(majors, profile.majors, profile.campus, planner.load_majors())
-        # Match results aren't persisted yet; once /match stores them, add
-        # planner.satisfied_from_match(result) for each chosen major here.
-        satisfied = planner.satisfied_from_courses(profile_store.confirmed_courses(profile_id))
-        semesters = planner.build_plan(chosen, satisfied)
+    except planner.PlannerError as e:
+        raise HTTPException(status_code=e.status, detail=str(e)) from e
+    # Same rule as the counselor: done = on the transcript, or satisfied per ASSIST for a chosen major.
+    courses = profile_store.confirmed_courses(profile_id)
+    matches = []
+    for major in chosen:
+        try:
+            matches.append(get_service().match(profile.sending_institution_id, profile.receiving_institution_id,
+                                               ASSIST_YEAR_ID, major.major_label, courses))
+        except AssistNotFound:
+            pass  # no agreement for this major: only the transcript counts
+        except AssistError as e:
+            log.warning("plan: ASSIST match for %r failed: %s", major.major_label, e)
+    try:
+        semesters = planner.build_plan(chosen, planner.satisfied(courses, matches))
     except planner.PlannerError as e:
         raise HTTPException(status_code=e.status, detail=str(e)) from e
     return PlanResponse(semesters=semesters)

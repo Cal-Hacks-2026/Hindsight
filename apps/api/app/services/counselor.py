@@ -111,13 +111,26 @@ def match_facts(result: MatchResult, sources: Sources) -> dict[str, Any]:
 
 
 def _catalog_citation(major: planner.Major, code: str | None = None) -> Citation:
+    # Several courses share a catalog page (url), so ref names the course: sources are keyed on (source, url, ref).
     tag = planner.PLACEHOLDER_PREFIX if major.placeholder else ""
     if code is None:
         return Citation(source="catalog", label=f"{tag}{major.campus.upper()} catalog · {major.major_label} "
                         f"({major.catalog_year})", url=major.source_url)
     course = major.courses[code]
     return Citation(source="catalog", label=f"{tag}{major.campus.upper()} catalog · {code} {course.title}",
-                    url=course.source_url, ref=f"{major.major_label} ({major.catalog_year})")
+                    url=course.source_url, ref=f"{code} · {major.major_label} ({major.catalog_year})")
+
+
+def _group_citation(major: planner.Major, group: planner.RequirementGroup) -> Citation:
+    return Citation(source="catalog", label=f"{major.campus.upper()} catalog · {major.major_label} · {group.title}",
+                    url=group.source_url, ref=f"{group.title} · {major.major_label} ({major.catalog_year})")
+
+
+def _catalog_doubt(placeholder: bool, needs_review: list[str], what: str) -> str | None:
+    """Why a curated catalog fact needs an advisor's check: placeholder data, or ambiguity the curator marked."""
+    if placeholder:
+        return "placeholder catalog data, not the real requirements"
+    return f"{what}: {needs_review[0]}" if needs_review else None
 
 
 # ---- terms ----
@@ -184,10 +197,7 @@ class Student:
                                             self.profile.campus, planner.load_majors())
         except planner.PlannerError as e:
             return {"error": str(e)}
-        satisfied = planner.satisfied_from_courses(self.courses)
-        for major in majors:
-            if result := self.match(major.major_label):
-                satisfied |= planner.satisfied_from_match(result)
+        satisfied = planner.satisfied(self.courses, filter(None, (self.match(m.major_label) for m in majors)))
         try:
             semesters = planner.build_plan(majors, satisfied, today=self.today)
         except planner.PlannerError as e:
@@ -197,24 +207,39 @@ class Student:
         for major in majors:
             for code in major.courses:
                 owner.setdefault(code, major)
-        placeholder = "placeholder catalog data, not the real requirements"
+        def course_source(code: str) -> str:
+            major = owner[code]  # a course's own flag first, else the major's (e.g. catalog edition)
+            doubt = _catalog_doubt(major.placeholder, major.courses[code].needs_review or major.needs_review, code)
+            return self.sources.add(_catalog_citation(major, code), doubt)
+
+        def course_facts(c) -> dict[str, Any]:
+            facts = {"code": c.code, "title": c.title, "units": c.units, "prereqs": c.prereqs,
+                     "reason": c.reason.removeprefix(planner.PLACEHOLDER_PREFIX), "source": course_source(c.code)}
+            if review := owner[c.code].courses[c.code].needs_review:
+                facts["needs_review"] = review
+            return facts
+
         last_term = semesters[-1].term if semesters else None
         out: dict[str, Any] = {
             "majors": [m.major_label for m in majors],
-            "requirements_sources": [self.sources.add(_catalog_citation(m), placeholder if m.placeholder else None)
-                                     for m in majors],
+            "requirements_sources": [
+                self.sources.add(_catalog_citation(m), _catalog_doubt(m.placeholder, m.needs_review, m.major_label))
+                for m in majors],
             "placeholder_data": any(m.placeholder for m in majors),
+            "requirements_caveats": {m.major_label: m.needs_review for m in majors if m.needs_review},
             "covers": PLAN_COVERS,
             "semesters": [{
                 "term": s.term,
                 "units": sum(c.units for c in s.courses),
-                "courses": [{
-                    "code": c.code, "title": c.title, "units": c.units, "prereqs": c.prereqs,
-                    "reason": c.reason.removeprefix(planner.PLACEHOLDER_PREFIX),
-                    "source": self.sources.add(_catalog_citation(owner[c.code], c.code),
-                                               placeholder if owner[c.code].placeholder else None),
-                } for c in s.courses],
+                "courses": [course_facts(c) for c in s.courses],
             } for s in semesters],
+            # Requirements with no course list in the catalog: in the degree, but not in these semesters.
+            "not_scheduled": [{
+                "major": m.major_label, "requirement": g.title, "units": g.units, "catalog_says": g.notes,
+                "why": g.needs_review[0],
+                "source": self.sources.add(_group_citation(m, g), _catalog_doubt(m.placeholder, g.needs_review,
+                                                                                   f"{m.major_label} {g.title}")),
+            } for m, g in planner.unscheduled_groups(majors)],
             "last_term": last_term,
             "terms_needed": len(semesters),
             "already_done_by_code": sorted(satisfied),
@@ -372,7 +397,8 @@ What is decided for you:
   finish / graduate by <term>" or "what if I add or drop a major" question, call plan_with_majors with
   the majors and target term; then answer from finishes_by_target, last_term, and the semesters. The
   plan covers what its `covers` field says and nothing more, so a plan finishing by the target does not
-  by itself mean the student graduates then; say what it does and doesn't cover.
+  by itself mean the student graduates then; say what it does and doesn't cover. Requirements in
+  not_scheduled are part of the degree but in no semester, so last_term doesn't include them; name them.
 - If a tool returns an error (for example a major whose requirements aren't loaded), say plainly what
   could not be computed. Don't estimate it. You may still report what was computed, such as the ASSIST
   lower-division match for that major.
@@ -386,7 +412,8 @@ Citations:
 
 Uncertainty:
 - If anything your answer depends on is partial, low or medium confidence, flagged (e.g. sequence_rule,
-  course_year_mismatch, renumbered_match, unspecified_rule), placeholder data, or could not be computed,
+  course_year_mismatch, renumbered_match, unspecified_rule), placeholder data, marked in the catalog data
+  (requirements_caveats, a course's needs_review, not_scheduled), or could not be computed,
   say so in the reply and set advisor_question to the specific question the student should ask their
   advisor: one or two sentences in the student's voice, naming the exact courses, requirement, and
   agreement involved. Otherwise set advisor_question to null.

@@ -1,0 +1,584 @@
+{
+  "placeholder": false,
+  "major_label": "Economics, B.S.",
+  "campus": "sjsu",
+  "catalog_year": "2025-26",
+  "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=1915",
+  "notes": [
+    "All courses required in the major (Core and major electives) must be completed with a minimum grade of \"C-\". The following courses in Preparation for the Major must be completed with a \"C\" or better: MATH 30 and a Statistics course.",
+    "Summary of Degree Units: Core Lower Division GE 22, Upper Division GE 9, Physical Education 2, Major Preparation 6, Major Requirements 50, University Electives or Minor 25; Total 120."
+  ],
+  "needs_review": [
+    "Curated from the 2025-2026 SJSU catalog PDF. The 2026-2027 online catalog (catalog.sjsu.edu) blocks automated access, so it wasn't checked for changes.",
+    "The catalog doesn't say which terms courses are offered, so the planner assumes Fall and Spring for every course."
+  ],
+  "courses": {
+    "STAT 95": {
+      "title": "Elementary Statistics",
+      "units": 3,
+      "prereqs": [],
+      "prereq_text": "Prerequisite(s): Math Enrollment Category M-I or M-II, or for Categories III or IV, completion of a GE Area 2 course with a grade of C- or better.",
+      "notes": [
+        "Intended for Psychology majors and minors as well as for programs in Behavioral Science, Child Development, Education, Health Science, Nursing, Nutritional Science, Social Science, and Social Work."
+      ],
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=1626"
+    },
+    "SOCI 15": {
+      "title": "Statistical Applications in the Social Sciences",
+      "units": 3,
+      "prereqs": [],
+      "prereq_text": "Prerequisite(s): Math Enrollment Category M-I, M-II, or M-III, or for Category IV, completion of a GE Area B4 course with a grade of C- or better. Corequisite weekly supported instruction required for Enrollment Category M-III, and recommended for M-II.",
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=1587"
+    },
+    "SOCS 15": {
+      "title": "Statistical Applications in the Social Sciences",
+      "units": 3,
+      "prereqs": [],
+      "prereq_text": "Prerequisite(s): Math Enrollment Category M-I, M-II, or M-III, or for Category IV, completion of a GE Area 2 course with a grade of C- or better. Corequisite weekly supported instruction required for Enrollment Category M-III, and recommended for M-II.",
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=1570"
+    },
+    "BUS2 90": {
+      "title": "Business Statistics",
+      "units": 3,
+      "prereqs": [
+        "MATH 70"
+      ],
+      "prereq_text": "Prerequisite(s): MATH 70.",
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=761"
+    },
+    "MATH 30": {
+      "title": "Calculus I",
+      "units": 3,
+      "prereqs": [],
+      "prereq_text": "Prerequisite(s): Math Enrollment Category M-I or M-II and satisfactory score on the Precalculus Proficiency Assessment; MATH 19 with a grade of C- or better to waive the exam; or MATH 18A and MATH 18B, with a grade of C- or better in each to waive the exam. Corequisite(s): MATH 30W for students with satisfactory score on the Precalculus Proficiency Assessment or MATH 19 with a grade of B- or lower or MATH 18A and MATH 18B with a grade of B- or lower or students who are repeating MATH 30.",
+      "needs_review": [
+        "Prerequisite is placement or MATH 19/MATH 18A+18B; no course edge stored."
+      ],
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=1284"
+    },
+    "ECON 1A": {
+      "title": "Principles of Economics: Macroeconomics",
+      "units": 3,
+      "prereqs": [],
+      "prereq_text": null,
+      "notes": [
+        "May be taken concurrently or prior to ECON 1B. Offered in Fall 2021 as 4 units and Spring 2022 as 3 units."
+      ],
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=938"
+    },
+    "ECON 1B": {
+      "title": "Principles of Economics: Microeconomics",
+      "units": 3,
+      "prereqs": [],
+      "prereq_text": null,
+      "notes": [
+        "May be taken concurrently or prior to ECON 1A."
+      ],
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=939"
+    },
+    "ECON 100W": {
+      "title": "Writing Workshop: Economic Reports",
+      "units": 4,
+      "prereqs": [
+        "ECON 1A",
+        "ECON 1B"
+      ],
+      "prereq_text": "Prerequisite(s): ECON 1A and ECON 1B; 1B or equivalent second semester composition course (with a grade of C- or better); completion of core GE; and upper division standing. Or Graduate or Postbaccalaureate level.",
+      "notes": [
+        "Must be passed with C or better to satisfy the CSU Graduation Writing Assessment Requirement (GWAR)."
+      ],
+      "needs_review": [
+        "Also requires second-semester composition, completion of core GE, and upper-division standing."
+      ],
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=940"
+    },
+    "ECON 101": {
+      "title": "Microeconomic Analysis",
+      "units": 4,
+      "prereqs": [
+        "ECON 1B"
+      ],
+      "prereqs_one_of": [
+        [
+          "MATH 30",
+          "MATH 71"
+        ]
+      ],
+      "prereq_text": "Prerequisite(s): ECON 1B and Calculus (MATH 30 or MATH 71).",
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=940"
+    },
+    "ECON 102": {
+      "title": "Macroeconomic Analysis",
+      "units": 4,
+      "prereqs": [
+        "ECON 1A"
+      ],
+      "prereq_text": "Prerequisite(s): ECON 1A.",
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=940"
+    },
+    "ECON 103A": {
+      "title": "Introduction to Econometrics and Research Methods",
+      "units": 4,
+      "prereqs": [],
+      "prereqs_one_of": [
+        [
+          "STAT 95",
+          "SOCI 15",
+          "UNVS 15"
+        ]
+      ],
+      "prereq_text": "Prerequisite(s): Introductory statistics (SOCI 15, STAT 95, UNVS 15, or equivalent).",
+      "needs_review": [
+        "The prerequisite also accepts 'or equivalent' introductory statistics; SOCS 15 and BUS2 90 aren't named."
+      ],
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=941"
+    },
+    "ECON 103B": {
+      "title": "Econometric Methods",
+      "units": 4,
+      "prereqs": [
+        "ECON 100W",
+        "ECON 103A"
+      ],
+      "prereq_text": "Prerequisite(s): ECON 100W and ECON 103A.",
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=941"
+    },
+    "ECON 104": {
+      "title": "Mathematical Methods for Economics",
+      "units": 4,
+      "prereqs": [
+        "ECON 1A",
+        "ECON 1B"
+      ],
+      "prereqs_one_of": [
+        [
+          "MATH 30",
+          "MATH 71"
+        ]
+      ],
+      "prereq_text": "Prerequisite(s): ECON 1A, ECON 1B, and a grade of \"C\" or better in MATH 30 or MATH 71.",
+      "notes": [
+        "MATH 30 or MATH 71 needs a grade of \"C\" or better."
+      ],
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=941"
+    },
+    "ECON 103": {
+      "title": "Intro to Econometrics",
+      "units": 4,
+      "prereqs": [
+        "ECON 3"
+      ],
+      "prereq_text": "Prerequisite(s): ECON 3 or equivalent.",
+      "needs_review": [
+        "A 100-level ECON course, so it fits the elective rule as written; the catalog doesn't say whether it can count alongside the core ECON 103A."
+      ],
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=941"
+    },
+    "ECON 106": {
+      "title": "Managerial Economics",
+      "units": 4,
+      "prereqs": [
+        "ECON 1B"
+      ],
+      "prereq_text": "Prerequisite(s): ECON 1B.",
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=941"
+    },
+    "ECON 107": {
+      "title": "Introduction to Environmental Economics and Policy",
+      "units": 4,
+      "prereqs": [
+        "ECON 1B"
+      ],
+      "prereq_text": "Prerequisite(s): ECON 1B or instructor consent.",
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=942"
+    },
+    "ECON 108": {
+      "title": "Cost-Benefit Analysis",
+      "units": 4,
+      "prereqs": [
+        "ECON 1B"
+      ],
+      "prereqs_one_of": [
+        [
+          "ECON 3",
+          "STAT 95"
+        ]
+      ],
+      "prereq_text": "Prerequisite(s): ECON 1B and ECON 3 or STAT 95, or instructor consent",
+      "needs_review": [
+        "The prerequisite 'ECON 1B and ECON 3 or STAT 95' can be read two ways; stored as ECON 1B plus one of ECON 3/STAT 95."
+      ],
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=942"
+    },
+    "ECON 112": {
+      "title": "Economic Development",
+      "units": 4,
+      "prereqs": [
+        "ECON 1A",
+        "ECON 1B"
+      ],
+      "prereq_text": "Prerequisite(s): ECON 1A and ECON 1B.",
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=942"
+    },
+    "ECON 113A": {
+      "title": "Economic History of the United States",
+      "units": 4,
+      "prereqs": [
+        "ECON 1A",
+        "ECON 1B"
+      ],
+      "prereq_text": "Prerequisite(s): ECON 1A and ECON 1B, or instructor consent.",
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=942"
+    },
+    "ECON 113B": {
+      "title": "Economic History of Europe",
+      "units": 4,
+      "prereqs": [],
+      "prereq_text": "Prerequisite(s): Upper division standing or instructor consent.",
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=943"
+    },
+    "ECON 121": {
+      "title": "Industrial Organization",
+      "units": 4,
+      "prereqs": [
+        "ECON 1B"
+      ],
+      "prereq_text": "Prerequisite(s): ECON 1B.",
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=943"
+    },
+    "ECON 132": {
+      "title": "Public Finance",
+      "units": 4,
+      "prereqs": [
+        "ECON 1B"
+      ],
+      "prereq_text": "Prerequisite(s): ECON 1B.",
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=943"
+    },
+    "ECON 133": {
+      "title": "Public Choice",
+      "units": 4,
+      "prereqs": [
+        "ECON 1B"
+      ],
+      "prereq_text": "Prerequisite(s): ECON 1B",
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=943"
+    },
+    "ECON 135": {
+      "title": "Money and Banking",
+      "units": 4,
+      "prereqs": [
+        "ECON 1A"
+      ],
+      "prereq_text": "Prerequisite(s): ECON 1A.",
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=943"
+    },
+    "ECON 136": {
+      "title": "International Economics",
+      "units": 4,
+      "prereqs": [
+        "ECON 1A",
+        "ECON 1B"
+      ],
+      "prereq_text": "Prerequisite(s): ECON 1A and ECON 1B.",
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=944"
+    },
+    "ECON 137A": {
+      "title": "Fundamentals of Corporate Finance",
+      "units": 4,
+      "prereqs": [
+        "ECON 1B"
+      ],
+      "prereq_text": "Prerequisite(s): ECON 1B.",
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=944"
+    },
+    "ECON 137B": {
+      "title": "Topics in Corporate Finance",
+      "units": 4,
+      "prereqs": [
+        "ECON 137A"
+      ],
+      "prereq_text": "Prerequisite(s): ECON 137A or instructor consent.",
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=944"
+    },
+    "ECON 138": {
+      "title": "Business and Economic Forecasting",
+      "units": 4,
+      "prereqs": [
+        "ECON 1A",
+        "ECON 1B",
+        "ECON 103A"
+      ],
+      "prereq_text": "Prerequisite(s): ECON 1A, ECON 1B, ECON 103A, and a semester of statistics.",
+      "needs_review": [
+        "A statistics prerequisite with no course code ('a semester of statistics' / 'introductory statistics'); no edge stored."
+      ],
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=944"
+    },
+    "ECON 139": {
+      "title": "Principles of Investments",
+      "units": 4,
+      "prereqs": [
+        "ECON 1A",
+        "ECON 1B"
+      ],
+      "prereq_text": "Prerequisite(s): ECON 1A and ECON 1B.",
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=944"
+    },
+    "ECON 141": {
+      "title": "Law and Economics",
+      "units": 4,
+      "prereqs": [],
+      "prereqs_one_of": [
+        [
+          "ECON 1A",
+          "ECON 1B"
+        ]
+      ],
+      "prereq_text": "Prerequisite(s): ECON 1A or ECON 1B.",
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=944"
+    },
+    "ECON 151": {
+      "title": "Labor Economics",
+      "units": 4,
+      "prereqs": [
+        "ECON 1A",
+        "ECON 1B"
+      ],
+      "prereq_text": "Prerequisite(s): ECON 1A and ECON 1B.",
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=945"
+    },
+    "ECON 155": {
+      "title": "Principles of Austrian Economics",
+      "units": 4,
+      "prereqs": [
+        "ECON 1A",
+        "ECON 1B"
+      ],
+      "prereq_text": "Prerequisite(s): ECON 1A and ECON 1B",
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=945"
+    },
+    "ECON 158": {
+      "title": "Economics of Entrepreneurship",
+      "units": 4,
+      "prereqs": [
+        "ECON 1A",
+        "ECON 1B"
+      ],
+      "prereq_text": "Prerequisite(s): ECON 1A and ECON 1B.",
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=945"
+    },
+    "ECON 165": {
+      "title": "Regional Economics",
+      "units": 4,
+      "prereqs": [],
+      "prereqs_one_of": [
+        [
+          "ECON 1A",
+          "ECON 1B"
+        ]
+      ],
+      "prereq_text": "Prerequisite(s): ECON 1A or ECON 1B or instructor consent.",
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=945"
+    },
+    "ECON 166": {
+      "title": "Urban Economics",
+      "units": 4,
+      "prereqs": [
+        "ECON 1B"
+      ],
+      "prereq_text": "Prerequisite(s): ECON 1B.",
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=945"
+    },
+    "ECON 170": {
+      "title": "Health Economics",
+      "units": 4,
+      "prereqs": [
+        "ECON 1A",
+        "ECON 1B"
+      ],
+      "prereq_text": "Prerequisite(s): ECON 1A and ECON 1B",
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=946"
+    },
+    "ECON 180": {
+      "title": "Individual Studies",
+      "units": 1,
+      "units_max": 4,
+      "prereqs": [],
+      "prereq_text": "Prerequisite(s): Instructor consent and department chair approval.",
+      "needs_review": [
+        "Variable units; requires instructor consent and department chair approval."
+      ],
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=946"
+    },
+    "ECON 185": {
+      "title": "Applied Economics Internship",
+      "units": 1,
+      "units_max": 8,
+      "prereqs": [],
+      "prereq_text": "Prerequisite(s): Junior or senior standing and consent of internship coordinator.",
+      "needs_review": [
+        "Variable units; requires junior or senior standing and consent of the internship coordinator."
+      ],
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=946"
+    },
+    "ECON 190": {
+      "title": "History of Economic Thought",
+      "units": 4,
+      "prereqs": [
+        "ECON 101",
+        "ECON 102",
+        "ECON 100W",
+        "ECON 103A"
+      ],
+      "prereq_text": "Prerequisite(s): ECON 101, ECON 102, ECON 100W, and ECON 103A; or instructor consent.",
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=946"
+    },
+    "ECON 191": {
+      "title": "Economic Thought of Nobel Prize Winners",
+      "units": 4,
+      "prereqs": [
+        "ECON 101",
+        "ECON 102",
+        "ECON 100W",
+        "ECON 103A"
+      ],
+      "prereq_text": "Prerequisite(s): ECON 101, ECON 102, ECON 100W, and ECON 103A; or instructor consent.",
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=946"
+    },
+    "ECON 192": {
+      "title": "International Program Studies",
+      "units": 1,
+      "units_max": 12,
+      "prereqs": [],
+      "prereq_text": null,
+      "needs_review": [
+        "Variable units; a study-abroad placeholder course, so whether a given program counts as an elective is up to the department."
+      ],
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=947"
+    },
+    "ECON 195": {
+      "title": "Computational Methods for Economics",
+      "units": 4,
+      "prereqs": [
+        "ECON 1A",
+        "ECON 1B"
+      ],
+      "prereq_text": "Prerequisite(s): ECON 1A, ECON 1B and a semester of statistics.",
+      "needs_review": [
+        "A statistics prerequisite with no course code ('a semester of statistics' / 'introductory statistics'); no edge stored."
+      ],
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=947"
+    },
+    "ECON 197": {
+      "title": "Experimental Economics",
+      "units": 4,
+      "prereqs": [
+        "ECON 1B"
+      ],
+      "prereq_text": "Prerequisite(s): ECON 1B and introductory statistics.",
+      "needs_review": [
+        "A statistics prerequisite with no course code ('a semester of statistics' / 'introductory statistics'); no edge stored."
+      ],
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=947"
+    }
+  },
+  "groups": [
+    {
+      "id": "econ-stats",
+      "title": "Major Preparation: Statistics",
+      "rule": "n_of",
+      "n": 1,
+      "courses": [
+        "STAT 95",
+        "SOCI 15",
+        "SOCS 15",
+        "BUS2 90"
+      ],
+      "notes": [
+        "Any Statistics course 3 unit(s) (including SOCI 15, SOCS 15, STAT 95, BUS2 90). Grade of \"C\" or better."
+      ],
+      "needs_review": [
+        "The catalog accepts 'any statistics course'; only these four are named. Whether another one (for example MATH 161A) counts isn't stated."
+      ],
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=1917"
+    },
+    {
+      "id": "econ-calc",
+      "title": "Major Preparation: Calculus",
+      "rule": "all",
+      "courses": [
+        "MATH 30"
+      ],
+      "notes": [
+        "Grade of \"C\" or better."
+      ],
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=1917"
+    },
+    {
+      "id": "econ-core",
+      "title": "Core Courses",
+      "rule": "all",
+      "courses": [
+        "ECON 1A",
+        "ECON 1B",
+        "ECON 100W",
+        "ECON 101",
+        "ECON 102",
+        "ECON 103A",
+        "ECON 103B",
+        "ECON 104"
+      ],
+      "notes": [
+        "Core Courses (30 units)"
+      ],
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=1917"
+    },
+    {
+      "id": "econ-electives",
+      "title": "Upper Division Economics Electives",
+      "rule": "units",
+      "units": 20,
+      "courses": [
+        "ECON 103",
+        "ECON 106",
+        "ECON 107",
+        "ECON 108",
+        "ECON 112",
+        "ECON 113A",
+        "ECON 113B",
+        "ECON 121",
+        "ECON 132",
+        "ECON 133",
+        "ECON 135",
+        "ECON 136",
+        "ECON 137A",
+        "ECON 137B",
+        "ECON 138",
+        "ECON 139",
+        "ECON 141",
+        "ECON 151",
+        "ECON 155",
+        "ECON 158",
+        "ECON 165",
+        "ECON 166",
+        "ECON 170",
+        "ECON 180",
+        "ECON 185",
+        "ECON 190",
+        "ECON 191",
+        "ECON 192",
+        "ECON 195",
+        "ECON 197"
+      ],
+      "notes": [
+        "Select any 100-level courses within the Department of Economics with the exception of ECON 109, which is NOT intended for majors.",
+        "Alternatively, to pursue a specialization in Data Analytics, students must complete two out of the following four elective courses: ECON 166, ECON 138, ECON 195, and ECON 197. In addition, students must complete 12 units of 100-level economics electives (excluding ECON 109)."
+      ],
+      "needs_review": [
+        "The catalog gives a rule, not a list. This list is every 100-level ECON course in the 2025-26 course descriptions except ECON 109 and the core courses (whether a core course can also count as an elective isn't stated). ECON 1290R (Culminating Experience Supervision, 1 unit) is left out because its number isn't clearly 100-level."
+      ],
+      "source_url": "https://catalog.sjsu.edu/mime/media/23/8710/2025-2026+Academic+Catalog.pdf#page=1917"
+    }
+  ]
+}
