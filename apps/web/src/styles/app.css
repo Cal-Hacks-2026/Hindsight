@@ -378,12 +378,17 @@ figcaption {
 }
 
 .spine-code {
+  flex: none;
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.08em;
 }
 
+/* Gives way to the code: a long "via" line ends in an ellipsis instead of running off the spine. */
 .spine-sub {
+  min-height: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   font-size: 10px;
   letter-spacing: 0.04em;
 }
@@ -939,8 +944,30 @@ table.confirm input {
   border-bottom: 1px solid transparent;
 }
 
+/* Titles wrap to a second line instead of being cut off. */
+table.confirm textarea {
+  display: block;
+  width: 100%;
+  min-height: 40px;
+  max-height: 60px;
+  padding: 10px 4px;
+  line-height: 20px;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  resize: none;
+  field-sizing: content;
+}
+
+@supports not (field-sizing: content) {
+  table.confirm textarea {
+    height: 60px;
+  }
+}
+
 table.confirm input:hover,
-table.confirm input:focus {
+table.confirm input:focus,
+table.confirm textarea:hover,
+table.confirm textarea:focus {
   border-bottom-color: var(--ink);
   outline: none;
 }

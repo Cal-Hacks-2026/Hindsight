@@ -6,11 +6,13 @@ import { useOpportunities } from "../lib/opportunities";
 import { loadSession } from "../lib/session";
 import { useNow } from "../lib/time";
 
+const SHOWN = 10;
+
 export function Radar() {
   const { profile } = loadSession();
   const { state, retry } = useOpportunities(profile?.id);
   const now = useNow(60_000);
-  const ready = state.status === "ready" ? state.items : undefined;
+  const ready = state.status === "ready" ? state.items.slice(0, SHOWN) : undefined;
 
   return (
     <>
@@ -42,11 +44,11 @@ export function Radar() {
           <RadarLoading startedAt={state.startedAt} skeletons={4} />
         ) : state.status === "error" ? (
           <RadarError error={state.error} onRetry={retry} />
-        ) : state.items.length === 0 ? (
+        ) : !ready?.length ? (
           <RadarEmpty campus={profile.campus} />
         ) : (
           <ol className="entries">
-            {state.items.map((item, i) => (
+            {ready.map((item, i) => (
               <Listing key={item.id} item={item} now={now} rank={i + 1} />
             ))}
           </ol>

@@ -173,3 +173,15 @@ def test_staff_only_events_are_demoted():
     staff = rank.score(row("f", "AI assignment design", type="workshop", tags=["faculty", "staff"]), terms, NOW)
     open_ = rank.score(row("s", "AI assignment design", type="workshop", tags=["faculty", "students"]), terms, NOW)
     assert staff.score < open_.score
+
+
+def test_faculty_only_items_are_left_out():
+    rows = [
+        row("cfe", "AI in the classroom", type="workshop", org="Center for Faculty Excellence"),
+        row("desc", "AI grading workshop", type="workshop", description="A hands-on session for faculty."),
+        row("staff", "AI mixer", description="Open to faculty and staff."),
+        row("all", "AI town hall", description="Open to faculty, staff, and students."),
+        row("mentors", "AI research with faculty mentors", type="program"),
+    ]
+    ranked = [s.row["id"] for s in rank.rank(PROFILE, rows, NOW)]
+    assert sorted(ranked) == ["all", "mentors"]
