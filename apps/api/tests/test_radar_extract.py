@@ -32,6 +32,8 @@ def test_plain_parsing_code_loads_and_runs(tmp_path, monkeypatch):
 @pytest.mark.parametrize("snippet,why", [
     ("import os", "not `import`"),
     ("from os import environ", "not allowed"),
+    ("x = source.parse_file('/proc/self/environ')", "`.parse_file`"),
+    ("x = source.model_validate_json('{}')", "`.model_validate_json`"),
     ("from subprocess import run", "not allowed"),
     ("from app.services.db import client", "not allowed"),
     ("from app.services.radar.extract import Path", "not allowed"),
@@ -174,3 +176,12 @@ def test_symlinked_extractors_are_refused(tmp_path, monkeypatch):
         extract.load("k")
     with pytest.raises(OSError):
         extract.page_function()
+
+
+def test_extractors_see_a_plain_source_not_the_model():
+    """No pydantic methods (parse_file reads files) reach patched code."""
+    seen = []
+    extract.run_in_process({"k": [({}, SRC)]}, lambda kind: lambda raw, source: seen.append(source) or [])
+    (view,) = seen
+    assert not isinstance(view, sources.Source) and not hasattr(view, "parse_file")
+    assert view.id == SRC.id and isinstance(view.url, str) and view.tags == SRC.tags

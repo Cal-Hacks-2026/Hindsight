@@ -166,9 +166,12 @@ ALLOWED_IMPORTS: dict[str, set[str]] = {
 _BANNED_NAMES = {"open", "exec", "eval", "compile", "__import__", "globals", "locals", "vars", "dir",
                  "getattr", "setattr", "delattr", "hasattr", "breakpoint", "input", "help", "exit", "quit",
                  "memoryview", "type", "object", "super", "classmethod", "staticmethod", "property"}
-_BANNED_ATTRS = {"format", "format_map", "mro"}  # str.format walks attributes; .mro() reaches object
+# str.format walks attributes; .mro() reaches object. The pydantic names are defense in
+# depth: extractors only get plain objects (source_view), but none should reach a model.
+_BANNED_ATTRS = {"format", "format_map", "mro", "parse_file", "parse_raw", "parse_obj", "from_orm",
+                 "construct", "schema", "schema_json", "validate", "update_forward_refs"}
 # Frame, code, and traceback attributes lead back to real globals and builtins.
-_BANNED_ATTR = re.compile(r"^(_|f_|gi_|cr_|ag_|tb_|co_)")
+_BANNED_ATTR = re.compile(r"^(_|f_|gi_|cr_|ag_|tb_|co_|model_)")
 _SAFE_BUILTINS = {
     name: getattr(builtins, name) for name in (
         "abs", "all", "any", "bool", "dict", "enumerate", "filter", "float", "frozenset", "int",
@@ -280,6 +283,13 @@ def well_formed(p: Any) -> bool:
 _BAD_RETURN = "extract() must return a list of Parsed (str fields, timezone-aware datetimes or None, list tags, set type_hints)"
 
 
+def source_view(source: Source) -> types.SimpleNamespace:
+    """What an extractor sees of its source: a plain copy of its fields (strings and lists).
+    Never the pydantic model, whose methods (parse_file, model_validate_json, …) could read
+    files; and a copy, so patched code can't retarget later scans."""
+    return types.SimpleNamespace(**source.model_dump(mode="json"))
+
+
 def run_in_process(batches: Batches, loader: Callable[[str], Extractor] | None = None) -> Results:
     """Run each kind's extractor over its items in this process. Used inside the isolated
     worker, and directly by tests that inject their own extractors."""
@@ -294,7 +304,7 @@ def run_in_process(batches: Batches, loader: Callable[[str], Extractor] | None =
         results = []
         for raw, source in items:
             try:
-                parsed = fn(raw, source.model_copy(deep=True))  # a copy: patched code can't retarget scans
+                parsed = fn(raw, source_view(source))
             except Exception as e:  # patchable code: its failure stays with its own sources
                 results.append(ExtractorError(f"{kind}.py: {type(e).__name__}: {e}"))
                 continue

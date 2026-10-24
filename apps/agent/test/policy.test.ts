@@ -103,3 +103,21 @@ test('refuses to patch a symlink, even under an allowed name', () => {
   s.allow(['linked.py']);
   assert.equal(s.decide(request(patch(`${DIR}/linked.py`))).outcome, O.Cancel);
 });
+
+test('patch text is parsed strictly, and must agree with what the CLI reports', () => {
+  const ok = patch(`${DIR}/localist.py`);
+  const withText = (patchContent: string) => ({ ...ok, patchContent });
+  const denied = (d: unknown) => scope().decide(request(d)).outcome === O.Cancel;
+  assert.equal(denied(withText(ok.patchContent.replaceAll('\n', '\r\n'))), false, 'CRLF is fine');
+  for (const sneaky of [
+    `*** Begin Patch\n*** Update File: ${DIR}/localist.py\n@@\n-a\n+b\n  *** Add File: ${DIR}/new.py\n+x\n*** End Patch`,
+    `*** Begin Patch\n***Update File: ${DIR}/../normalize.py\n@@\n-a\n+b\n*** End Patch`,
+    `*** Begin Patch\n*** Update File: ${DIR}/localist.py\n*** Move to: ${DIR}/x.py\n*** End Patch`,
+    `*** Begin Patch\n@@\n-a\n+b\n*** End Patch`,
+  ]) {
+    assert.ok(denied(withText(sneaky)), sneaky);
+  }
+  assert.ok(denied({ ...ok, files: [{ filePath: `${DIR}/x.py`, operation: 'update' }] }), 'files[] names another file');
+  assert.ok(denied({ ...ok, filePath: `${DIR}/x.py` }), 'filePath names another file');
+  assert.equal(denied({ ...ok, files: [{ filePath: `${DIR}/localist.py`, operation: 'update' }] }), false);
+});

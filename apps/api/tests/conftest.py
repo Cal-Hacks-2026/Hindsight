@@ -18,6 +18,15 @@ def fresh_claude_limiter(monkeypatch):
 
 
 @pytest.fixture(autouse=True)
+def fresh_profile_limiter(monkeypatch):
+    from app.services import profile_limits
+
+    limiter = claude_limits.ClaudeLimiter(per_ip_per_min=profile_limits.PER_IP_PER_MIN, daily_cap=0)
+    monkeypatch.setattr(profile_limits, "limiter", limiter)
+    return limiter
+
+
+@pytest.fixture(autouse=True)
 def fresh_assist_limiter(monkeypatch):
     limiter = claude_limits.ClaudeLimiter(per_ip_per_min=assist_limits.PER_IP_PER_MIN, daily_cap=0)
     monkeypatch.setattr(assist_limits, "limiter", limiter)

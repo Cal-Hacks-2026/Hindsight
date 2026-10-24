@@ -85,6 +85,16 @@ def test_new_profile_triggers_a_run(agent_fake, agent_env):
     assert started["campus"] == "sjsu"
 
 
+def test_profile_creation_is_rate_limited_per_ip(agent_fake, agent_env):
+    """Each new profile queues a run whose ranking spends Claude; creation can't be unbounded."""
+    from app.services import profile_limits
+
+    n = profile_limits.PER_IP_PER_MIN
+    codes = [client.post("/profiles", json=PROFILE).status_code for _ in range(n + 1)]
+    assert codes == [200] * n + [429]
+    assert len(agent_fake.started) == n
+
+
 def test_profile_is_created_even_when_the_agent_is_down(agent_fake, caplog):
     res = client.post("/profiles", json=PROFILE)  # AGENT_SECRET unset
     assert res.status_code == 200
