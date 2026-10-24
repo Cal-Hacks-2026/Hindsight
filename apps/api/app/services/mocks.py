@@ -8,19 +8,14 @@ from datetime import datetime, timedelta, timezone
 
 from app.models import (
     AgentEvent,
-    AssistMajor,
     Citation,
     Course,
-    MatchResult,
-    MatchSummary,
     RankedOpportunity,
-    Requirement,
     Semester,
     SemesterCourse,
 )
 
 ASSIST_URL = "https://assist.org/"
-MOCK_AGREEMENT_KEY = "MOCK/113/to/39/Major/mock-key"
 
 
 def now_iso() -> str:
@@ -53,67 +48,6 @@ def transcript_courses() -> list[Course]:
         )
         for p, n, t, u, g, term, y in rows
     ]
-
-
-def assist_majors() -> list[AssistMajor]:
-    return [
-        AssistMajor(label="Data Science, B.S.", key=f"{MOCK_AGREEMENT_KEY}/ds"),
-        AssistMajor(label="Economics, B.A.", key=f"{MOCK_AGREEMENT_KEY}/econ-ba"),
-        AssistMajor(label="Economics, B.S.", key=f"{MOCK_AGREEMENT_KEY}/econ-bs"),
-        AssistMajor(label="Computer Science, B.S.", key=f"{MOCK_AGREEMENT_KEY}/cs"),
-    ]
-
-
-def match_result(major_label: str) -> MatchResult:
-    reqs = [
-        Requirement(
-            id="req-1", group_title="Calculus", rule="all",
-            receiving_course="MATH 30 - Calculus I",
-            status="satisfied", satisfied_by=["MATH 1A"], flags=[],
-            citation=_assist_citation(major_label, "Group A, row 1"), confidence="high",
-        ),
-        Requirement(
-            id="req-2", group_title="Calculus", rule="all",
-            receiving_course="MATH 31 - Calculus II",
-            status="satisfied", satisfied_by=["MATH 1B"], flags=[],
-            citation=_assist_citation(major_label, "Group A, row 2"), confidence="high",
-        ),
-        Requirement(
-            id="req-3", group_title="Programming", rule="all",
-            receiving_course="CS 46A + CS 46B - Intro to Programming / Data Structures",
-            status="partial", satisfied_by=["CIS 22A"], flags=["sequence_rule"],
-            citation=_assist_citation(major_label, "Group B, row 1"), confidence="medium",
-        ),
-        Requirement(
-            id="req-4", group_title="Economics", rule="n_of", n=1,
-            receiving_course="ECON 1A - Principles of Macroeconomics",
-            status="missing", satisfied_by=[], flags=["min_grade_C"],
-            citation=_assist_citation(major_label, "Group C, row 1"), confidence="high",
-        ),
-        Requirement(
-            id="req-5", group_title="Linear Algebra", rule="all",
-            receiving_course="MATH 39 - Linear Algebra I",
-            status="at_university", satisfied_by=[], flags=["no_current_articulation"],
-            citation=_assist_citation(major_label, "Group D, row 1"), confidence="high",
-        ),
-        Requirement(
-            id="req-6", group_title="Statistics", rule="all",
-            receiving_course="STAT 95 - Elementary Statistics",
-            status="satisfied", satisfied_by=["STAT C1000"], flags=["renumbered_course"],
-            citation=_assist_citation(major_label, "Group D, row 2"), confidence="low",
-        ),
-    ]
-    return MatchResult(
-        major_label=major_label,
-        agreement_key=MOCK_AGREEMENT_KEY,
-        requirements=reqs,
-        summary=MatchSummary(
-            satisfied=sum(r.status == "satisfied" for r in reqs),
-            partial=sum(r.status == "partial" for r in reqs),
-            missing=sum(r.status == "missing" for r in reqs),
-            at_university=sum(r.status == "at_university" for r in reqs),
-        ),
-    )
 
 
 def plan() -> list[Semester]:
