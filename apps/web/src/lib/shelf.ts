@@ -57,7 +57,11 @@ export const spineWidth = (units: number | undefined) =>
 // "MATH 30", "STAT C1000", "ENGL 1B", "BUS2 90"
 const CODE_RE = /\b([A-Z][A-Z0-9]{1,5}) (C?\d+[A-Z]{0,3})\b/g;
 
-export type ParsedCourse = { code: string; title: string; alternatives: string[]; choose: boolean };
+/** `choose`: how a choose-from list reads, e.g. "choose from", "choose 2 from", "choose 8 units from". */
+export type ParsedCourse = { code: string; title: string; alternatives: string[]; choose?: string };
+
+// The evaluator's labels: "Choose from: …", "2 from: …", "8 units from: …".
+const CHOOSE_RE = /^(?:choose from|(\d+(?:\.\d+)?)( units)? from):/i;
 
 /**
  * ASSIST receiving-course text → display parts:
@@ -65,11 +69,13 @@ export type ParsedCourse = { code: string; title: string; alternatives: string[]
  */
 export function parseReceiving(text: string): ParsedCourse {
   const codes = [...text.matchAll(CODE_RE)].map((m) => `${m[1]} ${m[2]}`);
-  const choose = /^choose from/i.test(text.trim());
-  if (choose || codes.length === 0) {
-    return { code: choose ? "Elective" : text, title: "", alternatives: codes, choose };
+  const m = CHOOSE_RE.exec(text.trim());
+  if (m) {
+    const choose = m[1] ? `choose ${m[1]}${m[2] ?? ""} from` : "choose from";
+    return { code: "Elective", title: "", alternatives: codes, choose };
   }
+  if (codes.length === 0) return { code: text, title: "", alternatives: [] };
   const first = text.split(/ or (?=[A-Z][A-Z0-9]{1,5} C?\d)/)[0] ?? text;
   const title = first.includes(" - ") ? first.slice(first.indexOf(" - ") + 3).trim() : "";
-  return { code: codes[0]!, title, alternatives: codes.slice(1), choose };
+  return { code: codes[0]!, title, alternatives: codes.slice(1) };
 }

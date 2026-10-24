@@ -51,9 +51,11 @@ class Requirement(BaseModel):
     rule: Literal["all", "n_of"]
     n: int | None = None
     receiving_course: str
-    status: Literal["satisfied", "partial", "missing", "at_university"]
+    status: Literal["satisfied", "partial", "missing", "at_university", "in_progress"]
     satisfied_by: list[str]
     flags: list[str]
+    # What to take at the sending college, for rows not yet satisfied (I-02).
+    options: list[str] | None = None
     citation: Citation
     confidence: Literal["high", "medium", "low"]
 
@@ -63,6 +65,7 @@ class MatchSummary(BaseModel):
     partial: int
     missing: int
     at_university: int
+    in_progress: int = 0
 
 
 class MatchResult(BaseModel):

@@ -540,6 +540,16 @@ td.nowrap {
   color: var(--gray);
 }
 
+/* I-02: what to take at the community college, under an open row's "Satisfied by". */
+.take-at {
+  display: block;
+  font-size: 13px;
+}
+
+.take-at-lead {
+  color: var(--gray);
+}
+
 .status {
   display: inline-flex;
   align-items: center;

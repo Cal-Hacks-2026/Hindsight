@@ -80,9 +80,14 @@ def test_pass_grade_under_a_grade_rule_counts_with_low_confidence():
     assert "pass_no_pass" in hit.flags
 
 
-@pytest.mark.parametrize("grade", ["F", "W", "NP", "IP", "I", ""])
+@pytest.mark.parametrize("grade", ["F", "W", "NP", "I", ""])
 def test_non_completing_grades_do_not_count(grade):
     assert req(match(DS_KEY, c("MATH 1A", grade)), "MATH 30").status == "missing"
+
+
+def test_in_progress_grade_does_not_count_yet():
+    hit = req(match(DS_KEY, c("MATH 1A", "IP")), "MATH 30")
+    assert (hit.status, hit.satisfied_by) == ("in_progress", ["MATH 1A"])
 
 
 def test_retake_best_attempt_wins():
@@ -170,3 +175,31 @@ def test_all_rule_requirements_omit_n_when_serialized():
     body = match(DS_KEY, c("MATH 1A")).model_dump(exclude_none=True)
     assert all("n" not in r for r in body["requirements"] if r["rule"] == "all")
     MatchResult.model_validate(body)
+
+
+def test_unsatisfied_rows_list_what_to_take_at_the_college():
+    empty = match(DS_KEY)
+    assert req(empty, "MATH 30").options == ["MATH 1A or MATH 1AH"]
+    assert req(empty, "MATH 31").options == ["MATH 1B + MATH 1C (or honors)"]
+    assert req(empty, "CS 46A").options == ["CIS 35A", "CIS 22A + CIS 22B (or honors)", "CIS 36A + CIS 36B", "CIS 27"]
+    # "One of" rows pool their children's alternatives, without repeats.
+    stats = req(match(ECON_BS_KEY), "STAT 95")
+    assert stats.options == ["PSYC 15", "SOC 15", "STAT C1000 or STAT C1000H", "POLI 20"]
+
+    partial = req(match(DS_KEY, c("CIS 22A")), "CS 46A")
+    assert partial.status == "partial" and partial.options and "CIS 35A" in partial.options
+    done = req(match(DS_KEY, c("MATH 1A")), "MATH 30")
+    assert done.status == "satisfied" and done.options is None
+
+
+def test_requirement_whose_only_gap_is_in_progress():
+    ip = req(match(DS_KEY, c("MATH 1B"), c("MATH 1C", "IP", "Fall 2026")), "MATH 31")
+    assert (ip.status, ip.satisfied_by, ip.options) == ("in_progress", ["MATH 1B", "MATH 1C"], None)
+    assert "sequence_rule" not in ip.flags and "pass_no_pass" not in ip.flags
+
+    # Still short even once the IP course passes (MATH 1B): not "in progress".
+    short = req(match(DS_KEY, c("MATH 1C", "IP", "Fall 2026")), "MATH 31")
+    assert short.status == "missing" and short.options == ["MATH 1B + MATH 1C (or honors)"]
+    r = match(DS_KEY, c("MATH 1B"), c("MATH 1C", "IP", "Fall 2026"))
+    assert r.summary.in_progress == 1
+    assert sum(r.summary.model_dump().values()) == len(r.requirements)
