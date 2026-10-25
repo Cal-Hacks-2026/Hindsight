@@ -1,278 +1,190 @@
 <p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="apps/web/public/brand/janus-paper.svg">
-    <img src="apps/web/public/brand/janus-ink.svg" alt="Hindsight's mark: an engraving of Janus, one face looking back and one looking forward" width="120">
-  </picture>
+  <img src="docs/screenshots/transfer-planner/logo.png" alt="Hindsight’s Janus logo: one face looking back, one looking forward" width="144">
 </p>
 
 <h1 align="center">Hindsight</h1>
-
-<p align="center"><em>Transfer Planner</em></p>
+<p align="center"><strong>Transfer Planner</strong></p>
+<p align="center">Know what counts. Know what to take next.</p>
 
 <p align="center">
-  <a href="https://hindsight-web-yl0k.onrender.com">Open the app</a> ·
-  <a href="PROJECT.md">Project write-up</a> ·
-  <a href="DESIGN.md">Design language</a> ·
-  <a href="DECISIONS.md">Decision log</a>
+  <a href="https://hindsight-web-yl0k.onrender.com">Live demo</a> ·
+  <a href="#try-the-demo">Demo walkthrough</a> ·
+  <a href="#run-locally">Run locally</a> ·
+  <a href="docs/ROADMAP.md">Roadmap</a>
 </p>
 
-An AI counselor for California community-college transfer students. It reads your transcript against the official ASSIST articulation agreements, shows what already counts and what's left, plans the rest term by term, and watches campus for the events and opportunities you'd otherwise hear about after the deadline. Every claim it makes is cited.
+<p align="center">Built at Cal Hacks 13.0</p>
 
-Built in 36 hours at Cal Hacks 13.0.
+Hindsight helps community-college students turn their transcript into a transfer plan. It checks coursework against official articulation agreements, identifies remaining major requirements, and proposes what to take next. Alongside the plan, students get relevant campus opportunities and answers grounded in their own records.
 
-[![The Degree page: completed courses as solid book spines, missing ones as dashed outlines, with every claim cited in the margin](docs/screenshots/degree-shelf.png)](https://hindsight-web-yl0k.onrender.com)
+**The current demo supports De Anza College → San José State University.** Articulation matching uses the majors available for that pathway on ASSIST. Full university course planning covers Data Science, B.S. and Economics, B.S.
 
-<sub>The Degree page for a sample De Anza → SJSU transcript, captured from the live deployment. Solid spines count, dashed ones are still needed, and the "Caught" note flags credits that only count under the agreement in effect when the course was taken.</sub>
+[![Hindsight’s My plan screen showing proposed next-term courses, units, and sources](docs/screenshots/transfer-planner/plan.png)](https://hindsight-web-yl0k.onrender.com)
 
-## Why this exists
+<details>
+<summary>See credit review and Ask Hindsight</summary>
 
-Four-year students learn how a university works over two years: which credits count, which clubs matter, which programs open in August and close in September. Transfer students arrive as juniors with half the time and none of the map.
-
-I transferred from De Anza to SJSU this fall. My counselor read me the ASSIST page. Nobody told me, for my exact transcript and my two majors, what counted, what was missing, or in what order to take the rest. And I found out about a major AI-company student program a month after it closed.
-
-ChatGPT answers the questions you know to ask. A transfer student's problem is the questions they don't know to ask.
-
-## Who it's for
-
-- **Community-college transfers at a CSU.**
-  Today: De Anza → San José State, with every major ASSIST lists for that pair (149) and curated upper-division requirements for Data Science, B.S. and Economics, B.S.
-  Next: every sending and receiving pair on ASSIST, since the matcher reads any agreement.
-- **Transfers headed to UC Berkeley.**
-  Today: Campus Radar scans Berkeley's event calendars. The ASSIST pair resolves (95 majors).
-  Next: curated Berkeley major requirements, so the Degree plan works there too.
-- **Transfer counselors.**
-  Next: a cited, shareable report for each advising appointment, so the meeting starts from the student's actual gaps.
-
-## What it does
-
-```
-          Transcript PDF / image
-                    │
-                    ▼
-   Claude reads it ─► Student confirms every row
-                    │
-                    ▼
- ┌──────────────────┴───────────────────┐
- │ ASSIST client (XSRF handshake, cache) │──► Deterministic matcher ──► Degree plan
- │  agreement for the year each course   │    And/Or groups, N-of,       prerequisites,
- │  was taken, renumbering fallback      │    sequence rule, grade min   15-unit terms
- └───────────────────────────────────────┘
-                    │
-                    ▼
- Apify (Cheerio Scraper) ─► Campus Radar ─► ranked opportunities, Claude writes the reason
-                    ▲
- Factory Droid ─────┘  on a schedule: scan, health-check, repair a broken extractor, alert
-                    │
-                    ▼
-   Claude counselor: answers from the computed results only, cites every claim
-```
-
-<table>
-  <tr>
-    <td width="33%"><a href="docs/screenshots/onboarding.png"><img src="docs/screenshots/onboarding.png" alt="Onboarding"></a><br><sub><b>Onboarding.</b> Majors come live from ASSIST.</sub></td>
-    <td width="33%"><a href="docs/screenshots/confirm-courses.png"><img src="docs/screenshots/confirm-courses.png" alt="Confirm courses"></a><br><sub><b>Confirm.</b> Claude reads the transcript; you check every row.</sub></td>
-    <td width="33%"><a href="docs/screenshots/degree-full.png"><img src="docs/screenshots/degree-full.png" alt="Degree report"></a><br><sub><b>Degree.</b> What counts, what's left, and the plan.</sub></td>
-  </tr>
-</table>
-
-### Transcript in, confirmed by you
-
-Upload a PDF or a photo. Claude extracts each course (prefix, number, title, units, grade, term) and hands back an editable table. Nothing is matched until the student confirms it, so a misread course can't quietly change a plan.
-
-### Credits, matched against ASSIST
-
-Matching is deterministic code. Claude never decides whether a credit counts.
-
-- The client performs ASSIST's XSRF handshake, then fetches agreements and caches them in Supabase, since the API is unofficial.
-- Majors are matched by exact label, so "Data Science, B.S." never matches "Population Data Science".
-- The evaluator handles `Following`, `NFromArea`, `NFromFollowing`, choose-N sections, And-within-group and Or-between-groups, "no current articulation", "complete entire sequence at the same institution", minimum grades, and Pass grades.
-- **Year-of-course matching.** California community colleges renumbered many courses (ECON 1 became ECON C2002). Each course is checked against the agreement for the academic year it was taken, so older credits still count. Courses missing from every loaded agreement fall back to a strict title-and-units similarity match, flagged low confidence.
-- Every requirement carries a status (counts, partial, missing, take at SJSU), flags, a confidence level, and a citation to its ASSIST row.
-
-### The plan
-
-The planner takes the curated SJSU catalog requirements (2025–26, page-linked on every item), drops what the transcript or the ASSIST match already covers, and schedules the rest into terms of up to 15 units that respect prerequisite order. It plans major requirements only. The Degree page notes that term-by-term course offerings aren't confirmed yet, and the counselor is told the plan doesn't cover GE, total degree units, residency, or the graduation application.
-
-### Campus Radar
-
-<a href="docs/screenshots/radar.png"><img src="docs/screenshots/radar.png" alt="Campus Radar: ranked events with a one-line reason for each"></a>
-
-Twelve verified sources (SJSU and Berkeley event calendars, SJSU student-org events, Devpost, MLH) are scraped with Apify's Cheerio Scraper. Dates and links come only from the source page; a missing date stays empty. Scoring is plain code (interests, majors, goals, deadline urgency, item type); Claude writes only the one-line reason. Faculty-only events are filtered out.
-
-### The counselor
-
-<a href="docs/screenshots/counselor.png"><img src="docs/screenshots/counselor.png" alt="The counselor answering 'Can I graduate by Spring 2028 if I add Econ?' with numbered sources"></a>
-
-Claude answers from this student's data only: profile, confirmed courses, match results, plan, and top opportunities. For what-if questions it calls the real planner and matcher as tools instead of estimating. Claude cites source IDs, never URLs; the server drops any ID that doesn't exist. When something is uncertain, it says so and drafts the question to ask an advisor.
-
-### Droid, on a schedule
-
-<a href="docs/screenshots/agent.png"><img src="docs/screenshots/agent.png" alt="The Droid run log: plan, steps, and result"></a>
-
-See [How Droid is used](#how-droid-is-used) below.
-
-### Where it could go wrong, and what we did about it
-
-| Risk | Design |
+| My credits | Ask Hindsight |
 |---|---|
-| A wrong credit decision costs a student a semester | Matching is deterministic code over official ASSIST data. Claude only explains computed results. |
-| A misread transcript | The student confirms every extracted row before anything is matched. |
-| An invented fact | Every academic claim cites an ASSIST row or a catalog page. Unknown citation IDs are dropped server-side. |
-| Stale or renumbered courses | Year-of-course agreements, plus a low-confidence fallback that is always flagged. |
-| A made-up event or deadline | Radar shows only scraped items, linked to their source. Missing dates stay empty. |
-| Uncertainty | Confidence on every requirement, and a drafted advisor question whenever the answer depends on a human decision. |
+| [![Course matches, requirement status, and agreement sources](docs/screenshots/transfer-planner/credits.png)](docs/screenshots/transfer-planner/credits.png) | [![Questions about a student’s courses and transfer plan](docs/screenshots/transfer-planner/ask-hindsight.png)](docs/screenshots/transfer-planner/ask-hindsight.png) |
+
+</details>
+
+*Screenshots show a fictional student profile. Academic results use recorded test responses; they are not a live evaluation of a real student.*
+
+## Why we built it
+
+A course can transfer as credit without satisfying a student's major. An unfinished sequence, a changed course number, or an agreement from the wrong year can change the path to graduation. Students need those differences explained before they register.
+
+Our teammate Atishay transferred from De Anza to SJSU to study Data Science and Economics. His advising experience stopped at reading ASSIST; he still needed to understand what his own transcript satisfied and what to take next. He also discovered a student program after applications had closed.
+
+Hindsight brings those decisions together: **what counts, what comes next, and what needs attention.**
+
+## The student experience
+
+| Step | What the student gets |
+|---|---|
+| **Confirm coursework** | Upload a transcript PDF or image, review the extracted courses, and correct names, grades, units, or terms before matching. Students with no completed coursework can continue without a transcript. |
+| **My plan** | Next-term course proposals, requirements needing attention, progress, and a full course sequence with start and transfer-term controls. |
+| **My credits** | The university requirement, matched prior coursework, accepted alternatives, confidence, and the agreement behind each result. |
+| **Opportunities** | Campus listings ranked against majors, goals, and interests, with source links and dates. |
+| **Ask Hindsight** | Questions and follow-ups grounded in the student's confirmed transcript, computed matches, plan, and opportunities. |
+
+The interface leads with the student's next decision. Operational scan and scraper-repair logs are available through the API.
+
+## Try the demo
+
+1. Open the [live app](https://hindsight-web-yl0k.onrender.com) and create a profile. Choose **Data Science, B.S.**, **Economics, B.S.**, or both for the full planning demo.
+2. Upload the [fictional De Anza sample transcript](tests/fixtures/personas/p1-baseline-deanza.pdf), then review and confirm the course rows.
+3. Open **My plan** to see proposed next courses. Change the start or transfer term and inspect the full sequence.
+4. Open **My credits** to inspect requirement matches, incomplete sequences, and credits recognized under earlier agreements.
+5. Ask **“Which requirements need attention before I transfer?”** or **“What changes if I drop my second major?”**
+6. Explore **Opportunities** for the profile's ranked campus listings.
+
+The hosted API can take time to wake after inactivity. The first personalized opportunity feed may also take longer while its explanations are prepared.
+
+## How it works
+
+```mermaid
+flowchart LR
+    T[Transcript] --> E[Claude extracts courses]
+    E --> C[Student confirms]
+    C --> M[Deterministic matcher]
+    A[ASSIST agreements] --> M
+    M --> P[Deterministic planner]
+    K[University catalog data] --> P
+    P --> W[Student workspace]
+    D[Factory Droid] --> S[Apify campus scans]
+    S --> R[Normalize and rank]
+    R --> W
+    W --> Q[Claude answers with sources]
+```
+
+**Academic decisions come from code and source data.** The matcher handles course groups, alternatives, sequence rules, minimum grades, in-progress coursework, and agreement years. Renumbered or ambiguous matches are flagged. The planner schedules remaining coursework around the prerequisite relationships represented in the data.
+
+**Claude explains the results.** It extracts transcript rows, writes opportunity explanations, and answers questions using the student's data. For supported what-if questions, the counselor calls the matcher and planner. Citation IDs are checked against the sources supplied to the model.
+
+**Campus data comes from source pages.** Apify's Cheerio Scraper fetches curated calendars and listings. Extractors normalize the results; deterministic code ranks them. Missing dates remain empty, and every listing links to its original page. Campus collection uses Apify’s existing Cheerio Scraper Actor.
 
 ## How Droid is used
 
-Droid is the agent that keeps Campus Radar fresh. It does real work in the running product, not in a chat window.
+The Factory Droid SDK powers the background service in [`apps/agent`](apps/agent). Scheduled runs scan campus sources, rank results, and write opportunity alerts. When a source returns empty results or an extraction error, Droid can inspect the fetched page, repair that source's extractor, and rerun extraction to check the fix.
 
-**What it does.** Each run, Droid (through `@factory/droid-sdk` in `apps/agent`):
+Its permissions are deliberately narrow:
 
-1. writes a plan (its TodoWrite list),
-2. scans the campus's sources on Apify (`scan_campus`),
-3. **self-heals**: if a source comes back `empty` or with an `extractor_error`, it reads the fetched page data and that source's extractor, patches the extractor with the smallest fix, and re-runs the scan's extraction on the same fetched pages (`rescan`) to confirm the source is `ok`,
-4. re-ranks every profile's Radar feed (`rank_profiles`),
-5. writes alerts (`write_alerts`): a profile's top 5 ranked items whose deadline (or start) is within 7 days get `notified = true`,
-6. finishes with a structured summary.
+- Only existing extractor files associated with failed sources may be patched, with a per-run patch budget.
+- Shell commands and direct web access are denied; campus operations go through scoped tools.
+- The API and agent use separate OS users in the production container. API credentials are withheld from the agent, and run logs redact secrets.
+- Plans, steps, patches, results, and errors are recorded in `agent_events`. Repairs live on the container's disk; a redeploy resets them, while recorded diffs remain available for review.
 
-Every plan, step, diff, result, and error is a row in Supabase `agent_events`, served by `GET /agent/events?run_id=`, which the `/agent` page reads. A patch is recorded as a `diff` row with the unified diff.
+Runs default to every two hours. New profiles trigger ranking and alerts; manual scans are available through `POST /agent/run`. Inspect a run with `GET /agent/events?run_id=…` in the [API docs](https://hindsight-ul94.onrender.com/docs). Run details are available through the API for technical review.
 
-**Triggers.**
-- Schedule: every `AGENT_INTERVAL_MINUTES` (default 120, to conserve credits; `0` turns it off) for each campus in `AGENT_CAMPUSES`.
-- Manual: `POST /agent/run {campus}` (the demo button). A click within `AGENT_MANUAL_COOLDOWN_MINUTES` (default 2) of the last manual run for that campus returns that run's id, instead of starting another paid run.
-- New profile: `POST /profiles` hands the agent a `profile_created` run that ranks and alerts for that profile only (no scan). Since anyone can create a profile, `POST /profiles` is limited to 20 per IP per minute (its own bucket, separate from the Claude endpoints), and at most `AGENT_PROFILE_RUNS_PER_HOUR` (default 6) of these runs start a Droid session; past that, the agent ranks and alerts directly and logs why.
+The optional `npm run smoke:live` command in `apps/agent` exercises a real repair session against a temporary broken extractor and stubbed API. It uses Factory credits. See [the engineering decisions](DECISIONS.md) for the permission model and deployment tradeoffs.
 
-**How it runs.** The Node SDK starts the `droid` CLI (npm package `droid`, pinned in `apps/agent`) as a local subprocess and talks to it over stdio. There's no daemon; the model runs on Factory's side with `FACTORY_API_KEY`, and tools run on this machine. In production the API and the agent share one container (`Dockerfile`, `scripts/start-container.sh`). The API is public on `$PORT`, and the agent listens only on `127.0.0.1:8787`. They have to share a disk: Droid patches extractor files, and the API runs them on the next re-scan. A redeploy resets patches; the `diff` rows are how a human turns a good patch into a PR. **Droid never commits.**
+## Built with
 
-```
-web /agent ──GET /agent/events──────────────────────────┐
-web "Run now" ──POST /agent/run──► API ──POST /runs──► apps/agent ──stdio──► droid CLI ──► Factory model
-POST /profiles ─────────────────► API ──POST /runs──►     │  ▲                    │
-                                  ▲                       │  └─ schedule           │ tools: scan_campus, get_source_raw,
-                                  └── /internal/agent/* ◄─┘   (AGENT_SECRET)       │ rescan, rank_profiles, write_alerts,
-                                      scan · rescan · raw · rank · alerts · events │ ApplyPatch on extractors/ only
-```
-
-**What Droid can touch (DECISIONS.md D-003, D-006).**
-- **Edits:** only `apps/api/app/services/radar/extractors/<kind>.py`, and within that only the files whose sources failed in this run. Edits must be in-place updates (no creating, deleting, or moving files), with at most `AGENT_MAX_PATCHES` (default 4) per run. It's enforced in `apps/agent/src/policy.ts`, which parses patch text strictly: every `***` control line must be an exact `Update File:` (or Begin/End) line, and the files it names must match the files the CLI reports. The session runs at autonomy **Off**, so every call with a side effect asks that handler first, including calls made inside Droid's Script tool or by a subagent. The handler refuses everything else.
-- **No shell, no web.** Shell commands, URL fetches, and web searches all ask for permission and are always refused. Droid reaches the outside world only through our five tools, which are bound to the run's campus (and profile). Droid never sees a profile id.
-- **No secrets.** Droid's Read tool can't be gated, so the container keeps secrets out of its reach rather than out of its sight:
-  - The agent, and so Droid, runs as its own OS user (`droid`). The API runs as `node`, so Droid can't read the API's environment through `/proc`. The API also marks itself non-dumpable, so even processes running as `node` can't read it.
-  - The start script withholds the Supabase, Apify, and Anthropic keys from the agent. It passes `AGENT_SECRET` as a file the agent deletes after reading, and the agent strips its environment to a short allowlist before starting Droid (the SDK passes `process.env` to the CLI).
-  - What's left is Droid's own Factory key. The run log redacts it, `AGENT_SECRET`, and anything shaped like an API key before writing, since the log is public.
-  - `/internal/agent/*` accepts only loopback connections, so even a leaked `AGENT_SECRET` is useless from outside the container.
-  - The API refuses to read an extractor that is a symlink or not a regular file, and the permission handler refuses to patch one, since Droid's user owns that folder.
-  - When you run it locally, both processes run as you and the repo-root `.env` is readable. The container has no `.env`.
-- **Run logs carry no profile ids.** `/agent/events` is public and a profile id works like a password (it's how a student gets back to their profile), so the internal rank and alerts endpoints return counts and opportunities only.
-- **Patched code runs in its own process.** The API runs extractors in a separate Python process (`extract_worker.py`): an empty environment, isolated mode, a timeout, and JSON in and out, all re-validated. A patch can't reach the API's keys or memory.
-  - Inside that process, `extract.py` still checks the code first: only allowlisted `from X import Y` imports (`json`, `re`, `html`, `datetime`, `defusedxml`, our helpers), no `open`/`eval`/introspection, no underscore or frame attributes, no `match`, no attribute assignment, and a reduced set of Python built-ins.
-  - Each call gets a plain copy of its source config (strings and lists, never the pydantic model, whose methods can read files), and a broken or refused extractor fails only its own sources.
-  - The rules that make an item safe to show (http(s) URL, real title, dates only from the source, dedupe) live in `normalize.py`, outside Droid's folder.
-- **Page data is untrusted.** Fetched pages reach Droid labelled as third-party data, and the prompt tells it to ignore any instructions inside them. The permission scope above is what limits the damage if it doesn't.
-
-**Try it.** `cd apps/agent && npm run smoke:live` runs one real Droid session against a temporary copy of `extractors/` with `localist.py` deliberately broken and a stubbed API. It uses Factory credits but writes nothing to Supabase or Apify. Droid should patch the extractor, the run should log the diff, and the re-run should report the source `ok`.
-
-**Env.** `FACTORY_API_KEY`, `AGENT_SECRET` (shared by API and agent), `AGENT_INTERVAL_MINUTES`, `AGENT_CAMPUSES`, optional `DROID_MODEL`, `AGENT_MAX_PATCHES`, `AGENT_RUN_TIMEOUT_MINUTES`, `AGENT_PROFILE_RUNS_PER_HOUR`; see `.env.example`.
-
-## Numbers
-
-Measured on the live deployment (Render free tier) on October 24, 2026, with a fictional sample transcript.
-
-| What | Result |
+| Technology | Role |
 |---|---|
-| Courses extracted from the sample transcript | 17 of 17, with correct units, grades, and terms |
-| SJSU requirements matched | 8 satisfied, 3 of them only via the 2023–24 agreement; 2 missing; 1 partial |
-| ASSIST majors, De Anza → SJSU / → Berkeley | 149 / 95 |
-| Radar sources / listings on the first scan | 12 / 255 |
-| One Droid run (SJSU) | 6 of 6 sources healthy, 197 items stored, 56 s |
-| Radar first load / cached | ~14 s / ~0.4 s |
-| Counselor demo answer | 15 cited sources |
-| Tests | API 334 passed · agent 24 passed |
+| **Anthropic Claude** | Transcript extraction, source-grounded questions, and opportunity explanations. |
+| **Factory Droid SDK** | Scheduled campus operations and permission-scoped extractor repair. |
+| **Apify** | Cheerio Scraper for campus event and opportunity sources. |
+| **ASSIST** | Official California articulation agreements, accessed through the public site's API and cached. |
+| **React, TypeScript, Vite** | Responsive student workspace and PWA manifest. |
+| **FastAPI, Python** | Matching, planning, service integrations, and typed API responses. |
+| **Supabase** | Profiles, confirmed coursework, cached agreements, opportunities, and run events. |
+| **Render** | Static frontend and a shared API/agent container. |
 
-## Sponsor tracks
+The Janus mark connects hindsight with foresight: completed coursework on one side, the path ahead on the other. The current interface uses off-white paper, bold black typography, and simple school illustrations. See [DESIGN.md](DESIGN.md).
 
-| Track | Where it lives |
-|---|---|
-| **Anthropic: Claude for Public Benefit** | Community: CA community-college transfers. Claude reads transcripts, writes Radar reasons, and runs the cited counselor. See *Where it could go wrong*. |
-| **Factory: Droid SDK** | `apps/agent`. See *How Droid is used*. |
-| **Apify** | Cheerio Scraper powers Campus Radar (`apps/api/app/services/radar/`). |
-| **Figma** | Screens designed first; see `DESIGN.md` and `design/mockups/`. |
+## Accuracy, privacy, and current limits
 
-## Run it
+- **The student confirms the transcript.** The uploaded file is sent to Anthropic for extraction and is not stored by Hindsight. Confirmed course rows are saved in Supabase.
+- **Sources stay attached to decisions.** Requirement matches link to ASSIST agreements; curated university requirements link to catalog pages. A missing published equivalency is not presented as a rejected transfer-credit decision.
+- **A proposal is not a confirmed schedule.** Actual course offerings have not been verified. University requirements use the SJSU 2025–26 catalog and have not yet been checked against 2026–27.
+- **The plan covers major requirements.** General education, total degree units, residency, and graduation applications are outside the current audit. Requirements without a course list, including Data Science domain electives, remain unscheduled and are excluded from the estimated finish term.
+- **Coverage is limited.** Berkeley campus sources exist, but Berkeley onboarding and nationwide academic planning are not available. Current profile recovery depends on the same browser; cross-device accounts and persistent conversations are future work.
 
-Prereqs: Node 20+ (22+ for the agent), Python 3.12+, [uv](https://docs.astral.sh/uv/).
+Recorded integration checks and persona findings are in [AUDIT.md](AUDIT.md), with the revision and date of that audit. Test documents in [`tests/fixtures/personas`](tests/fixtures/personas) are fictional.
+
+## Run locally
+
+Requirements: **Node.js 22+**, **Python 3.12+**, and **[uv](https://docs.astral.sh/uv/)**.
 
 ```bash
-cp .env.example .env        # fill in Supabase, Anthropic, Apify, Factory keys
+git clone https://github.com/Cal-Hacks-2026/Hindsight.git
+cd Hindsight
+cp .env.example .env
 npm install
-
-# API → http://localhost:8000 (docs at /docs)
-cd apps/api && uv run uvicorn app.main:app --reload --port 8000
-
-# Web → http://localhost:5173
-npm run dev:web
-
-# Tests
-cd apps/api && uv run pytest
-npm run typecheck
+(cd apps/api && uv sync)
 ```
 
-The Droid agent is optional locally and has its own `package.json` (Node 22+):
+Fill in the relevant credentials in the root `.env`:
+
+| Variables | Enables |
+|---|---|
+| `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Profile and course persistence, agreement caching, and opportunity storage. Required for onboarding. |
+| `ANTHROPIC_API_KEY` | Transcript extraction and the counselor. `ANTHROPIC_MODEL` is an optional override. |
+| `APIFY_TOKEN` | Campus scraping. |
+| `PUBLIC_API_URL`, `APIFY_WEBHOOK_SECRET` | Webhook delivery for asynchronous scans, when used. |
+| `FACTORY_API_KEY`, `AGENT_SECRET` | Droid operations. Scheduling, campus selection, model, and limits are configured in `.env.example`. |
+| `VITE_API_URL` | Browser API address; defaults to `http://localhost:8000`. Never put secrets in `VITE_*` variables. |
+
+Start each service in a separate terminal, from the repository root:
 
 ```bash
-cd apps/agent && npm install
-npm start               # agent → http://127.0.0.1:8787; needs FACTORY_API_KEY and AGENT_SECRET in .env
-npm test                # node:test suites in test/
+# API: http://localhost:8000 — interactive docs at /docs
+(cd apps/api && uv run uvicorn app.main:app --reload --port 8000)
+```
+
+```bash
+# Web: http://localhost:5173
+npm run dev:web
+```
+
+```bash
+# Optional background agent: http://127.0.0.1:8787
+(cd apps/agent && npm install && npm start)
+```
+
+The API reads `.env` at startup; restart it after changing credentials. `/health` reports configuration readiness. With Apify and storage configured, populate the feed using `(cd apps/api && uv run python -m app.scan sjsu)`.
+
+### Checks
+
+```bash
 npm run typecheck
-npm run smoke:live      # one real Droid self-heal session; uses Factory credits
+npm run build:web
+(cd apps/api && uv run pytest)
+(cd apps/agent && npm test && npm run typecheck)
 ```
 
-### What each key unlocks
+### Deployment
 
-The API reads `.env` once at startup, so restart it after changing keys. `GET /health` reports whether storage and Claude are configured, and the web app shows a banner when either is missing.
+Build the web app with `npm run build:web` and serve `apps/web/dist` with a fallback to `index.html`. Set `VITE_API_URL` before the build. The root [`Dockerfile`](Dockerfile) runs the API and agent in one container so extractor repairs are visible to subsequent scans. Set `WEB_ORIGIN` to the frontend's exact origin.
 
-| Keys | Needed for | Without them |
-|---|---|---|
-| `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Saving profiles, courses and the Radar feed | Onboarding fails at "Continue" with "We couldn't save your profile" (503) |
-| `ANTHROPIC_API_KEY` (`ANTHROPIC_MODEL` optional) | Transcript reading, the Counselor, Radar reasons | Transcript upload and the Counselor are unavailable; Radar falls back to computed reasons |
-| `APIFY_TOKEN`, `APIFY_WEBHOOK_SECRET`, `PUBLIC_API_URL` | Scanning campus sources | The feed stays empty until a scan runs |
-| `FACTORY_API_KEY`, `AGENT_SECRET`, `DROID_MODEL` (optional) | The Droid agent | Droid activity page shows runs as not configured; ranking still works |
+## What's next
 
-## Current state and known gaps
-
-- Transfer path is fixed to De Anza → SJSU. UC Berkeley sources are scraped, but Berkeley onboarding isn't offered yet.
-- Term-by-term course offerings aren't confirmed, so planned terms are proposals.
-- Catalog requirements are not yet checked against the current catalog year.
-- Radar dates come from the source page. For hackathons the scraped end date is the end of the event, not a registration deadline.
-
-## Deploy
-
-One Render web service runs the API and the Droid agent in a single container (see D-006 in `DECISIONS.md`). The web app is a Render static site with a `/* → /index.html` rewrite. `WEB_ORIGIN` on the API must match the site's URL exactly, and `VITE_API_URL` is baked into the web build.
-
-## Layout
-
-```
-apps/
-  api/      FastAPI: ASSIST, matcher, transcripts, planner, Radar, counselor
-  web/      Vite + React 19 PWA, plain CSS on design tokens
-  agent/    Factory Droid SDK service: schedule, scan, repair, alerts
-  actor/    placeholder; Radar uses Apify's Cheerio Scraper instead (D-002)
-packages/
-  contracts/  shared API types, mirrored by Pydantic models
-data/
-  requirements/  curated SJSU major requirements (2025–26 catalog, page-linked)
-  sources.json   Radar sources
-design/mockups/  the canvas mockups the UI was built from
-```
-
-## Data and terms
-
-- **ASSIST** is the official repository of California articulation. Hindsight reads its public site's API and caches every agreement. ASSIST is best used with a counselor, and so is Hindsight.
-- **SJSU requirements** are transcribed from the official 2025–26 catalog PDF, with a page link on every item, and are not yet checked against 2026–27.
-- **Radar listings** link to their source pages.
-- **The Janus mark** is traced from a 19th-century engraving of the Roman god Janus.
-- **The sample transcript** in testing is fictional.
+Expand verified institution pairs, compare transfer destinations, add general-education and admission checks, incorporate actual course offerings and student schedules, and prepare course-evaluation requests. The same workflow should work across institutions as coverage grows. See the [product roadmap](docs/ROADMAP.md) for scope and priorities.
 
 ## Team
 
-Atishay Pahadiya · Shivendra Bhagat · Amaan Shaghel · Dhana Karthikeya Ventrapragada
+[Atishay Pahadiya](https://github.com/atishaypahadiya) · [Shivendra Bhagat](https://github.com/sh1vendra) · [Amaan Shaghel](https://github.com/amaanshaghel) · [Dhana Karthikeya Ventrapragada](https://github.com/vdkarthikeya)
