@@ -272,6 +272,7 @@ class UniversityGuideResponse(BaseModel):
     university_name: str | None = None
     guide: UniversityGuide | None = None
 
+
 # ---- Class schedule (SCHEDULE) ----
 
 ClassMode = Literal["in_person", "online", "hybrid", "asynchronous"]
