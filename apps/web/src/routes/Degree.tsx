@@ -1,18 +1,10 @@
-import {
-  Fragment,
-  useEffect,
-  useState,
-  type ChangeEvent,
-  type FormEvent,
-  type ReactNode,
-} from "react";
+import { Fragment, useEffect, useState, type FormEvent } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 import type {
   Course,
   MatchResult,
   Profile,
   Requirement,
-  Semester,
 } from "@hindsight/contracts";
 import {
   Masthead,
@@ -22,6 +14,12 @@ import {
   type StatusTone,
 } from "../components/Paper";
 import { Icon } from "../components/Icons";
+import {
+  NextTermTable,
+  PlanTables,
+  PlanTablesLoading,
+  type PlanContext,
+} from "../components/PlanTables";
 import { ApiError } from "../lib/api";
 import { catalogMajor, hasFullPlan, yearSpan } from "../lib/catalog";
 import {
@@ -37,12 +35,10 @@ import {
 } from "../lib/format";
 import { mentionsGraduation, parseGoalTerm, termIndex } from "../lib/goal";
 import {
-  afterTransfer,
   beforeTransfer,
   lastTerm,
   loadTerm,
   saveTerm,
-  termUnits,
   transferChoices,
   usePlans,
   type Plans,
@@ -53,7 +49,6 @@ import { parseReceiving, type ParsedCourse } from "../lib/shelf";
 
 // The planner's default cap (apps/api/app/services/planner.py DEFAULT_UNIT_CAP).
 const UNIT_CAP = 15;
-const TERMS_SHOWN = 3;
 const PLACEHOLDER_PREFIX = "PLACEHOLDER · ";
 
 // Human copy for gotcha flags; unknown flags fall through as-is.
@@ -265,7 +260,7 @@ function NoResults({
   return (
     <>
       <Masthead sketch={view === "credits" ? "books" : "cap"}>
-        {view === "credits" ? "My credits" : "My plan"}
+        {view === "credits" ? "My credits" : "Plan"}
       </Masthead>
       <Section label="Summary" last>
         <p className="lede">
@@ -340,17 +335,17 @@ function Report({
     .find(Boolean);
   const campusLong = agreement?.to ?? universityName(profile);
   const campus = shortUniversity(campusLong);
+  const catalogRefByMajor: Record<string, number> = {};
   const catalogRefs = majors.flatMap((label) => {
     const c = catalogMajor(label, profile.campus);
-    return c
-      ? [
-          sources.add(
-            c.source_url,
-            `${campus} Catalog ${yearSpan(c.catalog_year)} · ${label}${label.endsWith(".") ? "" : "."} Not yet checked against the current catalog.`,
-            `Catalog ${yearSpan(c.catalog_year)}`,
-          ),
-        ]
-      : [];
+    if (!c) return [];
+    const n = sources.add(
+      c.source_url,
+      `${campus} Catalog ${yearSpan(c.catalog_year)} · ${label}${label.endsWith(".") ? "" : "."} Not yet checked against the current catalog.`,
+      `Catalog ${yearSpan(c.catalog_year)}`,
+    );
+    catalogRefByMajor[label] = n;
+    return [n];
   });
 
   const collegeLong = agreement?.from ?? collegeName(profile);
@@ -368,8 +363,23 @@ function Report({
   const missed = rows.filter((r) => r.req.status === "satisfied" && r.older);
 
   const ready = plans.status === "ready" ? plans.plans : undefined;
+  const planContext: PlanContext = {
+    plans: ready,
+    rows: rows.map((r) => ({
+      req: r.req,
+      refs: r.refs,
+      majors: r.majors,
+      code: rowCode(r),
+      agreement: agreementOf(r.req.citation.label)?.span,
+    })),
+    courses,
+    names,
+    majors: planned,
+    catalogRefs: catalogRefByMajor,
+    profileId: profile.id,
+  };
   const citations = (
-    <Section label="Sources" title="Sources">
+    <Section id="sources" label="Sources" title="Sources">
       <div className="source-list">
         {sources.list.map((source) => (
           <p key={source.n} id={`source-${source.n}`}>
@@ -389,7 +399,7 @@ function Report({
         byline={majorsLine(majors)}
         sketch={view === "credits" ? "books" : "cap"}
       >
-        {view === "credits" ? "My credits" : "My plan"}
+        {view === "credits" ? "My credits" : "Plan"}
       </Masthead>
       {view === "credits" ? (
         <>
@@ -403,21 +413,19 @@ function Report({
         </>
       ) : (
         <>
-          {ready && (
-            <NextTerm plans={ready} catalogRefs={catalogRefs} rows={rows} />
-          )}
+          {ready && <NextTerm ctx={planContext} />}
           {planned.length > 0 && plans.status === "loading" && (
-            <Section label="Plan" title="Building your plan">
-              <PlanLoading />
+            <Section label="Plan" title="Building Your Plan">
+              <PlanTablesLoading />
             </Section>
           )}
           {plans.status === "error" && (
-            <Section label="Plan" title="Your plan">
+            <Section label="Plan" title="Your Plan">
               <PlanError error={plans.error} />
             </Section>
           )}
           <Attention rows={rows} />
-          <Section label="Summary" title="Your progress">
+          <Section label="Summary" title="Your Progress">
             <Abstract
               rows={rows}
               majors={planned}
@@ -434,7 +442,7 @@ function Report({
           <Section
             id="course-plan"
             label="Plan"
-            title="Your course plan"
+            title="Your Course Plan"
             notes={
               <PlanNotes
                 majors={planned}
@@ -445,17 +453,14 @@ function Report({
             }
           >
             <NotPlanned majors={uncurated} campus={campus} />
-            {ready && (
-              <Roadmap
-                plans={ready}
-                majors={planned}
-                catalogRefs={catalogRefs}
-                names={names}
-                picks={picks}
-                onPick={pick}
-                fullPlan={fullPlan}
-              />
-            )}
+            <PlanTables
+              ctx={planContext}
+              student={profile.name}
+              picks={picks}
+              onPick={pick}
+              fullPlan={fullPlan}
+              loading={planned.length > 0 && plans.status === "loading"}
+            />
           </Section>
           <Ask names={names} fullPlan={fullPlan} />
         </>
@@ -590,38 +595,13 @@ function Abstract({
   );
 }
 
-function NextTerm({
-  plans,
-  catalogRefs,
-  rows,
-}: {
-  plans: Plans;
-  catalogRefs: number[];
-  rows: Row[];
-}) {
-  const next = plans.combined.find((semester) => semester.courses.length > 0);
-  if (!next) return null;
-  const unitLabel = next.term_system === "quarter" ? "quarter units" : "units";
-  const refs =
-    next.phase === "before_transfer"
-      ? [...new Set(rows.flatMap((row) => row.refs))]
-      : catalogRefs;
+function NextTerm({ ctx }: { ctx: PlanContext }) {
   return (
-    <Section label="Plan" title="Take next">
-      <div className="next-term-heading">
-        <h3>{next.term}</h3>
-        <span>
-          {termUnits(next)} {unitLabel}
-        </span>
-      </div>
-      {next.institution && (
-        <p className="next-institution">At {next.institution}</p>
-      )}
-      <CourseCards semester={next} unitLabel={unitLabel} />
+    <Section label="Plan" title="Take Next">
+      <NextTermTable ctx={ctx} />
       <p className="plan-note">
         Proposed courses. Check availability and prerequisites before
         registering.
-        <Refs ns={refs} />
       </p>
       <a className="inline-link" href="#course-plan">
         See the full plan <Icon name="arrow" size={20} />
@@ -642,7 +622,7 @@ function Attention({ rows }: { rows: Row[] }) {
   );
   if (!review.length) return null;
   return (
-    <Section label="Heads up" title="Needs attention">
+    <Section label="Heads up" title="Needs Attention">
       <ul className="attention-list">
         {review.slice(0, 3).map((row) => (
           <li key={row.key}>
@@ -673,34 +653,6 @@ function Attention({ rows }: { rows: Row[] }) {
   );
 }
 
-function CourseCards({
-  semester,
-  unitLabel,
-}: {
-  semester: Semester;
-  unitLabel: string;
-}) {
-  return (
-    <div className="course-list">
-      {semester.courses.map((course) => (
-        <details className="course-card" key={course.code}>
-          <summary>
-            <strong>{course.code}</strong>
-            <span>
-              {course.units} {unitLabel}
-            </span>
-            <span className="course-title">{course.title}</span>
-          </summary>
-          <p>{course.reason.replace(PLACEHOLDER_PREFIX, "")}</p>
-          {course.prereqs.length > 0 && (
-            <p>Prerequisites: {course.prereqs.join(", ")}</p>
-          )}
-        </details>
-      ))}
-    </div>
-  );
-}
-
 // ---- Goal check ----
 
 function GoalCheck({
@@ -721,7 +673,7 @@ function GoalCheck({
   if (!goal) {
     if (!mentionsGraduation(text)) return null;
     return (
-      <Section label="Your goal">
+      <Section label="Your goal" title="Your Goal">
         <p className="goal">
           You wrote "{text}", but we couldn't read a target term from it. Add
           one like "Spring 2028" so we can check it against your plan.{" "}
@@ -734,7 +686,7 @@ function GoalCheck({
 
   if (finishAt <= goal.index) {
     return (
-      <Section label="Your goal">
+      <Section label="Your goal" title="Your Goal">
         <p className="goal ok">
           Your major plan finishes {finish}, within your {goal.label} target.
         </p>
@@ -750,7 +702,7 @@ function GoalCheck({
       : [];
   });
   return (
-    <Section label="Your goal">
+    <Section label="Your goal" title="Your Goal">
       <p className="goal late">
         Your current major plan finishes {finish}, after your {goal.label} goal.
       </p>
@@ -1044,243 +996,6 @@ function CreditNotes({ rows }: { rows: Row[] }) {
 
 // ---- 02 Plan ----
 
-// The planner's default caps (apps/api/app/services/planner.py DEFAULT_UNIT_CAP, DEFAULT_CC_UNIT_CAP).
-const CC_UNIT_CAP = 15;
-
-function Roadmap({
-  plans,
-  majors,
-  catalogRefs,
-  names,
-  picks,
-  onPick,
-  fullPlan,
-}: {
-  plans: Plans;
-  majors: string[];
-  catalogRefs: number[];
-  names: Names;
-  picks: TermPicks;
-  onPick: (which: keyof TermPicks, term: string | undefined) => void;
-  fullPlan: boolean;
-}) {
-  const before = beforeTransfer(plans.combined);
-  const after = afterTransfer(plans.combined);
-  const {
-    transfer_term: transfer,
-    earliest_transfer_term: earliest,
-    not_before_transfer: late,
-    default_start_term: defaultStart,
-    start_term_choices: startChoices,
-  } = plans.response;
-  const college = before[0]?.institution ?? names.collegeLong;
-  const campus = after[0]?.institution ?? names.campusLong;
-  const quarters = (before[0]?.term_system ?? "quarter") === "quarter";
-  const years = [
-    ...new Set(
-      majors.flatMap(
-        (m) => catalogMajor(m, names.profileCampus)?.catalog_year ?? [],
-      ),
-    ),
-  ].map(yearSpan);
-  return (
-    <>
-      <p className="plan-caveat">
-        Course offerings aren’t confirmed. Check {names.college} and{" "}
-        {names.campus} schedules before registering.
-      </p>
-
-      <div className="term-picks">
-        {defaultStart && startChoices && (
-          <TermSelect
-            id="start-term"
-            label={`Starting at ${names.college} in`}
-            value={picks.start}
-            defaultTerm={defaultStart}
-            defaultNote="default"
-            choices={startChoices}
-            onPick={(t) => onPick("start", t)}
-          />
-        )}
-        {transfer && (
-          <TermSelect
-            id="transfer-term"
-            label={`Transfer to ${names.campus} in`}
-            value={picks.transfer}
-            defaultTerm={earliest ?? transfer}
-            defaultNote="earliest"
-            choices={transferChoices()}
-            onPick={(t) => onPick("transfer", t)}
-          />
-        )}
-      </div>
-      {late && late.length > 0 && (
-        <p className="plan-warning" role="status">
-          {transfer} is too early for {listing(late)} at {names.college}, so{" "}
-          {late.length === 1 ? "its" : "their"} {names.campus}{" "}
-          {late.length === 1 ? "equivalent is" : "equivalents are"} planned
-          after transfer instead.
-          {earliest &&
-            ` Transferring in ${earliest} leaves time for all of them.`}
-        </p>
-      )}
-
-      <div className="phase">
-        <h3 className="phase-head">
-          <span className="phase-kicker">Before transfer</span> at {college}
-        </h3>
-        {before.length ? (
-          <PlanShelves
-            semesters={before}
-            unitLabel={quarters ? "qtr units" : "units"}
-            caption={
-              <>
-                Up to {CC_UNIT_CAP} {quarters ? "quarter" : "semester"} units
-                per term. Courses follow ASSIST sequences; check {names.college}{" "}
-                prerequisites.
-              </>
-            }
-          />
-        ) : (
-          <p className="lede">
-            Nothing left to take at {names.college} for {majorsLine(majors)}.
-          </p>
-        )}
-        <p className="phase-note">GE (Cal-GETC) isn't included yet.</p>
-      </div>
-
-      <div className="phase">
-        <h3 className="phase-head">
-          <span className="phase-kicker">After transfer</span> at {campus}
-        </h3>
-        {!fullPlan ? (
-          <p className="lede">
-            {names.campus}'s full degree requirements aren't available yet, so
-            upper-division courses aren't planned. Check with {names.campus}'s
-            advisors.
-          </p>
-        ) : after.length ? (
-          <PlanShelves
-            semesters={after}
-            unitLabel="units"
-            caption={
-              <>
-                Up to {UNIT_CAP} units per term, following prerequisites in the{" "}
-                {names.campus} Catalog {listing(years)}.
-                <Refs ns={catalogRefs} />
-              </>
-            }
-          />
-        ) : (
-          <p className="lede">
-            Nothing left to schedule at {names.campus}: every listed requirement
-            is done or planned before transfer.
-          </p>
-        )}
-      </div>
-    </>
-  );
-}
-
-/** A term picker whose empty value means the planner's default ("Fall 2028 (earliest)"). */
-function TermSelect({
-  id,
-  label,
-  value,
-  defaultTerm,
-  defaultNote,
-  choices,
-  onPick,
-}: {
-  id: string;
-  label: string;
-  value?: string;
-  defaultTerm: string;
-  defaultNote: string;
-  choices: string[];
-  onPick: (term: string | undefined) => void;
-}) {
-  function change(e: ChangeEvent<HTMLSelectElement>) {
-    onPick(e.target.value || undefined);
-  }
-  return (
-    <div className="term-pick">
-      <label htmlFor={id}>{label}</label>
-      <select id={id} value={value ?? ""} onChange={change}>
-        <option value="">
-          {defaultTerm} ({defaultNote})
-        </option>
-        {choices
-          .filter((t) => t !== defaultTerm)
-          .map((t) => (
-            <option key={t} value={t}>
-              {t}
-            </option>
-          ))}
-      </select>
-    </div>
-  );
-}
-
-function PlanShelves({
-  semesters,
-  caption,
-  unitLabel,
-}: {
-  semesters: Semester[];
-  caption: ReactNode;
-  unitLabel: string;
-}) {
-  const [expanded, setExpanded] = useState(false);
-  const shown = expanded ? semesters : semesters.slice(0, TERMS_SHOWN);
-  const hidden = semesters.slice(TERMS_SHOWN);
-
-  return (
-    <figure className="terms">
-      {shown.map((s) => (
-        <div className="term" key={s.term}>
-          <div className="term-label">
-            {s.term}
-            <br />
-            <span>
-              {termUnits(s)} {unitLabel}
-            </span>
-          </div>
-          <div className="term-shelf">
-            <CourseCards semester={s} unitLabel={unitLabel} />
-          </div>
-        </div>
-      ))}
-      {hidden.length > 0 && (
-        <div className="term more">
-          <div className="term-label">
-            {expanded ? "Through" : `${hidden[0]!.term} →`}
-            <br />
-            <span>
-              {expanded
-                ? lastTerm(semesters)
-                : `${hidden.length} more ${plural(hidden.length, "term")}`}
-            </span>
-          </div>
-          <div className="term-shelf">
-            <button
-              type="button"
-              className="text"
-              onClick={() => setExpanded((e) => !e)}
-              aria-expanded={expanded}
-            >
-              {expanded
-                ? "Show fewer terms"
-                : `Show every term to ${lastTerm(semesters)}`}
-            </button>
-          </div>
-        </div>
-      )}
-      <figcaption style={{ maxWidth: 640 }}>{caption}</figcaption>
-    </figure>
-  );
-}
-
 function PlanNotes({
   majors,
   plans,
@@ -1339,31 +1054,6 @@ function PlanNotes({
         </Note>
       )}
     </>
-  );
-}
-
-function PlanLoading() {
-  return (
-    <div role="status" aria-live="polite" className="terms">
-      <span className="sr-only">Building your plan…</span>
-      {[0, 1, 2].map((i) => (
-        <div className="term" key={i} aria-hidden="true">
-          <div className="term-label">
-            <span
-              className="skeleton-line w-60"
-              style={{ width: 80, height: 12 }}
-            />
-          </div>
-          <div className="term-shelf">
-            <div className="skeleton-shelf">
-              {[132, 140, 126, 136].map((h, j) => (
-                <span key={j} style={{ height: h - i * 4 }} />
-              ))}
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
   );
 }
 

@@ -434,29 +434,6 @@ figcaption {
   margin: 24px 0 12px;
   font-weight: 400;
 }
-.next-term-heading {
-  display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 12px 24px;
-  margin-bottom: 10px;
-}
-.next-term-heading h3 {
-  font-size: 44px;
-  font-weight: 650;
-  letter-spacing: -1.5px;
-  margin: 0;
-  line-height: 1.2;
-}
-.next-term-heading > span {
-  font-size: 22px;
-  color: var(--gray);
-}
-.next-institution {
-  font-size: 20px;
-  color: var(--gray);
-  margin: 0 0 24px;
-}
 .attention-list {
   list-style: none;
   padding: 0;
@@ -700,75 +677,6 @@ figcaption {
   color: var(--gray);
   margin: 24px 0 0;
   font-weight: 400;
-}
-.terms {
-  display: flex;
-  flex-direction: column;
-  gap: 28px;
-}
-.term {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-.term-label {
-  font-size: 26px;
-  font-weight: 650;
-}
-.term-label br {
-  display: none;
-}
-.term-label span {
-  color: var(--gray);
-  font-size: 20px;
-  font-weight: 500;
-  margin-left: 14px;
-}
-.term-shelf {
-  min-width: 0;
-  width: 100%;
-}
-.course-list {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
-}
-.course-card {
-  border: 1px solid var(--hair);
-  padding: 20px;
-  border-radius: 8px;
-  background: var(--paper);
-  min-width: 0;
-}
-.course-card summary {
-  cursor: pointer;
-  font-size: 22px;
-}
-.course-card summary strong {
-  font-size: 24px;
-  font-weight: 650;
-}
-.course-card summary > span {
-  color: var(--gray);
-  font-size: var(--text-small);
-  margin-left: 8px;
-}
-.course-card summary .course-title {
-  display: block;
-  font-size: 20px;
-  color: var(--gray);
-  margin: 10px 0 0;
-  line-height: 1.45;
-  font-weight: 500;
-}
-.course-card p {
-  font-size: var(--text-small);
-  margin: 18px 0 0;
-  color: var(--gray);
-  font-weight: 400;
-}
-.course-card[open] {
-  background: var(--surface);
 }
 .section input,
 .section select,
@@ -1190,17 +1098,6 @@ table.confirm button {
 .w-90 {
   width: 90%;
 }
-.skeleton-shelf {
-  display: flex;
-  gap: 12px;
-}
-.skeleton-shelf span {
-  width: 100%;
-  max-height: 64px;
-  background: var(--soft);
-  border-radius: 6px;
-  animation: pulse 1.6s ease-in-out infinite;
-}
 .entries {
   list-style: none;
   padding: 0;
@@ -1498,39 +1395,6 @@ table.confirm button {
   }
   .milestones dd {
     font-size: 30px;
-  }
-  .next-term-heading h3 {
-    font-size: 36px;
-  }
-  .next-term-heading > span {
-    font-size: 20px;
-  }
-  .next-institution {
-    font-size: 18px;
-  }
-  .course-list {
-    grid-template-columns: 1fr;
-  }
-  .course-card {
-    padding: 18px;
-  }
-  .course-card summary strong {
-    font-size: 24px;
-  }
-  .course-card summary > span {
-    margin-left: 5px;
-  }
-  .course-card summary .course-title {
-    font-size: 20px;
-    margin-left: 0;
-  }
-  .term-label {
-    font-size: 24px;
-  }
-  .term-label span {
-    display: block;
-    margin: 4px 0 0;
-    font-size: 18px;
   }
   .term-pick label {
     font-size: 20px;

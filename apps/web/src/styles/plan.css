@@ -1,0 +1,351 @@
+/* Plan: term tables and the printable ed plan. */
+
+.plan-terms {
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+}
+.plan-term.is-collapsed {
+  display: none;
+}
+.plan-term-head {
+  font-size: 26px;
+  font-weight: 650;
+  letter-spacing: -0.5px;
+  line-height: 1.3;
+  margin: 0 0 14px;
+}
+.plan-term-head span {
+  color: var(--gray);
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+/* Wide tables scroll inside their own box, never the page. */
+.plan-table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--hair);
+  border-radius: 8px;
+  background: var(--surface);
+}
+.plan-table {
+  width: 100%;
+  min-width: 860px;
+  border-collapse: collapse;
+  font-size: 20px;
+  font-variant-numeric: tabular-nums;
+}
+.plan-table th,
+.plan-table td {
+  text-align: left;
+  vertical-align: top;
+  padding: 16px 18px;
+}
+.plan-table thead th {
+  color: var(--gray);
+  font-size: var(--text-small);
+  font-weight: 600;
+  background: var(--paper);
+  border-bottom: 1px solid var(--hair);
+  white-space: nowrap;
+}
+.plan-table tbody td {
+  border-bottom: 1px solid var(--hair);
+}
+.plan-table .nowrap {
+  white-space: nowrap;
+}
+.plan-table .num {
+  text-align: right;
+  white-space: nowrap;
+}
+.plan-table.planned th:first-child {
+  width: 34%;
+}
+.plan-table.planned th:nth-child(2) {
+  width: 34%;
+}
+.plan-table.completed th:first-child {
+  width: 36%;
+}
+.plan-table.completed th:nth-child(2) {
+  width: 32%;
+}
+.plan-table tfoot th,
+.plan-table tfoot td {
+  font-weight: 650;
+  background: var(--paper);
+}
+.plan-table tfoot td:last-child {
+  color: var(--gray);
+  font-weight: 500;
+  font-size: var(--text-small);
+}
+
+/* Course code and title: one tint per subject (PlanTables.tsx subjectTints sets the hue). */
+.subject-tag {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: 100%;
+  padding: 8px 12px 9px;
+  border-radius: 6px;
+  border-left: 4px solid var(--tag-edge);
+  background: var(--tag-fill);
+  color: var(--ink);
+  line-height: 1.35;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+.subject-tag strong {
+  font-size: 20px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+.subject-tag span {
+  font-size: var(--text-small);
+  font-weight: 400;
+}
+
+.plan-prereqs {
+  display: block;
+  margin-top: 8px;
+  color: var(--gray);
+  font-size: var(--text-small);
+  font-weight: 400;
+}
+.plan-counts {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.plan-counts li + li {
+  margin-top: 10px;
+}
+.plan-count-note {
+  display: block;
+  color: var(--gray);
+  font-size: var(--text-small);
+  font-weight: 400;
+}
+.plan-muted {
+  color: var(--gray);
+  font-size: var(--text-small);
+  font-weight: 400;
+}
+.plan-section {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: var(--text-small);
+}
+.plan-section strong {
+  font-size: 20px;
+  font-weight: 600;
+}
+.plan-skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 22px;
+  margin-top: 14px;
+}
+
+.plan-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin: 0 0 28px;
+}
+.section button.plan-earlier {
+  margin-top: 20px;
+}
+.ed-plan-print-head {
+  display: none;
+}
+
+@media (max-width: 700px) {
+  .plan-term-head {
+    font-size: 24px;
+  }
+  .plan-term-head > span {
+    display: block;
+    font-size: 18px;
+  }
+  .plan-term-sep {
+    display: none;
+  }
+  .plan-table {
+    min-width: 680px;
+    font-size: 18px;
+  }
+  .plan-table th,
+  .plan-table td {
+    padding: 14px 12px;
+  }
+  .subject-tag strong,
+  .plan-section strong {
+    font-size: 18px;
+  }
+}
+
+/* ---- Download Ed Plan: the course plan and its sources, nothing else ---- */
+@media print {
+  @page {
+    margin: 14mm 12mm;
+  }
+  body:has(.ed-plan) {
+    background: #fff;
+    font-size: 11pt;
+  }
+  body:has(.ed-plan) .app-shell > :not(.workspace),
+  body:has(.ed-plan) .workspace > :not(main),
+  body:has(.ed-plan) main > :not(#course-plan):not(#sources) {
+    display: none !important;
+  }
+  body:has(.ed-plan) .workspace {
+    margin: 0;
+    background: none;
+  }
+  body:has(.ed-plan) main {
+    max-width: none;
+    padding: 0;
+  }
+  body:has(.ed-plan) main .section {
+    border: 0;
+    padding: 0;
+    margin: 0 0 18pt;
+    background: none;
+  }
+  body:has(.ed-plan) .section-head {
+    margin-bottom: 10pt;
+  }
+  body:has(.ed-plan) .section-head h2 {
+    font-size: 16pt;
+  }
+  body:has(.ed-plan) .section-head > svg,
+  #course-plan > .section-head,
+  .plan-actions,
+  .term-picks,
+  .plan-earlier {
+    display: none !important;
+  }
+  .ed-plan-print-head {
+    display: block;
+    margin-bottom: 16pt;
+    padding-bottom: 12pt;
+    border-bottom: 1.5pt solid var(--ink);
+  }
+  .ed-plan-print-head h1 {
+    font-size: 22pt;
+    letter-spacing: -0.5px;
+    margin: 0 0 4pt;
+  }
+  .ed-plan-print-head p {
+    margin: 0;
+    font-size: 12pt;
+  }
+  .ed-plan-print-head .ed-plan-pathway {
+    font-weight: 650;
+  }
+  .ed-plan-print-head dl {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6pt 24pt;
+    margin: 10pt 0 0;
+    font-size: 10pt;
+  }
+  .ed-plan-print-head dt {
+    color: var(--gray);
+  }
+  .ed-plan-print-head dd {
+    margin: 0;
+    font-weight: 600;
+  }
+  .ed-plan .plan-term.is-collapsed {
+    display: block;
+  }
+  .ed-plan .phase {
+    margin-top: 14pt;
+    padding-top: 10pt;
+  }
+  .ed-plan .phase-head {
+    font-size: 11pt;
+    margin-bottom: 10pt;
+  }
+  .ed-plan .phase-kicker {
+    font-size: 11pt;
+    padding: 2pt 6pt;
+  }
+  .ed-plan .phase-note,
+  .ed-plan .plan-caveat,
+  .ed-plan .plan-warning,
+  #course-plan .lede {
+    font-size: 9.5pt;
+    margin-bottom: 8pt;
+  }
+  .ed-plan .plan-terms {
+    gap: 12pt;
+  }
+  .ed-plan .plan-term {
+    break-inside: avoid;
+  }
+  .ed-plan .plan-term-head {
+    font-size: 12pt;
+    margin-bottom: 4pt;
+    break-after: avoid;
+  }
+  .ed-plan .plan-term-head span {
+    font-size: 10pt;
+  }
+  .ed-plan .plan-table-scroll {
+    overflow: visible;
+    border-radius: 0;
+  }
+  .ed-plan .plan-table {
+    min-width: 0;
+    font-size: 9.5pt;
+  }
+  .ed-plan .plan-table th,
+  .ed-plan .plan-table td {
+    padding: 4pt 6pt;
+  }
+  .ed-plan .plan-table thead th,
+  .ed-plan .plan-table tfoot td:last-child,
+  .ed-plan .plan-muted,
+  .ed-plan .plan-count-note,
+  .ed-plan .plan-prereqs,
+  .ed-plan .subject-tag span,
+  .ed-plan .plan-section {
+    font-size: 8.5pt;
+  }
+  .ed-plan .subject-tag {
+    padding: 2pt 5pt;
+    border-left-width: 3pt;
+  }
+  .ed-plan .subject-tag strong,
+  .ed-plan .plan-section strong {
+    font-size: 9.5pt;
+  }
+  #course-plan sup.ref {
+    font-size: 7pt;
+  }
+  #course-plan sup.ref a {
+    text-decoration: none;
+  }
+  body:has(.ed-plan) .notes {
+    font-size: 9pt;
+    margin-top: 10pt;
+    padding-top: 8pt;
+  }
+  body:has(.ed-plan) #sources .source-list {
+    font-size: 8.5pt;
+    gap: 4pt;
+  }
+  body:has(.ed-plan) #sources a::after {
+    content: " " attr(href);
+    color: var(--gray);
+  }
+}
