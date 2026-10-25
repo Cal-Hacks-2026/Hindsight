@@ -6,7 +6,7 @@
   <a href="https://hindsight-web-yl0k.onrender.com">Live app</a> ·
   <a href="https://cal-hacks-2026.github.io/Hindsight/">Website</a> ·
   <!-- VIDEO LINK -->Demo video (coming soon) ·
-  <!-- DEVPOST LINK -->Devpost (coming soon) ·
+  <a href="https://devpost.com/software/hindsight-68sruh">Devpost</a> ·
   <a href="#run-locally">Run locally</a>
 </p>
 
@@ -104,8 +104,10 @@ Onboarding asks where the student is now (high school, community college, transf
 
 ## How it works
 
+Credits and plan: the transcript becomes checked credits, a term-by-term plan and cited answers.
+
 ```mermaid
-flowchart LR
+flowchart TD
     T[Transcript] --> E[Claude extracts courses]
     E --> C[Student confirms]
     C --> M[Deterministic matcher]
@@ -117,10 +119,16 @@ flowchart LR
     P --> W[Student workspace]
     U[University pages] --> V[Cited University guide]
     V --> W
+    W --> Q[Claude answers with sources]
+```
+
+Campus opportunities: Droid scans campus sources on a schedule and ranks what it finds.
+
+```mermaid
+flowchart TD
     D[Factory Droid] --> S[Apify campus scans]
     S --> R[Normalize and rank]
-    R --> W
-    W --> Q[Claude answers with sources]
+    R --> W[Student workspace]
 ```
 
 **Academic decisions come from code and source data.** The matcher handles course groups, alternatives, sequence rules, minimum grades, in-progress coursework and agreement years. It flags renumbered or ambiguous matches. GE progress checks each course against the college's Cal-GETC or IGETC list for the year it was taken. The planner schedules remaining major coursework around the prerequisites in the data, then fills missing GE areas before transfer. Free time comes from the saved class schedule.
@@ -151,7 +159,7 @@ The Janus mark connects hindsight with foresight: completed coursework on one si
 The Factory Droid SDK powers the background service in [`apps/agent`](apps/agent). Scheduled runs scan campus sources, rank results and write opportunity alerts.
 
 <details>
-<summary><strong>How Droid is used (permission model)</strong></summary>
+<summary><strong>Permission model</strong></summary>
 
 <br>
 
@@ -264,11 +272,6 @@ See the [product roadmap](docs/ROADMAP.md) for scope and priorities.
 
 ## Team
 
-| Name | Role |
-|---|---|
-| [Atishay Pahadiya](https://github.com/atishaypahadiya) | Product, design and code |
-| [Shivendra Bhagat](https://github.com/sh1vendra) | Transfer-credit expertise and requirements data |
-| [Amaan Shaghel](https://github.com/amaanshaghel) | Research, field testing and video |
-| [Dhana Karthikeya Ventrapragada](https://github.com/vdkarthikeya) | Data curation, Devpost and pitch |
+Built by [Atishay Pahadiya](https://github.com/atishaypahadiya) (product, design and engineering), with input from [Shivendra Bhagat](https://github.com/sh1vendra) (admissions and transfer-credit expertise), [Amaan Shaghel](https://github.com/amaanshaghel) and [Dhana Karthikeya Ventrapragada](https://github.com/vdkarthikeya) (transfer-student experience).
 
-Built at Cal Hacks 13.0.
+Built at [Cal Hacks 13.0](https://devpost.com/software/hindsight-68sruh).
