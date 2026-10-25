@@ -271,11 +271,6 @@ See the [product roadmap](docs/ROADMAP.md) for scope and priorities.
 
 ## Team
 
-| Name | Role |
-|---|---|
-| [Atishay Pahadiya](https://github.com/atishaypahadiya) | ROLE |
-| [Shivendra Bhagat](https://github.com/sh1vendra) | ROLE |
-| [Amaan Shaghel](https://github.com/amaanshaghel) | ROLE |
-| [Dhana Karthikeya Ventrapragada](https://github.com/vdkarthikeya) | ROLE |
+Built by [Atishay Pahadiya](https://github.com/atishaypahadiya) (product, design and engineering), with input from [Shivendra Bhagat](https://github.com/sh1vendra) (admissions and transfer-credit expertise), [Amaan Shaghel](https://github.com/amaanshaghel) and [Dhana Karthikeya Ventrapragada](https://github.com/vdkarthikeya) (transfer-student experience).
 
 Built at [Cal Hacks 13.0](https://devpost.com/software/hindsight-68sruh).
