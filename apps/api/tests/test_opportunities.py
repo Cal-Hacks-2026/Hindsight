@@ -24,7 +24,7 @@ from .test_radar_rank import PROFILE
 client = TestClient(app)
 NOW = datetime(2026, 10, 24, 9, 0, tzinfo=timezone.utc)
 FIXTURE = Path(__file__).parent / "fixtures" / "radar" / "dataset-2026-10-24.json"
-PROGRAMS_FILE = Path(__file__).resolve().parents[3] / "data" / "programs" / "sjsu.json"
+PROGRAMS_FILE = Path(__file__).resolve().parents[3] / "data" / "campuses" / "39" / "programs.json"
 # conftest swaps in fakes per test; these are the real ones.
 REAL_UPSERT = store.upsert
 REAL_ASK = classify.ask_claude
@@ -205,24 +205,25 @@ def test_program_reasons_never_come_from_claude_or_the_cache(monkeypatch):
 
 
 def test_program_without_a_reason_is_rejected(tmp_path):
-    (tmp_path / "sjsu.json").write_text(json.dumps({"campus": "sjsu", "last_checked": "2026-10-25", "programs": [{
+    (tmp_path / "sjsu.json").write_text(json.dumps({"last_checked": "2026-10-25", "programs": [{
         "id": "x", "title": "X", "org": "Y", "category": "research", "subcategory": "symposiums",
         "url": "https://www.sjsu.edu/x", "description": "d", "window": "w", "last_checked": "2026-10-25"}]}))
     with pytest.raises(ValueError, match="reason"):
-        programs.load("sjsu", tmp_path)
+        programs.load("sjsu", tmp_path / "sjsu.json")
 
 
 def test_program_with_unknown_category_is_rejected(tmp_path):
-    (tmp_path / "sjsu.json").write_text(json.dumps({"campus": "sjsu", "last_checked": "2026-10-25", "programs": [{
+    (tmp_path / "sjsu.json").write_text(json.dumps({"last_checked": "2026-10-25", "programs": [{
         "id": "x", "title": "X", "org": "Y", "category": "research", "subcategory": "hackathons",
         "url": "https://www.sjsu.edu/x", "description": "d", "window": "w", "last_checked": "2026-10-25",
         "reason": "r"}]}))
     with pytest.raises(ValueError, match="unknown category"):
-        programs.load("sjsu", tmp_path)
+        programs.load("sjsu", tmp_path / "sjsu.json")
 
 
 def test_campus_without_a_programs_file_has_none(tmp_path):
-    assert programs.as_rows("berkeley", tmp_path) == []
+    assert programs.programs_file("berkeley") is None and programs.as_rows("berkeley") == []
+    assert programs.as_rows("sjsu", tmp_path / "missing.json") == []
 
 
 # ---- time window ----
@@ -259,14 +260,14 @@ def feed(radar_fake, monkeypatch, tmp_path):
             tags=["recognized student organization"], location="Spartan Recreation Center"),
         row("far", "Data Science Symposium", now=now, days=30),
     ]
-    (tmp_path / "sjsu.json").write_text(json.dumps({"campus": "sjsu", "last_checked": "2026-10-25", "programs": [{
+    (tmp_path / "sjsu.json").write_text(json.dumps({"last_checked": "2026-10-25", "programs": [{
         "id": "rsca", "title": "Student Data Science Research Fellowship", "org": "Research and Innovation",
         "category": "research", "subcategory": "summer-research", "url": "https://www.sjsu.edu/research/srf",
         "description": "Funds students doing data science research with a faculty mentor.",
         "window": "Applications due each February", "window_months": [2], "evidence": "due February",
         "tags": ["research"], "last_checked": "2026-10-25",
         "reason": "Funds student data science research with a faculty mentor."}]}))
-    monkeypatch.setattr(programs, "PROGRAMS_DIR", tmp_path)
+    monkeypatch.setattr(programs, "programs_file", lambda campus: tmp_path / f"{campus}.json")
     monkeypatch.setattr(rank, "ask_claude", lambda p, items: {})
     return radar_fake
 
@@ -333,7 +334,8 @@ def test_bad_filters_are_422(feed):
 
 def test_other_campus_still_gets_an_empty_feed(feed, profile_fake):
     pid = make_profile()
-    profile_fake.profiles[pid] = profile_fake.profiles[pid].model_copy(update={"campus": "other"})
+    # A university with no feed in the campus registry; the legacy campus column isn't consulted.
+    profile_fake.profiles[pid] = profile_fake.profiles[pid].model_copy(update={"receiving_institution_id": 117})
     assert get(pid, category="clubs").json() == {"items": []}
 
 

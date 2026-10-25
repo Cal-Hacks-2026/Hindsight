@@ -9,6 +9,7 @@ import {
   RadarLoading,
   RadarUnwatched,
 } from "../components/RadarStates";
+import { campusLabel, watched } from "../lib/campuses";
 import { plural, shortUniversity, universityName } from "../lib/format";
 import { fitFor, nextSevenDays, useFreeWeek, type FreeWeek } from "../lib/fits";
 import { useOpportunities } from "../lib/opportunities";
@@ -73,9 +74,11 @@ const monthOf = (at: number) =>
 
 export function Radar() {
   const { profile } = loadSession();
-  // "other": a university with no Radar sources. Nothing to fetch; another campus's feed would mislead.
-  const unwatched = profile?.campus === "other";
-  const campus = profile ? shortUniversity(universityName(profile)) : undefined;
+  // Neither school has Radar sources in the registry. Nothing to fetch; another campus's feed would mislead.
+  const unwatched = !!profile && !watched(profile);
+  const campus = profile
+    ? shortUniversity(universityName(profile), profile.receiving_institution_id)
+    : undefined;
   const profileId = unwatched ? undefined : profile?.id;
   const [params, setParams] = useSearchParams();
   const category = params.get("category") ?? undefined;
@@ -289,6 +292,7 @@ export function Radar() {
                 rank={i + 1}
                 kind={kindOf(item)}
                 fit={fit}
+                campus={campusLabel(item.campus_id, profile)}
               />
             ))}
           </ol>

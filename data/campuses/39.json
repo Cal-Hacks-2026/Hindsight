@@ -1,0 +1,31 @@
+{
+  "assist_id": 39,
+  "name": "San José State University",
+  "short_name": "SJSU",
+  "term_system": "semester",
+  "requirements": [
+    "39/requirements/data-science-bs.json",
+    "39/requirements/economics-bs.json"
+  ],
+  "opportunities": {
+    "feed": "sjsu",
+    "sources": "39/opportunity-sources.json",
+    "programs": "39/programs.json",
+    "vocabulary": {
+      "staff_audience_tags": [
+        "sjsu employees"
+      ],
+      "wellness_tags": [
+        "sjsu athletics",
+        "spartan recreation"
+      ],
+      "faculty_prefixes": [
+        "sjsu"
+      ]
+    }
+  },
+  "university_guide": {
+    "sources": "39/guide-sources.json",
+    "guide": "39/guide.json"
+  }
+}

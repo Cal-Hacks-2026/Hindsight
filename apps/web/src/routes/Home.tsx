@@ -18,6 +18,7 @@ import { Icon } from "../components/Icons";
 import { safeUrl } from "../components/Listing";
 import { Masthead, Section } from "../components/Paper";
 import { api } from "../lib/api";
+import { watched as readsAFeed } from "../lib/campuses";
 import { catalogMajor, hasFullPlan, yearSpan } from "../lib/catalog";
 import {
   collapse,
@@ -246,7 +247,7 @@ function courseWhy(
   }
   // University course: "Major Requirements: Upper Division (Data Science, B.S.); Prerequisite for …"
   const group = /^(.+?) \(([^()]+)\)/.exec(c.reason.split(";")[0] ?? "");
-  const major = group ? catalogMajor(group[2]!, profile.campus) : undefined;
+  const major = group ? catalogMajor(group[2]!, profile.receiving_institution_id) : undefined;
   return {
     text: group
       ? `Counts toward ${majorName(group[2]!)} ${group[1]}.`
@@ -356,11 +357,12 @@ function geMove(
 
 function deadlineMove(
   university: string,
+  universityId: number,
   transfer: string | undefined,
   today: string,
   sources: Sources,
 ): Move | undefined {
-  const m = nextMilestone(university, transfer, today);
+  const m = nextMilestone(university, universityId, transfer, today);
   if (!m) return undefined;
   return {
     key: m.id,
@@ -462,13 +464,13 @@ function HomePage({
   const now = useNow(60_000);
   const today = new Date(now);
   const todayIso = iso(today);
-  const university = shortUniversity(universityName(profile));
+  const university = shortUniversity(universityName(profile), profile.receiving_institution_id);
 
   // The same plan as the Plan page: chosen majors, picked terms, GE included.
   const majors = matches?.map((m) => m.major_label) ?? [];
-  const fullPlan = hasFullPlan(profile.campus);
+  const fullPlan = hasFullPlan(profile.receiving_institution_id);
   const planned = fullPlan
-    ? majors.filter((m) => catalogMajor(m, profile.campus))
+    ? majors.filter((m) => catalogMajor(m, profile.receiving_institution_id))
     : majors;
   const [picks] = useState(() => {
     const transfer = loadTerm("transfer", profile.id);
@@ -489,7 +491,7 @@ function HomePage({
     schedule.status === "ready"
       ? currentTerm(rows, schedule.terms, todayIso)
       : undefined;
-  const watched = profile.campus !== "other";
+  const watched = readsAFeed(profile);
   // The next 7 days only, as Opportunities' Fits Your Week asks for them (no wait on new reasons).
   const { state: opps } = useOpportunities(
     watched ? profile.id : undefined,
@@ -540,6 +542,7 @@ function HomePage({
   const deadline = planSettled
     ? deadlineMove(
         universityName(profile),
+        profile.receiving_institution_id,
         transfer,
         pacificDay.format(new Date(now)),
         sources,
@@ -631,7 +634,7 @@ function HomePage({
             fullPlan={fullPlan}
             university={university}
             catalogRefs={planned.flatMap((label) => {
-              const c = catalogMajor(label, profile.campus);
+              const c = catalogMajor(label, profile.receiving_institution_id);
               return c
                 ? sources.add(
                     c.source_url,

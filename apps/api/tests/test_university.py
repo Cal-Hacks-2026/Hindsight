@@ -12,6 +12,7 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 from app.models import UniversityGuide, UniversityGuideResponse
+from app.services import campuses
 from app.services.university import build, fetch, sources, store, write
 
 client = TestClient(app)
@@ -316,7 +317,8 @@ def test_numbers_must_appear_on_a_cited_page():
 
 
 def test_the_sjsu_guide_file_is_complete_and_cited():
-    path = sources.SOURCES_FILE.parent / "guides" / "39.json"
+    entry = campuses.get(39)
+    path = entry.path(entry.university_guide.guide)
     stored = json.loads(path.read_text())
     listed = {s.id: s for s in sources.university(39).sources}
     guide = store.to_contract(stored)
@@ -333,7 +335,7 @@ def test_the_sjsu_guide_file_is_complete_and_cited():
 
 
 def test_the_sjsu_guide_is_served(monkeypatch):
-    monkeypatch.setattr(store, "GUIDES_DIR", sources.SOURCES_FILE.parent / "guides")
+    monkeypatch.setattr(store, "GUIDES_DIR", None)  # the registry's guide file
     body = client.get("/universities/39/guide").json()
     assert body["available"] and body["guide"]["university_name"] == "San José State University"
     cited = {s["id"] for s in body["guide"]["sources"]}

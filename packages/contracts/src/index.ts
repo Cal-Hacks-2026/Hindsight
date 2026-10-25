@@ -2,10 +2,12 @@
 // Mirrored by Pydantic models in apps/api/app/models/contracts.py.
 // Any shape change needs integrator (Atishay) sign-off.
 
-export type Campus = "sjsu" | "berkeley"; // campuses with Radar sources
-// The API sets a profile's campus from receiving_institution_id; "other" is any ASSIST
-// university without Radar sources or curated requirements.
-export type ProfileCampus = Campus | "other";
+// An opportunities feed: the `feed` key of a school in the campus registry (data/campuses/), which
+// Radar listings, runs and agent jobs are stored under. Code never names one.
+export type Campus = string;
+// A profile's legacy `campus` column: its university's feed, or "other". The API sets it from
+// receiving_institution_id; schools are looked up by ASSIST id, never by this.
+export type ProfileCampus = string;
 
 // ---- SKELETON: where the student is now, asked before the pathway ----
 export type ProfileStage = "high_school" | "community_college" | "transferred" | "returning";
@@ -90,7 +92,7 @@ export type Semester = {
   courses: SemesterCourse[];
   // Two-phase roadmap (I-03): community-college terms before transfer, university terms after.
   phase?: "before_transfer" | "after_transfer";
-  institution?: string; // e.g. "De Anza College"
+  institution?: string; // the institution's name, as ASSIST gives it
   term_system?: "quarter" | "semester"; // how `units` are counted
 };
 
@@ -119,6 +121,9 @@ export type RankedOpportunity = {
   window?: string;
   /** Recurring programs: when the official page was read (YYYY-MM-DD). */
   last_checked?: string;
+  /** The school whose own listing this is (ASSIST id; its registry feed). Unset for listings
+   *  open to every campus, such as hackathons. */
+  campus_id?: number;
 };
 
 export type AgentEvent = {
@@ -146,7 +151,13 @@ export type AssistInstitution = {
 
 // ---- Request / response envelopes ----
 
-export type CreateProfileRequest = Omit<Profile, "id" | "created_at" | "sending_institution_name" | "receiving_institution_name">;
+export type CreateProfileRequest = Omit<
+  Profile,
+  "id" | "created_at" | "campus" | "sending_institution_name" | "receiving_institution_name"
+> & {
+  /** Ignored: the API sets it. */
+  campus?: ProfileCampus;
+};
 export type ProfileResponse = { profile: Profile };
 export type CoursesResponse = { courses: Course[] };
 export type UpdateCoursesRequest = { courses: Course[] };
@@ -225,7 +236,7 @@ export type GuideSectionId =
 export type GuideSource = {
   id: string;
   title: string;
-  publisher: string; // e.g. "SJSU University Housing Services", "Associated Students, SJSU"
+  publisher: string; // the office or organization that publishes the page
   url: string;
   retrieved_on: string; // YYYY-MM-DD the page was read
 };
@@ -244,7 +255,7 @@ export type GuideSection = {
 };
 
 export type UniversityGuide = {
-  university_id: number; // ASSIST institution id (39 = SJSU)
+  university_id: number; // ASSIST institution id
   university_name: string;
   last_updated: string; // YYYY-MM-DD the sources were last read
   sections: GuideSection[];

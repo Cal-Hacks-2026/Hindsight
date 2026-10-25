@@ -1,25 +1,24 @@
 import type { Profile } from "@hindsight/contracts";
-import { SJSU_NAME } from "./config";
+import { campusEntry, campusNamed } from "./campuses";
 
-// For profiles saved before the API sent institution names.
-const CAMPUS_LONG: Record<string, string> = { sjsu: SJSU_NAME, berkeley: "University of California, Berkeley" };
-
-/** "San Jose State University" → "SJSU", "University of California, Los Angeles" → "UCLA",
- *  "California State University, East Bay" → "CSU East Bay"; anything else as is. */
-export function shortUniversity(name: string): string {
-  if (/^San Jos[eé] State University$/.test(name)) return "SJSU";
+/** A university's short name: its registry entry's (by ASSIST id, else by name), else the system's pattern:
+ *  "University of California, <Campus>" → "UC <Campus>", "California State University, <Campus>" →
+ *  "CSU <Campus>"; anything else as is. */
+export function shortUniversity(name: string, assistId?: number): string {
+  const entry = campusEntry(assistId) ?? campusNamed(name);
+  if (entry) return entry.short_name;
   const uc = /^University of California,\s*(.+)$/.exec(name)?.[1];
-  if (uc) return uc === "Los Angeles" ? "UCLA" : `UC ${uc}`;
+  if (uc) return `UC ${uc}`;
   const csu = /^California State University,\s*(.+)$/.exec(name)?.[1];
   return csu ? `CSU ${csu}` : name;
 }
 
-/** "De Anza College" → "De Anza" */
+/** "<Name> College" → "<Name>" */
 export const shortCollege = (name: string) => name.replace(/ College$/, "");
 
-/** The student's university, full name: ASSIST's, or the campus's for an older saved profile. */
-export const universityName = (p: Pick<Profile, "campus" | "receiving_institution_name">) =>
-  p.receiving_institution_name ?? CAMPUS_LONG[p.campus] ?? "your university";
+/** The student's university, full name: ASSIST's, or the registry's while ASSIST can't say. */
+export const universityName = (p: Pick<Profile, "receiving_institution_id" | "receiving_institution_name">) =>
+  p.receiving_institution_name ?? campusEntry(p.receiving_institution_id)?.name ?? "your university";
 
 /** The student's community college, full name. */
 export const collegeName = (p: Pick<Profile, "sending_institution_id" | "sending_institution_name">) =>
@@ -69,11 +68,4 @@ export function collapse(items: string[], sep: string, max = 3): string {
 export function listing(items: string[]): string {
   if (items.length <= 1) return items.join("");
   return `${items.slice(0, -1).join(", ")} and ${items.at(-1)}`;
-}
-
-// A host on a campus's own domain gets that campus beside it; open hackathon sites stay bare.
-export function hostWithCampus(host: string): string {
-  if (host.endsWith("sjsu.edu")) return `${host} (SJSU)`;
-  if (host.endsWith("berkeley.edu")) return `${host} (Berkeley)`;
-  return host;
 }

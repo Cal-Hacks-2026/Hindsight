@@ -5,14 +5,25 @@ serialize with response_model_exclude_none so they're omitted, matching the
 TS `field?: T` shape.
 """
 
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel
+from pydantic import AfterValidator, BaseModel
 
-Campus = Literal["sjsu", "berkeley"]  # campuses with Radar sources
-# A profile's campus comes from receiving_institution_id (config.campus_for); "other" is any
-# ASSIST university without Radar sources or curated requirements.
-ProfileCampus = Literal["sjsu", "berkeley", "other"]
+
+def _known_feed(feed: str) -> str:
+    from app.services import campuses  # the registry imports nothing from the app
+
+    if feed not in campuses.feeds():
+        raise ValueError(f"unknown campus feed {feed!r}")
+    return feed
+
+
+# An opportunities feed: the `feed` key of a school in the campus registry (data/campuses/), which
+# Radar listings, runs and agent jobs are stored under. Code never names one.
+Campus = Annotated[str, AfterValidator(_known_feed)]
+# A profile's legacy `campus` column: its university's feed, or "other". The API sets it from
+# receiving_institution_id; schools are looked up by ASSIST id, never by this.
+ProfileCampus = str
 GePattern = Literal["calgetc", "igetc"]  # GE progress (feature: GE)
 
 # ---- SKELETON: where the student is now, asked before the pathway ----
@@ -21,7 +32,7 @@ ProfileStage = Literal["high_school", "community_college", "transferred", "retur
 
 class CreateProfileRequest(BaseModel):
     name: str
-    campus: ProfileCampus
+    campus: ProfileCampus | None = None  # ignored on create: the API sets it
     sending_institution_id: int
     receiving_institution_id: int
     majors: list[str]
@@ -107,7 +118,7 @@ class Semester(BaseModel):
     courses: list[SemesterCourse]
     # Two-phase roadmap (I-03): community-college terms before transfer, university terms after.
     phase: Literal["before_transfer", "after_transfer"] | None = None
-    institution: str | None = None  # e.g. "De Anza College"
+    institution: str | None = None  # the institution's name, as ASSIST gives it
     term_system: Literal["quarter", "semester"] | None = None  # how `units` are counted
 
 
@@ -130,6 +141,9 @@ class RankedOpportunity(BaseModel):
     modality: "OpportunityModality | None" = None
     window: str | None = None  # recurring programs: typical timing, as the official page states it
     last_checked: str | None = None  # recurring programs: when the official page was read (YYYY-MM-DD)
+    # The school whose own listing this is (ASSIST id; its registry feed). None for listings open
+    # to every campus, such as hackathons.
+    campus_id: int | None = None
 
 
 class AgentEvent(BaseModel):
@@ -287,7 +301,7 @@ GuideSectionId = Literal["transfer_services", "academics", "getting_around", "ho
 class GuideSource(BaseModel):
     id: str
     title: str
-    publisher: str  # e.g. "SJSU University Housing Services", "Associated Students, SJSU"
+    publisher: str  # the office or organization that publishes the page
     url: str
     retrieved_on: str  # YYYY-MM-DD the page was read
 
@@ -306,7 +320,7 @@ class GuideSection(BaseModel):
 
 
 class UniversityGuide(BaseModel):
-    university_id: int  # ASSIST institution id (39 = SJSU)
+    university_id: int  # ASSIST institution id
     university_name: str
     last_updated: str  # YYYY-MM-DD the sources were last read
     sections: list[GuideSection]

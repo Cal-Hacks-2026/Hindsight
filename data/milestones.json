@@ -1,0 +1,77 @@
+{
+  "notes": "Transfer milestones for Home's This Week: a small, hand-checked list with the official page each date comes from (read October 25, 2026). Only this cycle's published dates are listed; a later cycle's dates aren't guessed. Add the next cycle once UC, the CSU and CSAC publish it. `system`: UC, CSU, or any (every student). `transfer`: only for students transferring that term. `universities`: only these universities (ASSIST ids); unset = the whole system. `opens`/`closes`: YYYY-MM-DD, Pacific; a milestone shows until the end of `closes`.",
+  "milestones": [
+    {
+      "id": "uc-tag-fall-2027",
+      "system": "UC",
+      "transfer": "Fall 2027",
+      "title": "Submit a UC TAG",
+      "dates": "Sept 1–30, 2026",
+      "opens": "2026-09-01",
+      "closes": "2026-09-30",
+      "why": "A Transfer Admission Guarantee for fall 2027 is filed in September.",
+      "action": "TAG requirements",
+      "url": "https://admission.universityofcalifornia.edu/admission-requirements/transfer-requirements/uc-transfer-programs/transfer-admission-guarantee-tag.html",
+      "source": "University of California Admissions · Transfer Admission Guarantee (TAG)",
+      "universities": [
+        89,
+        120,
+        144,
+        46,
+        128,
+        132
+      ]
+    },
+    {
+      "id": "uc-apply-spring-2027",
+      "system": "UC",
+      "transfer": "Spring 2027",
+      "title": "Apply to UC",
+      "dates": "July 1–31, 2026",
+      "opens": "2026-07-01",
+      "closes": "2026-07-31",
+      "why": "UC's winter and spring 2027 application period.",
+      "action": "UC transfer dates",
+      "url": "https://admission.universityofcalifornia.edu/how-to-apply/applying-as-a-transfer/",
+      "source": "University of California Admissions · Applying as a transfer student"
+    },
+    {
+      "id": "uc-apply-fall-2027",
+      "system": "UC",
+      "transfer": "Fall 2027",
+      "title": "Apply to UC",
+      "dates": "Oct 1–Nov 30, 2026",
+      "opens": "2026-10-01",
+      "closes": "2026-11-30",
+      "why": "UC's fall 2027 application period. Applications are due November 30.",
+      "action": "UC transfer dates",
+      "url": "https://admission.universityofcalifornia.edu/how-to-apply/applying-as-a-transfer/",
+      "source": "University of California Admissions · Applying as a transfer student"
+    },
+    {
+      "id": "csu-apply-fall-2027",
+      "system": "CSU",
+      "transfer": "Fall 2027",
+      "title": "Apply on Cal State Apply",
+      "dates": "Oct 1–Nov 30, 2026",
+      "opens": "2026-10-01",
+      "closes": "2026-11-30",
+      "why": "The CSU's fall 2027 priority filing period. Submissions open October 1 and close November 30.",
+      "action": "CSU application dates",
+      "url": "https://www.calstate.edu/apply/pages/application-dates-deadlines.aspx",
+      "source": "The California State University · Application Dates & Deadlines"
+    },
+    {
+      "id": "fafsa-2027-28",
+      "system": "any",
+      "title": "File the FAFSA or California Dream Act Application",
+      "dates": "Oct 1, 2026–Mar 2, 2027",
+      "opens": "2026-10-01",
+      "closes": "2027-03-02",
+      "why": "March 2 is California's deadline for many state aid programs in 2027–28, including Cal Grants.",
+      "action": "2027–28 FAFSA form",
+      "url": "https://studentaid.gov/sites/default/files/2027-28-fafsa-form.pdf",
+      "source": "Federal Student Aid · 2027–28 FAFSA form (state deadlines)"
+    }
+  ]
+}

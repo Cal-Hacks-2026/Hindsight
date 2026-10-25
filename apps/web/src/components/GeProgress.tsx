@@ -20,7 +20,7 @@ const PATTERNS: [GePattern, string][] = [
 ];
 
 function status(area: GeArea): { tone: StatusTone; label: string } {
-  if (!area.required) return { tone: "sjsu", label: "Not required" };
+  if (!area.required) return { tone: "neutral", label: "Not required" };
   switch (area.status) {
     case "done":
       return { tone: "ok", label: "Done" };
@@ -34,7 +34,7 @@ function status(area: GeArea): { tone: StatusTone; label: string } {
 /** "ENGL C1000" never breaks across lines. */
 const nb = (code: string) => code.replace(/ /g, " ");
 
-/** "ASSIST · De Anza College · IGETC (2023–2024)" → "IGETC 2023–2024". */
+/** "ASSIST · <College> · IGETC (2023–2024)" → "IGETC 2023–2024". */
 const listName = (c: Citation) =>
   /· ([^·]+) \((\d{4}[–-]\d{4})\)$/.exec(c.label)?.slice(1).join(" ") ??
   "ASSIST list";

@@ -1,6 +1,6 @@
 """Campus scans on Apify (PROJECT.md §8.3, §10).
 
-We run the Store actor apify/cheerio-scraper over data/sources.json with our own
+We run the Store actor apify/cheerio-scraper over the registry's sources (radar/sources.py) with our own
 pageFunction (extractors/page_function.js), then normalize and upsert the dataset. Two ways in:
 - `run_scan(campus)`: start, wait, ingest. Used by `python -m app.scan`.
 - `start_scan(campus, webhook_url)`: start with an ad-hoc webhook; Apify then POSTs

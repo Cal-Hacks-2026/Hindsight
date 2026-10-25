@@ -1,6 +1,5 @@
 {
   "version": 1,
-  "campus": "sjsu",
   "last_checked": "2026-10-25",
   "notes": "Recurring SJSU programs that aren't one-off events. Every entry was loaded from its official url on last_checked; window is the typical timing the page states, not a promised date.",
   "programs": [

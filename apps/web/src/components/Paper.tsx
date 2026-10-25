@@ -103,7 +103,7 @@ export function Ref({ n }: { n: number | undefined }) {
   );
 }
 
-export type StatusTone = "ok" | "check" | "missing" | "sjsu";
+export type StatusTone = "ok" | "check" | "missing" | "neutral";
 export function StatusMark({
   tone,
   children,

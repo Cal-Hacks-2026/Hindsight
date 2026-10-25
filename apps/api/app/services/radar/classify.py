@@ -7,7 +7,7 @@ Every listing gets one (category, subcategory) label:
    Claude picks only from the taxonomy below; anything else is dropped. Those labels are
    stored in opportunity_labels, keyed by listing and title, so each is asked about once.
 3. Anything still unlabeled (Claude unavailable, cap spent) falls back by item type.
-Programs from data/programs/ carry their own hand-checked label.
+Programs (each campus's registry programs file) carry their own hand-checked label.
 """
 
 import hashlib
@@ -23,7 +23,7 @@ from typing import Any
 import anthropic
 from pydantic import BaseModel
 
-from app.services import claude_limits
+from app.services import campuses, claude_limits
 from app.services.claude_limits import RateLimited
 from app.services.db import StoreError
 from app.services.radar import store
@@ -220,9 +220,10 @@ RULES: list[Rule] = [
     Rule(("clubs", "orgs"), tags=frozenset({"recognized student organization"}),
          org=_re(r"\b(?:club|association|society|guild)\b|cross cultural center")),
     Rule(("growth", "wellness-community"),
-         tags=frozenset({"residence life", "social", "sjsu athletics", "spartan recreation", "volunteer opportunities",
+         tags=frozenset({"residence life", "social", "volunteer opportunities",
                          "educational/awareness", "academic wellness", "special event", "community service",
-                         "social events and gatherings", "fitness/training", "cultural"}),
+                         "social events and gatherings", "fitness/training", "cultural",
+                         *campuses.vocabulary().wellness_tags}),
          title=_re(r"\bgame night\b|\bwellness\b|\bvolunteer|\bcelebrat|\bfootball\b|\bbasketball\b|\bcraft")),
     # A Student Union listing no rule above placed is a drop-in or visit ("Event Center Check in"),
     # not a job: its job postings say so in the title and are caught by the Campus Jobs rules.

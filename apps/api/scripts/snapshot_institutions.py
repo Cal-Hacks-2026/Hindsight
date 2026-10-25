@@ -17,7 +17,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app.routers.assist import colleges, universities  # noqa: E402
 
-OUT = Path(__file__).resolve().parents[3] / "apps/web/src/data/institutions-snapshot.json"
+OUT = Path(__file__).resolve().parents[3] / "data/assist/institutions-snapshot.json"
 PAUSE_SECONDS = 0.5  # between ASSIST requests
 
 

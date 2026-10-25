@@ -1,4 +1,6 @@
-"""Curated Radar sources from data/sources.json (PROJECT.md §8.3)."""
+"""Curated Radar sources (PROJECT.md §8.3): each campus's file named in its registry entry
+(data/campuses/<id>.json → opportunities.sources), plus data/opportunities/shared-sources.json,
+which every campus scans."""
 
 import json
 import os
@@ -10,9 +12,11 @@ from urllib.parse import urlparse
 from pydantic import BaseModel, HttpUrl
 
 from app.models.contracts import Campus
+from app.services import campuses
 
-SOURCES_FILE = Path(
-    os.getenv("SOURCES_FILE") or Path(__file__).resolve().parents[5] / "data" / "sources.json"
+SHARED_SOURCES_FILE = Path(
+    os.getenv("SHARED_SOURCES_FILE")
+    or Path(__file__).resolve().parents[5] / "data" / "opportunities" / "shared-sources.json"
 )
 
 Kind = Literal["localist", "livewhale", "campusgroups_rss", "devpost", "mlh_season"]
@@ -30,14 +34,29 @@ class Source(BaseModel):
     location_contains: list[str] = []  # mlh_season: keep events whose location mentions one of these
 
 
+class SourceList(BaseModel):
+    """One sources file: a campus's own, or the shared one."""
+
+    sources: list[Source]
+
+
 class SourcesFile(BaseModel):
-    campuses: dict[Campus, list[Source]]
+    campuses: dict[Campus, list[Source]]  # by feed
     shared: list[Source] = []
 
 
+def _read(path: Path) -> list[Source]:
+    return SourceList.model_validate(json.loads(path.read_text())).sources
+
+
 @lru_cache(maxsize=1)
-def load(path: Path = SOURCES_FILE) -> SourcesFile:
-    return SourcesFile.model_validate(json.loads(path.read_text()))
+def load() -> SourcesFile:
+    """Every feed in the registry with its sources, plus the shared sources."""
+    return SourcesFile(
+        campuses={c.opportunities.feed: _read(c.path(c.opportunities.sources))
+                  for c in campuses.all_campuses() if c.opportunities},
+        shared=_read(SHARED_SOURCES_FILE),
+    )
 
 
 def for_campus(campus: Campus) -> list[Source]:

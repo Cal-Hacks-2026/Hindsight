@@ -277,7 +277,7 @@ def test_write_alerts_only_marks_new_rows(monkeypatch, profile_fake):
     marked = []
     monkeypatch.setattr(store, "top_ranked", lambda pid, limit: rows[:limit])
     monkeypatch.setattr(store, "mark_notified", lambda pid, ids: marked.append(ids) or len(ids))
-    monkeypatch.setattr(alerts.profile_store, "list_profiles", lambda campus, limit: [profile])
+    monkeypatch.setattr(alerts.profile_store, "list_profiles_at", lambda institution_id, limit: [profile])
     got = alerts.write_alerts("sjsu", now=now)
     assert [(a.opportunity_id, a.new) for a in got] == [("a", True), ("b", False)]
     assert marked == [["a"]]

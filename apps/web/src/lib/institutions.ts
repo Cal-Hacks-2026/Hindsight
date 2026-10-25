@@ -2,12 +2,11 @@
 // page session (the API caches them for a day too) and filtered in the browser as the student types,
 // so typing never calls ASSIST.
 //
-// When the live list can't load, a committed snapshot (src/data/institutions-snapshot.json, from
+// When the live list can't load, a committed snapshot (data/assist/institutions-snapshot.json, from
 // apps/api/scripts/snapshot_institutions.py) stands in, and `savedOn` says so. It's only a list to
 // pick from: nothing is preselected either way. A saved list isn't kept, so the next load tries live.
 import type { AssistInstitution } from "@hindsight/contracts";
 import { api } from "./api";
-import { SJSU_ID } from "./config";
 
 /** `savedOn`: the snapshot's date ("2026-10-25"), set only when the live list failed. */
 export type InstitutionList = { institutions: AssistInstitution[]; savedOn?: string };
@@ -25,7 +24,7 @@ type Snapshot = {
 
 // Loaded only on a failure, as its own chunk.
 const snapshot = () =>
-  import("../data/institutions-snapshot.json").then((m) => m.default as unknown as Snapshot);
+  import("../../../../data/assist/institutions-snapshot.json").then((m) => m.default as unknown as Snapshot);
 
 /** The snapshot's list, or the live call's own error when the snapshot can't help. */
 function fromSnapshot(
@@ -83,7 +82,3 @@ export const savedOnLabel = (savedOn: string) =>
     year: "numeric",
     timeZone: "UTC",
   });
-
-/** The profile campus the API will assign (apps/api/app/config.py campus_for). */
-export const campusFor = (universityId: number) =>
-  universityId === SJSU_ID ? "sjsu" : universityId === 79 ? "berkeley" : "other";

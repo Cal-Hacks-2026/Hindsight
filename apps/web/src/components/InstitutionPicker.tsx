@@ -6,18 +6,17 @@ import { useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import type { AssistInstitution } from "@hindsight/contracts";
 import { shortUniversity } from "../lib/format";
 
-/** Case- and accent-insensitive: "san jose" finds "San José State University". */
+/** Case- and accent-insensitive: "jose" finds "José". */
 const fold = (s: string) => s.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLowerCase();
 
-/** What a search matches: the name, plus its short form ("UCLA", "SJSU", "CSU East Bay"). */
-const haystack = (i: AssistInstitution) => fold(`${i.name} ${shortUniversity(i.name)}`);
+/** What a search matches: the name, plus its short form (the registry's, or "UC <Campus>", "CSU <Campus>"). */
+const haystack = (i: AssistInstitution) => fold(`${i.name} ${shortUniversity(i.name, i.id)}`);
 
 export function InstitutionPicker({
   id,
   label,
   noun,
   nouns,
-  example,
   value,
   options,
   onChange,
@@ -30,8 +29,6 @@ export function InstitutionPicker({
   /** "community college" / "community colleges": for the placeholder and empty states. */
   noun: string;
   nouns: string;
-  /** For the placeholder: "Foothill". */
-  example: string;
   value?: AssistInstitution;
   /** undefined while loading. */
   options?: AssistInstitution[];
@@ -82,7 +79,7 @@ export function InstitutionPicker({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={key}
-            placeholder={`Search ${options?.length ?? 0} ${nouns}, e.g. ${example}`}
+            placeholder={`Search ${options?.length ?? 0} ${nouns} by name`}
             aria-labelledby={`${id}-label`}
             aria-controls={`${id}-list`}
           />

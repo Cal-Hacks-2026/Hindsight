@@ -14,7 +14,6 @@ import { api } from "../lib/api";
 import { ASSIST_YEAR_2026_27, assistYear } from "../lib/config";
 import { shortUniversity } from "../lib/format";
 import {
-  campusFor,
   loadColleges,
   loadUniversities,
   savedOnLabel,
@@ -320,7 +319,6 @@ function ProfileStep({ onDone }: { onDone: (p: Profile) => void }) {
       const { profile } = await api.createProfile({
         name: name.trim(),
         stage,
-        campus: campusFor(university.id),
         sending_institution_id: college.id,
         receiving_institution_id: university.id,
         majors,
@@ -384,7 +382,6 @@ function ProfileStep({ onDone }: { onDone: (p: Profile) => void }) {
         label="Community College"
         noun="community college"
         nouns="community colleges"
-        example="Foothill"
         value={college}
         options={colleges}
         onChange={setCollege}
@@ -395,7 +392,6 @@ function ProfileStep({ onDone }: { onDone: (p: Profile) => void }) {
         label="University"
         noun="university"
         nouns="universities"
-        example="UCLA"
         value={university}
         options={universities}
         onChange={setUniversity}
@@ -544,7 +540,7 @@ function SavedListNote({ noun, savedOn }: { noun: string; savedOn: string }) {
 
 /** What the plan covers for this university, and which ASSIST year its agreements come from. */
 function UniversityHint({ university }: { university: AssistInstitution }) {
-  const short = shortUniversity(university.name);
+  const short = shortUniversity(university.name, university.id);
   const year = university.year_id;
   return (
     <>

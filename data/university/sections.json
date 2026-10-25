@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "verified_on": "2026-10-25",
+  "notes": "The sections of every university's \"What to Expect\" guide. Each university's source pages are listed in its registry entry (data/campuses/<id>.json → university_guide.sources).",
+  "sections": [
+    {
+      "id": "transfer_services",
+      "title": "Transfer Services and Orientation",
+      "topic": "Services for incoming transfer students and transfer orientation, from admission to the first day of classes: what orientation is, whether it is required, how to sign up, the enrollment deposit, and the remaining enrollment steps (writing placement, final transcripts, fees, immunizations). Classes, deadlines once the semester starts, and housing belong to other sections.",
+      "opportunity_types": [
+        "program",
+        "event"
+      ]
+    },
+    {
+      "id": "academics",
+      "title": "Academic Culture",
+      "topic": "What classes and academics are like: that SJSU runs on semesters (not quarters), with the upcoming fall semester's first and last day of instruction and final examination period from the registration calendar, which shows how long a semester runs; unit limits per semester; class sizes; how advising works (who advises transfer students and where); and free academic support such as tutoring. Add/drop and other deadlines belong to First-Semester Tips.",
+      "opportunity_types": [
+        "workshop"
+      ]
+    },
+    {
+      "id": "getting_around",
+      "title": "Getting Around",
+      "topic": "Getting to and around campus: where the campus is, transit passes and which transit services they cover, parking permits for commuters, and the campus map.",
+      "opportunity_types": []
+    },
+    {
+      "id": "housing",
+      "title": "Housing",
+      "topic": "Campus housing: how to apply, what it costs to apply, which buildings exist and who they are for (for example juniors and seniors), what rates include, and how much demand there is.",
+      "opportunity_types": []
+    },
+    {
+      "id": "student_life",
+      "title": "Student Life",
+      "topic": "Student life: clubs and recognized student organizations (including major-related ones), welcome events for new students, Associated Students services, and leadership programs.",
+      "opportunity_types": [
+        "club",
+        "event"
+      ]
+    },
+    {
+      "id": "first_semester",
+      "title": "First-Semester Tips",
+      "topic": "Practical things to do once the first semester begins: add/drop and withdrawal deadlines, census date, waitlists and permission numbers, checking official MySJSU messages, and joining Weeks of Welcome events. Tutoring belongs to Academic Culture. Orientation and the enrollment steps before classes belong to Transfer Services and Orientation; don't repeat them.",
+      "opportunity_types": [
+        "workshop"
+      ]
+    }
+  ]
+}

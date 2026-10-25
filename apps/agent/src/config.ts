@@ -1,10 +1,29 @@
 // Environment → config. Read once at startup; main.ts then scrubs secrets from
 // process.env, because the Droid SDK passes process.env on to the droid subprocess.
-import { readFileSync, realpathSync, rmSync } from 'node:fs';
+import { readdirSync, readFileSync, realpathSync, rmSync } from 'node:fs';
+import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-export const CAMPUSES = ['sjsu', 'berkeley'] as const;
-export type Campus = (typeof CAMPUSES)[number];
+const DEFAULT_CAMPUSES_DIR = fileURLToPath(new URL('../../../data/campuses', import.meta.url));
+
+/**
+ * Every opportunities feed in the campus registry (data/campuses/<ASSIST id>.json →
+ * opportunities.feed), in file-name order, the same list the API accepts. The agent names no
+ * campus itself.
+ */
+export function registryFeeds(dir: string = process.env.CAMPUSES_DIR || DEFAULT_CAMPUSES_DIR): string[] {
+  return readdirSync(dir)
+    .filter((f) => f.endsWith('.json'))
+    .sort()
+    .flatMap((f) => {
+      const feed: unknown = JSON.parse(readFileSync(join(dir, f), 'utf8'))?.opportunities?.feed;
+      return typeof feed === 'string' && feed ? [feed] : [];
+    });
+}
+
+export const CAMPUSES: readonly string[] = registryFeeds();
+/** A campus feed from the registry. */
+export type Campus = string;
 
 export interface Config {
   apiUrl: string;
@@ -57,12 +76,13 @@ function agentSecret(env: NodeJS.ProcessEnv): string {
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
-  const campuses = (env.AGENT_CAMPUSES ?? 'sjsu,berkeley')
+  // Default: every feed in the registry.
+  const campuses = (env.AGENT_CAMPUSES ?? CAMPUSES.join(','))
     .split(',')
     .map((c) => c.trim())
     .filter(Boolean);
   for (const c of campuses) {
-    if (!(CAMPUSES as readonly string[]).includes(c)) throw new Error(`AGENT_CAMPUSES: unknown campus ${c}`);
+    if (!CAMPUSES.includes(c)) throw new Error(`AGENT_CAMPUSES: unknown campus ${c}`);
   }
   return {
     apiUrl: (env.AGENT_API_URL ?? 'http://127.0.0.1:8000').replace(/\/+$/, ''),
@@ -71,7 +91,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     host: env.AGENT_HOST ?? '127.0.0.1',
     port: int(env, 'AGENT_PORT', 8787, 1),
     intervalMinutes: int(env, 'AGENT_INTERVAL_MINUTES', 120),
-    campuses: campuses as Campus[],
+    campuses,
     extractorsDir: realpathSync(env.EXTRACTORS_DIR ?? DEFAULT_EXTRACTORS),
     droidPath: env.DROID_PATH ?? DEFAULT_DROID,
     modelId: env.DROID_MODEL || undefined,

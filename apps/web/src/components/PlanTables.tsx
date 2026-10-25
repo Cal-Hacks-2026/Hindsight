@@ -51,13 +51,14 @@ export type PlanRow = {
   agreement?: string;
 };
 
-/** Institution names: "De Anza" / "De Anza College", "SJSU" / "San José State University". */
+/** Institution names, short and full, for the college and the university. */
 export type PlanNames = {
   college: string;
   collegeLong: string;
   campus: string;
   campusLong: string;
-  profileCampus: string;
+  /** The profile's university (ASSIST id). */
+  universityId: number;
 };
 
 /** What every table needs to say what a course counts toward and cite it. */
@@ -175,7 +176,7 @@ function requirementCounts(
     }
     merged.set(key, {
       key,
-      // A choose-from requirement reads by its group: "SJSU Major Electives".
+      // A choose-from requirement reads by its group: "<University> Major Electives".
       text: `${ctx.names.campus} ${row.code === "Elective" ? titleCase(row.req.group_title) : row.code}`,
       refs: [...row.refs],
       note: note(row),
@@ -565,7 +566,7 @@ export function PlanTables({
   const years = [
     ...new Set(
       majors.flatMap(
-        (m) => catalogMajor(m, names.profileCampus)?.catalog_year ?? [],
+        (m) => catalogMajor(m, names.universityId)?.catalog_year ?? [],
       ),
     ),
   ].map(yearSpan);

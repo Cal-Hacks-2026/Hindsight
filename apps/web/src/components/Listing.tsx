@@ -61,6 +61,7 @@ export function Listing({
   rank,
   kind,
   fit,
+  campus,
 }: {
   item: RankedOpportunity;
   now: number;
@@ -70,6 +71,8 @@ export function Listing({
   kind?: string;
   /** Why it fits the student's week: "Free Tuesday 2–5 PM". */
   fit?: string;
+  /** Whose listing it is: "At <university>, your target school" (lib/campuses campusLabel). */
+  campus?: string;
 }) {
   const link = safeUrl(item.url);
   const target = closeAt(item, now);
@@ -95,7 +98,7 @@ export function Listing({
   const meta = [kind ?? typeLabel(item.type), item.org, link && hostOf(link)]
     .filter(Boolean)
     .join(" · ");
-  const where = [item.modality && MODALITY_LABEL[item.modality], item.location]
+  const where = [campus, item.modality && MODALITY_LABEL[item.modality], item.location]
     .filter(Boolean)
     .join(" · ");
   const recurring = item.type === "program" && item.window;

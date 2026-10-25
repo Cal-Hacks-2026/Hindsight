@@ -53,7 +53,7 @@ def transcript(terms) -> list[Course]:
 def roadmap(courses: list[Course], labels=(DS, ECON), transfer_term=None, today=OCT_2026, start_term=None):
     """Planned the way /plan and the counselor do it."""
     profile = Profile(id="p", created_at="", **PROFILE)
-    majors, uncurated = planner.resolve_majors(",".join(labels), [], "sjsu", planner.load_majors())
+    majors, uncurated = planner.resolve_majors(",".join(labels), [], 39, planner.load_majors())
     planning = planner.assume_in_progress_passed(courses)
 
     def match(label):
@@ -202,7 +202,7 @@ def test_option_alternatives(option, alternatives):
 def test_unknown_uncurated_labels_never_reach_assist(assist_fake):
     """A label ASSIST doesn't list for this pair would otherwise trigger a live lookup per label."""
     profile = Profile(id="p", created_at="", **PROFILE)
-    majors, _ = planner.resolve_majors(DS, [], "sjsu", planner.load_majors())
+    majors, _ = planner.resolve_majors(DS, [], 39, planner.load_majors())
     asked = []
 
     def match(label):

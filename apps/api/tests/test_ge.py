@@ -265,7 +265,7 @@ def ge_roadmap(terms, transfer_term=None):
     courses = transcript(terms)
     slots = ge_plan.slots(ge.progress(courses, DE_ANZA, ge.get_store(), None, SJSU))
     profile = Profile(id="p", created_at="", **PROFILE)
-    majors, uncurated = planner.resolve_majors(f"{DS},{ECON}", [], "sjsu", planner.load_majors())
+    majors, uncurated = planner.resolve_majors(f"{DS},{ECON}", [], 39, planner.load_majors())
     planning = planner.assume_in_progress_passed(courses)
     match = lambda label: get_service().match(DE_ANZA, SJSU, ASSIST_YEAR_ID, label, planning)  # noqa: E731
     return planner.roadmap_for(profile, courses, majors, uncurated, match, today=OCT_2026,

@@ -96,6 +96,8 @@ flowchart LR
 
 **Claude explains the results.** It extracts transcript and class-schedule rows, writes opportunity explanations, writes the University guide from the university's own pages (code drops any item whose quote isn't on the page it cites), and answers questions using the student's data. For supported what-if questions, the counselor calls the matcher and planner. Citation IDs are checked against the sources supplied to the model.
 
+**Every school goes through the same code.** The app names no college or university. What we know beyond ASSIST about a school (display and short names, term system, curated degree requirements, opportunity sources, recurring programs, University-guide pages) lives in its entry in the campus registry, [`data/campuses/<ASSIST id>.json`](data/campuses/README.md), and is looked up by the ASSIST ids on the student's profile. A school with no entry gets credits, GE progress and community-college terms from ASSIST; adding its requirements or sources is a data change, not a code change. A test fails if application code names a school, an ASSIST id, or a campus key.
+
 **Campus data comes from source pages.** Apify's Cheerio Scraper fetches curated calendars and listings. Extractors normalize the results; deterministic code ranks them. Missing dates remain empty, and every listing links to its original page. Campus collection uses Apify’s existing Cheerio Scraper Actor.
 
 ## How Droid is used

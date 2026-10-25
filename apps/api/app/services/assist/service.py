@@ -14,6 +14,7 @@ from typing import Any, Literal
 
 from app.config import ASSIST_YEAR_ID
 from app.models import AssistInstitution, AssistMajor, Course, MatchResult
+from app.services import campuses
 
 from .cache import ArticulationCache
 from .client import AssistClient, AssistError, AssistNotFound
@@ -30,8 +31,6 @@ INSTITUTIONS_RETRY_SECONDS = 60
 # Which universities a college has agreements with, and for which years.
 PARTNERS_TTL_SECONDS = 24 * 3600
 MAX_CACHED_PARTNER_LISTS = 256
-# Quarter-system colleges, for when ASSIST's institution data can't be read.
-QUARTER_COLLEGES = {113, 51}  # De Anza, Foothill
 # Bound the extra ASSIST calls a long transcript can trigger (most recent years win).
 MAX_PRIOR_YEARS = 6
 # ASSIST's earliest academic year (1980–81); one year past ours once it's published.
@@ -132,7 +131,7 @@ class AssistService:
 
     def year_for(self, sending: int, receiving: int) -> int:
         """The ASSIST year to read a pair's agreements from (I-17): ours when the pair has it,
-        else the latest year that has agreements (UCLA had none for 2026–27 at first). ASSIST_YEAR_ID
+        else the latest year that has agreements (some universities had none for 2026–27 at first). ASSIST_YEAR_ID
         when that can't be told."""
         try:
             years = self._partner_years(sending).get(receiving, [])
@@ -143,7 +142,8 @@ class AssistService:
         return usable[-1] if usable else ASSIST_YEAR_ID
 
     def term_system(self, institution_id: int) -> Literal["quarter", "semester"]:
-        """From ASSIST's `termType` (1 = quarter, 0 = semester); the known quarter colleges otherwise."""
+        """From ASSIST's `termType` (1 = quarter, 0 = semester); when ASSIST can't say, the campus
+        registry's term_system; otherwise the default (semesters)."""
         try:
             term_type = self._institutions_by_id().get(institution_id, {}).get("termType")
         except AssistError as e:
@@ -151,7 +151,7 @@ class AssistService:
             term_type = None
         if term_type in (0, 1):
             return "quarter" if term_type == 1 else "semester"
-        return "quarter" if institution_id in QUARTER_COLLEGES else "semester"
+        return campuses.term_system(institution_id) or campuses.DEFAULT_TERM_SYSTEM
 
     def _validate(self, sending: int, receiving: int, year: int) -> None:
         """ASSIST agreements run community college → university."""
