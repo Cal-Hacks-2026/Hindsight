@@ -158,3 +158,51 @@ export type AgentEventsResponse = { events: AgentEvent[] };
 export type AgentLatestRunResponse = { run_id: string | null };
 export type WebhookResponse = { ok: true };
 export type HealthResponse = { status: "ok"; app: string; storage?: boolean; claude?: boolean };
+
+// ---- University guide (UNIVERSITY) ----
+// "What to Expect" at the student's university: short sections written only from official or
+// institutional pages, every item citing them (GET /universities/{id}/guide).
+
+export type GuideSectionId =
+  | "transfer_services"
+  | "academics"
+  | "getting_around"
+  | "housing"
+  | "student_life"
+  | "first_semester";
+
+export type GuideSource = {
+  id: string;
+  title: string;
+  publisher: string; // e.g. "SJSU University Housing Services", "Associated Students, SJSU"
+  url: string;
+  retrieved_on: string; // YYYY-MM-DD the page was read
+};
+
+export type GuideItem = {
+  text: string;
+  source_ids: string[]; // ids in UniversityGuide.sources; never empty
+};
+
+export type GuideSection = {
+  id: GuideSectionId;
+  title: string;
+  items: GuideItem[];
+  // Opportunities categories (RankedOpportunity.type) worth linking from this section.
+  opportunity_types?: string[];
+};
+
+export type UniversityGuide = {
+  university_id: number; // ASSIST institution id (39 = SJSU)
+  university_name: string;
+  last_updated: string; // YYYY-MM-DD the sources were last read
+  sections: GuideSection[];
+  sources: GuideSource[]; // cited sources, in footnote order
+};
+
+export type UniversityGuideResponse = {
+  university_id: number;
+  available: boolean; // false: no guide for this university yet
+  university_name?: string;
+  guide?: UniversityGuide;
+};
