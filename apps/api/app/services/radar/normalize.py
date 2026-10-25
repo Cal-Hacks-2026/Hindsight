@@ -23,13 +23,14 @@ from pydantic import BaseModel
 from app.models.contracts import Campus
 from app.services.radar import extract
 from app.services.radar import sources as sources_mod
-from app.services.radar.extract import ItemType, Parsed, clean_text, is_http_url
+from app.services.radar.extract import MODALITIES, ItemType, Modality, Parsed, clean_text, is_http_url
 from app.services.radar.sources import Source
 from app.services.radar.extract import parse_devpost_dates, parse_when  # noqa: F401 (re-exported)
 
 log = logging.getLogger(__name__)
 
 MAX_DESCRIPTION = 2000
+MAX_LOCATION = 200
 MAX_TAGS = 20
 # An item with a start but no end is treated as over this long after it starts.
 NO_END_GRACE = timedelta(days=1)
@@ -48,6 +49,10 @@ class RadarItem(BaseModel):
     description: str
     tags: list[str]
     scraped_at: str
+    # Opportunities: ten categories, programs, fits your week.
+    ends_at: str | None = None
+    location: str | None = None
+    modality: Modality | None = None
 
 
 @dataclass
@@ -156,6 +161,9 @@ def normalize(raw_items: list[dict], now: datetime, lookup=sources_mod.by_id,
                 description=clean_text(p.description)[:MAX_DESCRIPTION],
                 tags=_tags(source.tags, p.tags),
                 scraped_at=scraped_at,
+                ends_at=_iso(p.ends_at) if p.ends_at and (p.starts_at is None or p.ends_at >= p.starts_at) else None,
+                location=clean_text(p.location)[:MAX_LOCATION] or None,
+                modality=p.modality if p.modality in MODALITIES else None,
             )
             result.per_source[source.id] += 1
     result.items = list(items.values())

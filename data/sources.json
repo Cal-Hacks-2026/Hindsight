@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "verified_on": "2026-10-24",
+  "verified_on": "2026-10-25",
   "notes": "Campus Radar sources (PROJECT.md §8.3). Every url was fetched and returned real, current listings on verified_on. `url` is what the Apify Cheerio Scraper fetches; `homepage` is the human-facing page it mirrors. `kind` picks the parser in apps/api/app/services/radar/normalize.py. Sources under `shared` are scanned with every campus.",
   "campuses": {
     "sjsu": [
@@ -55,7 +55,7 @@
         "id": "berkeley-events-ai",
         "name": "UC Berkeley Events: search \"artificial intelligence\"",
         "kind": "livewhale",
-        "url": "https://events.berkeley.edu/live/json/events/search/artificial%20intelligence/response_fields/summary,tags,event_types,group_title",
+        "url": "https://events.berkeley.edu/live/json/events/search/artificial%20intelligence/response_fields/summary,tags,event_types,group_title,location",
         "homepage": "https://events.berkeley.edu/",
         "org": "UC Berkeley",
         "tags": ["ai"]
@@ -64,7 +64,7 @@
         "id": "berkeley-events-data-science",
         "name": "UC Berkeley Events: search \"data science\"",
         "kind": "livewhale",
-        "url": "https://events.berkeley.edu/live/json/events/search/data%20science/response_fields/summary,tags,event_types,group_title",
+        "url": "https://events.berkeley.edu/live/json/events/search/data%20science/response_fields/summary,tags,event_types,group_title,location",
         "homepage": "https://events.berkeley.edu/",
         "org": "UC Berkeley",
         "tags": ["data science"]
@@ -73,7 +73,7 @@
         "id": "berkeley-events-machine-learning",
         "name": "UC Berkeley Events: search \"machine learning\"",
         "kind": "livewhale",
-        "url": "https://events.berkeley.edu/live/json/events/search/machine%20learning/response_fields/summary,tags,event_types,group_title",
+        "url": "https://events.berkeley.edu/live/json/events/search/machine%20learning/response_fields/summary,tags,event_types,group_title,location",
         "homepage": "https://events.berkeley.edu/",
         "org": "UC Berkeley",
         "tags": ["machine learning"]
@@ -82,7 +82,7 @@
         "id": "berkeley-events-entrepreneurship",
         "name": "UC Berkeley Events: search \"entrepreneurship\"",
         "kind": "livewhale",
-        "url": "https://events.berkeley.edu/live/json/events/search/entrepreneurship/response_fields/summary,tags,event_types,group_title",
+        "url": "https://events.berkeley.edu/live/json/events/search/entrepreneurship/response_fields/summary,tags,event_types,group_title,location",
         "homepage": "https://events.berkeley.edu/",
         "org": "UC Berkeley",
         "tags": ["entrepreneurship"]
@@ -91,7 +91,7 @@
         "id": "berkeley-events-hackathon",
         "name": "UC Berkeley Events: search \"hackathon\"",
         "kind": "livewhale",
-        "url": "https://events.berkeley.edu/live/json/events/search/hackathon/response_fields/summary,tags,event_types,group_title",
+        "url": "https://events.berkeley.edu/live/json/events/search/hackathon/response_fields/summary,tags,event_types,group_title,location",
         "homepage": "https://events.berkeley.edu/",
         "org": "UC Berkeley",
         "tags": ["hackathon"]

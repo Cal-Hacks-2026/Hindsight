@@ -25,5 +25,7 @@ def extract(raw, source):
             description=" ".join(p for p in parts if p),
             tags=themes + (["online"] if location.lower() == "online" else []),
             type_hints={"hackathon"},
+            location="" if location.lower() == "online" else location,
+            modality=("online" if location.lower() == "online" else "in_person") if location else None,
         ))
     return out

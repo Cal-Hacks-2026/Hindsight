@@ -13,9 +13,12 @@ function loadingMessage(seconds: number): string {
 export function RadarLoading({
   startedAt,
   skeletons = 3,
+  quick,
 }: {
   startedAt: number;
   skeletons?: number;
+  /** A filtered list: it never waits on reasons, so leave out the first-visit note. */
+  quick?: boolean;
 }) {
   const now = useNow(1000);
   const seconds = Math.max(0, Math.floor((now - startedAt) / 1000));
@@ -29,7 +32,7 @@ export function RadarLoading({
           </span>
         </div>
         <div className="loading-bar" aria-hidden="true" />
-        <p>The first visit can take about 15 seconds.</p>
+        {!quick && <p>The first visit can take about 15 seconds.</p>}
       </div>
       <div aria-hidden="true">
         {Array.from({ length: skeletons }, (_, i) => (

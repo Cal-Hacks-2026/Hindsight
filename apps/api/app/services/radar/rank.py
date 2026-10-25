@@ -15,7 +15,7 @@ import logging
 import os
 import re
 import threading
-from collections import OrderedDict
+from collections import Counter, OrderedDict
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from typing import Any
@@ -23,9 +23,10 @@ from typing import Any
 import anthropic
 from pydantic import BaseModel
 
-from app.models import Profile, RankedOpportunity
+from app.models import OpportunityCategory, OpportunitySubcategory, Profile, RankedOpportunity
 from app.services import claude_limits
 from app.services.claude_limits import RateLimited
+from app.services.radar import classify
 from app.services.radar.normalize import parse_when
 from app.services.transcript import DEFAULT_MODEL, FALLBACK_MODELS
 
@@ -199,15 +200,18 @@ def score(row: dict[str, Any], terms: ProfileTerms, now: datetime) -> Scored:
     return Scored(row=row, score=round(min(max(total, 0.0), 1.0), 2), matched=matched)
 
 
-def rank(profile: Profile, rows: list[dict[str, Any]], now: datetime, limit: int = FEED_SIZE) -> list[Scored]:
-    terms = ProfileTerms.of(profile)
-    scored = sorted((s for s in (score(r, terms, now) for r in rows if is_current(r, now) and not is_for_faculty(r))
-                     if s.score >= MIN_SCORE and s.specific),
-                    key=lambda s: (-s.score, s.row.get("deadline") or s.row.get("starts_at") or "9999"))
-    # The same event is often listed by more than one source (e.g. Devpost and the campus calendar).
+def _sort_key(s: Scored) -> tuple:
+    return (-s.score, s.row.get("deadline") or s.row.get("starts_at") or "9999")
+
+
+def _dedupe(scored: list[Scored], limit: int | None, by_day: bool = False) -> list[Scored]:
+    """The same event is often listed by more than one source (e.g. Devpost and the campus calendar).
+    `by_day` keeps one per title per start day, so a weekly meeting shows each day it meets."""
     seen, out = set(), []
     for s in scored:
         key = re.sub(r"\W+", " ", (s.row.get("title") or "").lower()).strip()
+        if by_day:
+            key += f"@{(s.row.get('starts_at') or '')[:10]}"
         if key in seen:
             continue
         seen.add(key)
@@ -215,6 +219,13 @@ def rank(profile: Profile, rows: list[dict[str, Any]], now: datetime, limit: int
         if len(out) == limit:
             break
     return out
+
+
+def rank(profile: Profile, rows: list[dict[str, Any]], now: datetime, limit: int = FEED_SIZE) -> list[Scored]:
+    terms = ProfileTerms.of(profile)
+    scored = sorted((s for s in (score(r, terms, now) for r in rows if is_current(r, now) and not is_for_faculty(r))
+                     if s.score >= MIN_SCORE and s.specific), key=_sort_key)
+    return _dedupe(scored, limit)
 
 
 # ---- reasons ----
@@ -232,6 +243,8 @@ def fallback_reason(s: Scored) -> str:
     org = s.row.get("org") or "your campus"
     if parts:
         return f"Matches {' and '.join(parts)}."[:MAX_REASON_CHARS]
+    if kind == "program":
+        return f"Recurring program from {org}."[:MAX_REASON_CHARS]
     return f"Upcoming {kind} from {org}."[:MAX_REASON_CHARS]
 
 
@@ -323,17 +336,23 @@ def _one_line(text: str) -> str:
     return line if len(line) <= MAX_REASON_CHARS else line[:MAX_REASON_CHARS - 1].rstrip() + "…"
 
 
-def reasons(profile: Profile, items: list[Scored]) -> dict[str, str]:
+def reasons(profile: Profile, items: list[Scored], ask: bool = True) -> dict[str, str]:
+    """Reviewed and cached reasons, Claude for the rest when `ask`, else the computed reason."""
     pkey = _profile_key(profile)
     out: dict[str, str] = {}
     missing = []
     for s in items:
+        if s.row.get("reviewed_reason"):
+            out[str(s.row["id"])] = s.row["reviewed_reason"]
+            continue
         cached = reason_cache.get(_cache_key(pkey, s.row))
         if cached:
             out[str(s.row["id"])] = cached
         else:
             missing.append(s)
-    if missing:
+    if missing and not ask:
+        out.update({str(s.row["id"]): fallback_reason(s) for s in missing})
+    elif missing:
         try:
             claude_limits.limiter.take_daily()
             written = ask_claude(profile, missing)
@@ -353,11 +372,8 @@ def reasons(profile: Profile, items: list[Scored]) -> dict[str, str]:
     return out
 
 
-def ranked_opportunities(profile: Profile, rows: list[dict[str, Any]],
-                         now: datetime | None = None) -> list[RankedOpportunity]:
-    ranked = rank(profile, rows, now or datetime.now(timezone.utc))
-    why = reasons(profile, ranked)
-    return [RankedOpportunity(
+def _item(s: Scored, reason: str, label: classify.Label) -> RankedOpportunity:
+    return RankedOpportunity(
         id=str(s.row["id"]),
         title=s.row["title"],
         type=s.row.get("type") or "event",
@@ -366,5 +382,108 @@ def ranked_opportunities(profile: Profile, rows: list[dict[str, Any]],
         starts_at=s.row.get("starts_at"),
         deadline=s.row.get("deadline"),
         score=s.score,
-        reason=why[str(s.row["id"])],
-    ) for s in ranked]
+        reason=reason,
+        category=label[0],
+        subcategory=label[1],
+        ends_at=s.row.get("ends_at"),
+        location=s.row.get("location") or None,
+        modality=s.row.get("modality"),
+        window=s.row.get("window"),
+        last_checked=s.row.get("last_checked"),
+    )
+
+
+def ranked_opportunities(profile: Profile, rows: list[dict[str, Any]], now: datetime | None = None,
+                         labels: dict[str, classify.Label] | None = None) -> list[RankedOpportunity]:
+    ranked = rank(profile, rows, now or datetime.now(timezone.utc))
+    why = reasons(profile, ranked)
+    labels = labels if labels is not None else classify.labels_for([s.row for s in ranked])
+    return [_item(s, why[str(s.row["id"])], labels[str(s.row["id"])]) for s in ranked]
+
+
+# ---- Opportunities: ten categories, programs, fits your week ----
+
+FILTERED_FEED_SIZE = 100  # Fits Your Week narrows a week of listings in the browser
+
+
+@dataclass
+class Filters:
+    category: str | None = None
+    subcategory: str | None = None
+    start: datetime | None = None  # `from`: happening at or after
+    end: datetime | None = None  # `to`: happening at or before
+    modality: str | None = None
+    location: str | None = None  # substring of the listing's location
+
+    def active(self) -> bool:
+        return any(v not in (None, "") for v in vars(self).values())
+
+    def without_category(self) -> "Filters":
+        return Filters(start=self.start, end=self.end, modality=self.modality, location=self.location)
+
+
+def _months(start: datetime, end: datetime) -> set[int]:
+    months, y, m = set(), start.year, start.month
+    while (y, m) <= (end.year, end.month) and len(months) < 12:
+        months.add(m)
+        y, m = (y + 1, 1) if m == 12 else (y, m + 1)
+    return months
+
+
+def in_window(row: dict[str, Any], start: datetime | None, end: datetime | None, now: datetime) -> bool:
+    """Whether the listing happens (or is open) between start and end. A recurring program counts
+    when its typical months overlap; one with no stated months, or a listing with no dates, doesn't."""
+    if start is None and end is None:
+        return True
+    if row.get("window_months"):
+        lo = start or now
+        hi = end or lo + timedelta(days=366)
+        return bool(set(row["window_months"]) & _months(lo, hi))
+    begins = parse_when(row.get("starts_at"))
+    finishes = parse_when(row.get("ends_at")) or parse_when(row.get("deadline")) or begins
+    begins = begins or finishes
+    if begins is None or finishes is None:
+        return False
+    return (end is None or begins <= end) and (start is None or finishes >= start)
+
+
+def matches(row: dict[str, Any], label: classify.Label, f: Filters, now: datetime) -> bool:
+    if f.category and label[0] != f.category:
+        return False
+    if f.subcategory and label[1] != f.subcategory:
+        return False
+    if f.modality and row.get("modality") != f.modality:
+        return False
+    if f.location and f.location.strip().lower() not in (row.get("location") or "").lower():
+        return False
+    return in_window(row, f.start, f.end, now)
+
+
+def _counts(pool: list[tuple[dict[str, Any], classify.Label]]) -> list[OpportunityCategory]:
+    cats: Counter = Counter(label[0] for _, label in pool)
+    subs: Counter = Counter(label for _, label in pool)
+    return [OpportunityCategory(id=cid, label=name, count=cats[cid], subcategories=[
+        OpportunitySubcategory(id=sid, label=sname, count=subs[(cid, sid)]) for sid, sname in sub_names.items()
+    ]) for cid, (name, sub_names) in classify.TAXONOMY.items()]
+
+
+def feed(profile: Profile, rows: list[dict[str, Any]], filters: Filters | None = None,
+         now: datetime | None = None) -> tuple[list[RankedOpportunity], list[OpportunityCategory]]:
+    """The feed and per-category counts. With no filter it's the ranked top 20 with Claude reasons
+    (ranked_opportunities). With any filter it's every current listing that passes, best first,
+    up to 100; reasons come from the cache or are computed, so a filter never waits on Claude."""
+    now = now or datetime.now(timezone.utc)
+    filters = filters or Filters()
+    live = [r for r in rows if is_current(r, now) and not is_for_faculty(r)]
+    labels = classify.labels_for(live)
+    loose = filters.without_category()
+    pool = [(r, labels[str(r["id"])]) for r in live if matches(r, labels[str(r["id"])], loose, now)]
+    terms = ProfileTerms.of(profile)
+    by_day = filters.start is not None or filters.end is not None
+    deduped = _dedupe(sorted((score(r, terms, now) for r, _ in pool), key=_sort_key), None, by_day)
+    categories = _counts([(s.row, labels[str(s.row["id"])]) for s in deduped])
+    if not filters.active():
+        return ranked_opportunities(profile, live, now, labels), categories
+    picked = [s for s in deduped if matches(s.row, labels[str(s.row["id"])], filters, now)][:FILTERED_FEED_SIZE]
+    why = reasons(profile, picked, ask=False)
+    return [_item(s, why[str(s.row["id"])], labels[str(s.row["id"])]) for s in picked], categories

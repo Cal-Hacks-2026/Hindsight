@@ -62,6 +62,7 @@ class FakeRadarStore:
         self.upserts: list[list] = []
         self.ranked: dict[str, list] = {}
         self.notified: dict[str, set[str]] = {}
+        self.labels: dict[str, dict] = {}  # opportunity_labels, by opportunity_id
 
     def candidates(self, campus, transport=None):
         return [r for r in self.rows if r["campus"] == campus or r["type"] == "hackathon"]
@@ -77,22 +78,36 @@ class FakeRadarStore:
     def notified_ids(self, profile_id, transport=None):
         return self.notified.get(profile_id, set())
 
+    def read_labels(self, opportunity_ids, transport=None):
+        return [self.labels[i] for i in opportunity_ids if i in self.labels]
+
+    def save_labels(self, rows, transport=None):
+        self.labels.update({r["opportunity_id"]: r for r in rows})
+        return len(rows)
+
 
 @pytest.fixture(autouse=True)
 def radar_fake(monkeypatch) -> FakeRadarStore:
     """No test reaches Supabase, Apify, or Claude for the Radar unless it opts in."""
-    from app.services.radar import rank, store
+    from app.services.radar import classify, rank, store
 
     fake = FakeRadarStore()
     monkeypatch.setattr(store, "candidates", fake.candidates)
     monkeypatch.setattr(store, "upsert", fake.upsert)
     monkeypatch.setattr(store, "record_ranked", fake.record_ranked)
     monkeypatch.setattr(store, "notified_ids", fake.notified_ids)
+    monkeypatch.setattr(store, "labels", fake.read_labels)
+    monkeypatch.setattr(store, "save_labels", fake.save_labels)
 
     def no_claude(profile, items):
         raise AssertionError("test called Claude without faking rank.ask_claude")
 
     monkeypatch.setattr(rank, "ask_claude", no_claude)
+
+    def no_claude_labels(rows):
+        raise AssertionError("test called Claude without faking classify.ask_claude")
+
+    monkeypatch.setattr(classify, "ask_claude", no_claude_labels)
     monkeypatch.setattr(rank, "reason_cache", rank._ReasonCache())
     monkeypatch.delenv("APIFY_TOKEN", raising=False)
     monkeypatch.delenv("APIFY_WEBHOOK_SECRET", raising=False)

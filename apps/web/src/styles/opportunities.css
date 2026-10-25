@@ -1,0 +1,132 @@
+/* Opportunities: category filter, Fits Your Week, and the card lines they add.
+   Filter buttons reuse .credit-filters (app.css); this file only adds what that doesn't cover. */
+
+.opp-controls {
+  margin: 0 0 40px;
+}
+.opp-controls .credit-filters {
+  margin: 0 0 16px;
+}
+.opp-count {
+  font-size: var(--text-small);
+  font-weight: 400;
+  color: var(--gray);
+  font-variant-numeric: tabular-nums;
+}
+.section .credit-filters button[aria-pressed="true"] .opp-count {
+  color: var(--paper);
+}
+.opp-subfilters {
+  padding-left: 18px;
+  border-left: 2px solid var(--hair);
+}
+
+.opp-fits {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 20px;
+  margin-top: 24px;
+}
+.opp-switch {
+  position: relative;
+  width: 44px;
+  height: 26px;
+  flex: 0 0 44px;
+  border: 1px solid var(--ink);
+  border-radius: 13px;
+  background: var(--paper);
+}
+.opp-switch::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--ink);
+  transition: transform 0.15s ease;
+}
+.section .opp-fits-toggle[aria-pressed="true"] .opp-switch {
+  background: var(--ink);
+}
+.section .opp-fits-toggle[aria-pressed="true"] .opp-switch::after {
+  background: var(--paper);
+  transform: translateX(18px);
+}
+.opp-fits-note,
+.opp-type {
+  flex: 1 1 320px;
+  margin: 0;
+  font-size: var(--text-small);
+  color: var(--gray);
+}
+.opp-type {
+  margin-top: 16px;
+}
+.section .opp-type button {
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: var(--text-small);
+  text-decoration: underline;
+}
+
+.entry-fit {
+  display: inline-block;
+  margin: 0 0 14px;
+  padding: 4px 10px;
+  border: 1px solid var(--ink);
+  border-radius: 4px;
+  font-size: var(--text-small);
+  font-weight: 600;
+}
+.entry-where {
+  font-size: 20px;
+  color: var(--gray);
+  margin: 8px 0 0;
+}
+.entry-checked {
+  color: var(--gray);
+}
+
+@media (max-width: 700px) {
+  .opp-controls {
+    margin-bottom: 32px;
+  }
+  /* One row per filter that scrolls sideways inside the card, so the list stays in view. */
+  .opp-controls .credit-filters {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+    margin-right: -20px;
+    padding-right: 20px;
+  }
+  .opp-controls .credit-filters::-webkit-scrollbar {
+    display: none;
+  }
+  .section .opp-controls .credit-filters button {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    scroll-snap-align: start;
+  }
+  .opp-subfilters {
+    padding-left: 12px;
+  }
+  .entry-where {
+    font-size: 18px;
+  }
+  /* The listing takes the whole line beside its numeral (48px + 16px gap); Source wraps below it. */
+  .entries .entry-body {
+    flex-basis: calc(100% - 64px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .opp-switch::after {
+    transition: none;
+  }
+}

@@ -5,6 +5,7 @@ from json import loads
 from app.services.radar.extract import Parsed, clean_text, is_http_url, parse_when
 
 FORMATS = {"physical": "in-person", "hybrid_physical": "hybrid", "digital": "online"}
+MODALITY = {"physical": "in_person", "hybrid_physical": "hybrid", "digital": "online"}
 
 
 def extract(raw, source):
@@ -31,5 +32,7 @@ def extract(raw, source):
                 description=f"MLH member hackathon in {location}." if location else "MLH member hackathon.",
                 tags=focus + ([fmt] if fmt else []),
                 type_hints={"hackathon"},
+                location=location,
+                modality=MODALITY.get(e.get("formatType") or ""),
             ))
     return out

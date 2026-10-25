@@ -39,6 +39,8 @@ EXTRACTORS_DIR = Path(__file__).parent / "extractors"
 PACIFIC = ZoneInfo("America/Los_Angeles")
 
 ItemType = Literal["event", "workshop", "club", "program", "hackathon", "position"]
+Modality = Literal["in_person", "online", "hybrid"]
+MODALITIES: tuple[Modality, ...] = ("in_person", "online", "hybrid")
 
 
 @dataclass
@@ -54,6 +56,8 @@ class Parsed:
     description: str = ""
     tags: list[str] = field(default_factory=list)
     type_hints: set[ItemType] = field(default_factory=set)  # from the source's own categories
+    location: str = ""  # where, as the source prints it ("King Library, Room 125")
+    modality: Modality | None = None  # only when the source says
 
 
 # ---- helpers for extractors ----
@@ -277,10 +281,12 @@ def well_formed(p: Any) -> bool:
             and isinstance(p.org, str) and isinstance(p.description, str)
             and all(d is None or (isinstance(d, datetime) and d.tzinfo is not None)
                     for d in (p.starts_at, p.ends_at, p.deadline))
-            and isinstance(p.tags, list) and isinstance(p.type_hints, set))
+            and isinstance(p.tags, list) and isinstance(p.type_hints, set)
+            and isinstance(p.location, str) and (p.modality is None or p.modality in MODALITIES))
 
 
-_BAD_RETURN = "extract() must return a list of Parsed (str fields, timezone-aware datetimes or None, list tags, set type_hints)"
+_BAD_RETURN = ("extract() must return a list of Parsed (str fields, timezone-aware datetimes or None, list tags, "
+               "set type_hints, modality in_person/online/hybrid or None)")
 
 
 def source_view(source: Source) -> types.SimpleNamespace:
@@ -319,7 +325,8 @@ def parsed_to_json(p: Parsed) -> dict:
             "starts_at": p.starts_at.isoformat() if p.starts_at else None,
             "ends_at": p.ends_at.isoformat() if p.ends_at else None,
             "deadline": p.deadline.isoformat() if p.deadline else None,
-            "tags": [t for t in p.tags if isinstance(t, str)], "type_hints": sorted(p.type_hints)}
+            "tags": [t for t in p.tags if isinstance(t, str)], "type_hints": sorted(p.type_hints),
+            "location": p.location, "modality": p.modality}
 
 
 def _aware(value: Any) -> datetime | None:
@@ -337,12 +344,16 @@ def parsed_from_json(d: Any) -> Parsed:
         raise ValueError("not an object")
     texts = [d.get(k) for k in ("title", "url", "org", "description")]
     tags, hints = d.get("tags"), d.get("type_hints")
+    location, modality = d.get("location", ""), d.get("modality")
     if not all(isinstance(t, str) for t in texts) or not isinstance(tags, list) or not isinstance(hints, list):
         raise ValueError("bad field types")
+    if not isinstance(location, str) or (modality is not None and modality not in MODALITIES):
+        raise ValueError("bad location or modality")
     return Parsed(title=texts[0], url=texts[1], org=texts[2], description=texts[3],
                   starts_at=_aware(d.get("starts_at")), ends_at=_aware(d.get("ends_at")),
                   deadline=_aware(d.get("deadline")),
-                  tags=[t for t in tags if isinstance(t, str)], type_hints={h for h in hints if isinstance(h, str)})
+                  tags=[t for t in tags if isinstance(t, str)], type_hints={h for h in hints if isinstance(h, str)},
+                  location=location, modality=modality)
 
 
 def run_isolated(batches: Batches, extractors_dir: Path | None = None,
