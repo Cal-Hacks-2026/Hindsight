@@ -1,10 +1,24 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router";
-import type { AssistMajor, Course, Profile } from "@hindsight/contracts";
+import type {
+  AssistInstitution,
+  AssistMajor,
+  Course,
+  Profile,
+} from "@hindsight/contracts";
 import { Icon } from "../components/Icons";
+import { InstitutionPicker } from "../components/InstitutionPicker";
 import { Masthead, Note, Section } from "../components/Paper";
 import { api } from "../lib/api";
-import { ASSIST_YEAR_2026_27, DE_ANZA_ID, SJSU_ID } from "../lib/config";
+import { ASSIST_YEAR_2026_27, assistYear } from "../lib/config";
+import { shortUniversity } from "../lib/format";
+import {
+  DE_ANZA,
+  SJSU,
+  campusFor,
+  loadColleges,
+  loadUniversities,
+} from "../lib/institutions";
 import { saveSession } from "../lib/session";
 
 type Step = "profile" | "upload" | "confirm";
@@ -162,25 +176,79 @@ function ProfileStep({ onDone }: { onDone: (p: Profile) => void }) {
   const [majors, setMajors] = useState<string[]>([]);
   const [goals, setGoals] = useState("");
   const [interests, setInterests] = useState("");
-  const [options, setOptions] = useState<AssistMajor[]>([]);
+  const [colleges, setColleges] = useState<AssistInstitution[]>();
+  const [college, setCollege] = useState<AssistInstitution>();
+  const [universities, setUniversities] = useState<AssistInstitution[]>();
+  const [university, setUniversity] = useState<AssistInstitution>();
+  const [listError, setListError] = useState<string | null>(null);
+  const [options, setOptions] = useState<AssistMajor[]>();
   const [filter, setFilter] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Colleges once; De Anza by default. If ASSIST's list can't load, De Anza → SJSU still works.
   useEffect(() => {
-    api
-      .assistMajors(DE_ANZA_ID, SJSU_ID, ASSIST_YEAR_2026_27)
-      .then((r) =>
-        setOptions(
-          [...r.majors].sort((a, b) => a.label.localeCompare(b.label)),
-        ),
-      )
-      .catch((e) => setError(`Couldn't load majors: ${errorText(e)}`));
+    loadColleges().then(
+      (list) => {
+        setColleges(list);
+        setCollege((c) => c ?? list.find((x) => x.id === DE_ANZA.id) ?? list[0]);
+      },
+      (e) => {
+        setListError(`Couldn't load ASSIST's college list (${errorText(e)}), so only the default path is shown.`);
+        setColleges([DE_ANZA]);
+        setCollege(DE_ANZA);
+      },
+    );
   }, []);
+
+  // The universities this college has agreements with; keep the pick if it's still there, else SJSU.
+  useEffect(() => {
+    if (!college) return;
+    let live = true;
+    setUniversities(undefined);
+    loadUniversities(college.id).then(
+      (list) => {
+        if (!live) return;
+        setUniversities(list);
+        setUniversity((u) => list.find((x) => x.id === u?.id) ?? list.find((x) => x.id === SJSU.id) ?? list[0]);
+      },
+      (e) => {
+        if (!live) return;
+        const fallback = college.id === DE_ANZA.id ? [SJSU] : [];
+        setListError(`Couldn't load the universities for ${college.name}: ${errorText(e)}`);
+        setUniversities(fallback);
+        setUniversity(fallback[0]);
+      },
+    );
+    return () => {
+      live = false;
+    };
+  }, [college]);
+
+  // Majors for the pair, from the year ASSIST has agreements for. Picks not offered for the new pair drop.
+  useEffect(() => {
+    if (!college || !university) return;
+    let live = true;
+    setOptions(undefined);
+    setError(null);
+    api.assistMajors(college.id, university.id, university.year_id ?? ASSIST_YEAR_2026_27).then(
+      (r) => {
+        if (!live) return;
+        const sorted = [...r.majors].sort((a, b) => a.label.localeCompare(b.label));
+        setOptions(sorted);
+        setMajors((m) => m.filter((label) => sorted.some((o) => o.label === label)));
+      },
+      (e) => live && setError(`Couldn't load majors: ${errorText(e)}`),
+    );
+    return () => {
+      live = false;
+    };
+  }, [college, university]);
 
   // ASSIST lists ~180 majors: keep them alphabetical and narrow as you type; picks show as chips.
   const needle = filter.trim().toLowerCase();
-  const shown = options.filter((m) => m.label.toLowerCase().includes(needle));
+  const shown = (options ?? []).filter((m) => m.label.toLowerCase().includes(needle));
+  const year = university?.year_id;
 
   const toggleMajor = (label: string) =>
     setMajors((m) =>
@@ -192,15 +260,15 @@ function ProfileStep({ onDone }: { onDone: (p: Profile) => void }) {
 
   async function submit(e: FormEvent) {
     e.preventDefault();
-    if (goalsTooShort) return;
+    if (goalsTooShort || !college || !university) return;
     setBusy(true);
     setError(null);
     try {
       const { profile } = await api.createProfile({
         name: name.trim(),
-        campus: "sjsu",
-        sending_institution_id: DE_ANZA_ID,
-        receiving_institution_id: SJSU_ID,
+        campus: campusFor(university.id),
+        sending_institution_id: college.id,
+        receiving_institution_id: university.id,
         majors,
         goals: goals.trim(),
         interests: interests
@@ -228,6 +296,35 @@ function ProfileStep({ onDone }: { onDone: (p: Profile) => void }) {
           required
         />
       </label>
+      <div className="field-row route-pickers">
+        <InstitutionPicker
+          id="from"
+          label="Transferring From"
+          noun="community college"
+          nouns="community colleges"
+          example="Foothill"
+          value={college}
+          options={colleges}
+          onChange={setCollege}
+          hint={
+            college?.term_system &&
+            `${college.term_system === "quarter" ? "Quarter" : "Semester"} system.`
+          }
+        />
+        <InstitutionPicker
+          id="to"
+          label="Transferring To"
+          noun="university"
+          nouns="universities"
+          example="UCLA"
+          value={university}
+          options={universities}
+          onChange={setUniversity}
+          badge={(u) => (u.full_plan ? "Full Plan" : undefined)}
+          hint={university && <UniversityHint university={university} />}
+        />
+      </div>
+      {listError && <p className="field-hint">{listError}</p>}
       <fieldset className="field">
         <legend>Majors</legend>
         <input
@@ -253,10 +350,17 @@ function ProfileStep({ onDone }: { onDone: (p: Profile) => void }) {
           </div>
         )}
         <div className="choices scroll">
-          {options.length === 0 && !error && (
+          {!options && !error && (
             <span className="muted">Loading majors…</span>
           )}
-          {options.length > 0 && shown.length === 0 && (
+          {options?.length === 0 && (
+            <span className="muted">
+              ASSIST lists no major agreements from {college?.name} to{" "}
+              {university?.name}
+              {year ? ` for ${assistYear(year)}` : ""}.
+            </span>
+          )}
+          {!!options?.length && shown.length === 0 && (
             <span className="muted">No major matches “{filter}”.</span>
           )}
           {shown.map((m) => (
@@ -270,6 +374,9 @@ function ProfileStep({ onDone }: { onDone: (p: Profile) => void }) {
             </label>
           ))}
         </div>
+        {year !== undefined && !!options?.length && (
+          <span className="field-hint">From ASSIST's {assistYear(year)} agreements.</span>
+        )}
       </fieldset>
       <label className="field">
         <span className="label">Goals (optional)</span>
@@ -300,7 +407,12 @@ function ProfileStep({ onDone }: { onDone: (p: Profile) => void }) {
           className="primary"
           type="submit"
           disabled={
-            busy || !name.trim() || majors.length === 0 || goalsTooShort
+            busy ||
+            !name.trim() ||
+            !college ||
+            !university ||
+            majors.length === 0 ||
+            goalsTooShort
           }
         >
           {busy ? (
@@ -313,6 +425,26 @@ function ProfileStep({ onDone }: { onDone: (p: Profile) => void }) {
         </button>
       </div>
     </form>
+  );
+}
+
+/** What the plan covers for this university, and which ASSIST year its agreements come from. */
+function UniversityHint({ university }: { university: AssistInstitution }) {
+  const short = shortUniversity(university.name);
+  const year = university.year_id;
+  return (
+    <>
+      {university.full_plan
+        ? `Full plan: credits, community college terms and ${short} semesters.`
+        : `Credits and community college terms only. ${short}'s full degree requirements aren't available yet.`}
+      {year !== undefined && year < ASSIST_YEAR_2026_27 && (
+        <>
+          {" "}
+          ASSIST has no {assistYear(ASSIST_YEAR_2026_27)} agreements for this
+          pair yet, so {assistYear(year)} is used.
+        </>
+      )}
+    </>
   );
 }
 
@@ -370,8 +502,10 @@ function UploadStep({
   return (
     <form className="form" onSubmit={upload}>
       <p className="lede">
-        Upload a PDF or photo. You’ll review the courses before we match your
-        credits.
+        Upload your{" "}
+        {profile.sending_institution_name ?? "community college"} transcript as
+        a PDF or photo. You’ll review the courses before your credits are
+        matched.
       </p>
       {empty && (
         <div className="state" role="alert">

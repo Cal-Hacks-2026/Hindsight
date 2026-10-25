@@ -1,8 +1,6 @@
 // Loading, empty, error, and no-profile states used by Radar.
 import { Link } from "react-router";
-import type { Campus } from "@hindsight/contracts";
 import { ApiError } from "../lib/api";
-import { CAMPUS_SHORT } from "../lib/format";
 import { useNow } from "../lib/time";
 
 // The first load is one long Claude call (DECISIONS.md D-005); say what's happening as time passes.
@@ -92,14 +90,33 @@ export function RadarError({
   );
 }
 
-export function RadarEmpty({ campus }: { campus: Campus }) {
+export function RadarEmpty({ campus }: { campus: string }) {
   return (
     <div className="state">
       <h3>No opportunities yet.</h3>
       <p>
-        No upcoming {CAMPUS_SHORT[campus]} listings match your profile yet.
-        Check back after the next campus scan.
+        No upcoming {campus} listings match your profile yet. Check back
+        after the next campus scan.
       </p>
+    </div>
+  );
+}
+
+/** A university with no Radar sources: say so instead of showing an empty or another campus's feed. */
+export function RadarUnwatched({ university }: { university: string }) {
+  return (
+    <div className="state">
+      <h3>{university}'s Campus Isn't Covered Yet</h3>
+      <p>
+        Opportunities are listed only for campuses Hindsight scans, and{" "}
+        {university} isn't one of them yet. Your plan and credits work the
+        same.
+      </p>
+      <div className="actions">
+        <Link className="button" to="/plan">
+          Open My Plan
+        </Link>
+      </div>
     </div>
   );
 }

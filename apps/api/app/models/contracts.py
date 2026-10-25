@@ -9,12 +9,15 @@ from typing import Any, Literal
 
 from pydantic import BaseModel
 
-Campus = Literal["sjsu", "berkeley"]
+Campus = Literal["sjsu", "berkeley"]  # campuses with Radar sources
+# A profile's campus comes from receiving_institution_id (config.campus_for); "other" is any
+# ASSIST university without Radar sources or curated requirements.
+ProfileCampus = Literal["sjsu", "berkeley", "other"]
 
 
 class CreateProfileRequest(BaseModel):
     name: str
-    campus: Campus
+    campus: ProfileCampus
     sending_institution_id: int
     receiving_institution_id: int
     majors: list[str]
@@ -25,6 +28,9 @@ class CreateProfileRequest(BaseModel):
 class Profile(CreateProfileRequest):
     id: str
     created_at: str
+    # ASSIST's names for the two institutions, filled in by the API when it can (not stored).
+    sending_institution_name: str | None = None
+    receiving_institution_name: str | None = None
 
 
 class Course(BaseModel):
@@ -123,6 +129,17 @@ class AssistMajor(BaseModel):
     key: str
 
 
+class AssistInstitution(BaseModel):
+    id: int
+    name: str
+    term_system: Literal["quarter", "semester"] | None = None  # community colleges
+    # Universities, for one community college: the ASSIST year their agreements are read from
+    # (2026–27 = 77, or the latest year published before it) and whether we have curated
+    # requirements for a full degree plan.
+    year_id: int | None = None
+    full_plan: bool | None = None
+
+
 # ---- Request / response envelopes ----
 
 
@@ -142,6 +159,10 @@ class AssistMajorsResponse(BaseModel):
     majors: list[AssistMajor]
 
 
+class AssistInstitutionsResponse(BaseModel):
+    institutions: list[AssistInstitution]
+
+
 class MatchRequest(BaseModel):
     major_label: str
 
@@ -157,6 +178,8 @@ class PlanResponse(BaseModel):
     # Community-college courses that don't fit before a requested transfer_term; their
     # university equivalents are planned after transfer instead.
     not_before_transfer: list[str] | None = None
+    # False when we don't have the university's degree requirements: no after-transfer terms.
+    full_plan: bool | None = None
 
 
 class OpportunitiesResponse(BaseModel):

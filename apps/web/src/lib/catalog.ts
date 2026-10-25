@@ -8,8 +8,10 @@ const labels = import.meta.glob<string>("../../../../data/requirements/*.json", 
 const years = import.meta.glob<string>("../../../../data/requirements/*.json", { eager: true, import: "catalog_year" });
 const urls = import.meta.glob<string>("../../../../data/requirements/*.json", { eager: true, import: "source_url" });
 const groups = import.meta.glob<Group[]>("../../../../data/requirements/*.json", { eager: true, import: "groups" });
+const campuses = import.meta.glob<string>("../../../../data/requirements/*.json", { eager: true, import: "campus" });
 
 export type CatalogMajor = {
+  campus: string;
   major_label: string;
   catalog_year: string;
   source_url: string;
@@ -18,6 +20,7 @@ export type CatalogMajor = {
 };
 
 const CATALOG: CatalogMajor[] = Object.keys(labels).map((path) => ({
+  campus: campuses[path]!,
   major_label: labels[path]!,
   catalog_year: years[path]!,
   source_url: urls[path]!,
@@ -26,7 +29,12 @@ const CATALOG: CatalogMajor[] = Object.keys(labels).map((path) => ({
     .map((g) => ({ title: g.title, units: g.units! })),
 }));
 
-export const catalogMajor = (label: string) => CATALOG.find((m) => m.major_label === label);
+/** A curated major at the student's campus; another campus's major with the same label doesn't count. */
+export const catalogMajor = (label: string, campus: string) =>
+  CATALOG.find((m) => m.major_label === label && m.campus === campus);
+
+/** Whether we have the campus's degree requirements, so the plan goes past transfer. */
+export const hasFullPlan = (campus: string) => CATALOG.some((m) => m.campus === campus);
 
 /** "2025-26" → "2025–26" */
 export const yearSpan = (year: string) => year.replace("-", "–");

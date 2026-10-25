@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 
-from app.models import AssistMajorsResponse
+from app.config import campus_for
+from app.models import AssistInstitution, AssistInstitutionsResponse, AssistMajorsResponse
+from app.services import planner
 from app.services.assist import AssistError, AssistNotFound, get_service, limits
 
 router = APIRouter(prefix="/assist", tags=["assist"])
@@ -14,3 +16,32 @@ def majors(sending: int, receiving: int, year: int) -> AssistMajorsResponse:
         raise HTTPException(status_code=404, detail=str(e)) from e
     except AssistError as e:
         raise HTTPException(status_code=502, detail=f"ASSIST unavailable: {e}") from e
+
+
+# The pickers load each list once and filter as the student types; both are cached for a day.
+@router.get("/colleges", response_model=AssistInstitutionsResponse, response_model_exclude_none=True,
+            dependencies=[Depends(limits.per_ip)])
+def colleges() -> AssistInstitutionsResponse:
+    """Every California community college in ASSIST, with its term system."""
+    try:
+        return AssistInstitutionsResponse(institutions=get_service().colleges())
+    except AssistError as e:
+        raise HTTPException(status_code=502, detail=f"ASSIST unavailable: {e}") from e
+
+
+@router.get("/universities", response_model=AssistInstitutionsResponse, response_model_exclude_none=True,
+            dependencies=[Depends(limits.per_ip)])
+def universities(sending: int) -> AssistInstitutionsResponse:
+    """Universities ASSIST has agreements with from `sending`, each with the year to read them from
+    and whether we can plan the whole degree (curated requirements)."""
+    try:
+        found = get_service().universities(sending)
+    except AssistNotFound as e:
+        raise HTTPException(status_code=404, detail=str(e)) from e
+    except AssistError as e:
+        raise HTTPException(status_code=502, detail=f"ASSIST unavailable: {e}") from e
+    curated = {m.campus for m in planner.load_majors()}
+    return AssistInstitutionsResponse(institutions=[
+        AssistInstitution(id=rid, name=name, year_id=year, full_plan=campus_for(rid) in curated)
+        for rid, name, year in found
+    ])

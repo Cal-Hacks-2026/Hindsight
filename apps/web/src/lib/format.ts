@@ -1,8 +1,29 @@
-import type { Campus } from "@hindsight/contracts";
+import type { Profile } from "@hindsight/contracts";
+import { DE_ANZA_ID, DE_ANZA_NAME, SJSU_NAME } from "./config";
 
-export const CAMPUS_SHORT: Record<Campus, string> = { sjsu: "SJSU", berkeley: "UC Berkeley" };
-export const CAMPUS_LONG: Record<Campus, string> = { sjsu: "San José State University", berkeley: "UC Berkeley" };
-export const SENDING_LONG = "De Anza College";
+// For profiles saved before the API sent institution names.
+const CAMPUS_LONG: Record<string, string> = { sjsu: SJSU_NAME, berkeley: "University of California, Berkeley" };
+
+/** "San Jose State University" → "SJSU", "University of California, Los Angeles" → "UCLA",
+ *  "California State University, East Bay" → "CSU East Bay"; anything else as is. */
+export function shortUniversity(name: string): string {
+  if (/^San Jos[eé] State University$/.test(name)) return "SJSU";
+  const uc = /^University of California,\s*(.+)$/.exec(name)?.[1];
+  if (uc) return uc === "Los Angeles" ? "UCLA" : `UC ${uc}`;
+  const csu = /^California State University,\s*(.+)$/.exec(name)?.[1];
+  return csu ? `CSU ${csu}` : name;
+}
+
+/** "De Anza College" → "De Anza" */
+export const shortCollege = (name: string) => name.replace(/ College$/, "");
+
+/** The student's university, full name: ASSIST's, or the campus's for an older saved profile. */
+export const universityName = (p: Pick<Profile, "campus" | "receiving_institution_name">) =>
+  p.receiving_institution_name ?? CAMPUS_LONG[p.campus] ?? "your university";
+
+/** The student's community college, full name. */
+export const collegeName = (p: Pick<Profile, "sending_institution_id" | "sending_institution_name">) =>
+  p.sending_institution_name ?? (p.sending_institution_id === DE_ANZA_ID ? DE_ANZA_NAME : "your community college");
 
 /** "Data Science, B.S." → "Data Science" */
 export const shortMajor = (label: string) => label.replace(/,\s*B\.[AS]\.?$/i, "").trim();

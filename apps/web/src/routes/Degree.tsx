@@ -23,16 +23,17 @@ import {
 } from "../components/Paper";
 import { Icon } from "../components/Icons";
 import { ApiError } from "../lib/api";
-import { catalogMajor, yearSpan } from "../lib/catalog";
+import { catalogMajor, hasFullPlan, yearSpan } from "../lib/catalog";
 import {
-  CAMPUS_LONG,
-  CAMPUS_SHORT,
-  SENDING_LONG,
+  collegeName,
   countWord,
   listing,
   majorsLine,
   plural,
+  shortCollege,
   shortMajor,
+  shortUniversity,
+  universityName,
 } from "../lib/format";
 import { mentionsGraduation, parseGoalTerm, termIndex } from "../lib/goal";
 import {
@@ -105,11 +106,6 @@ class Sources {
 
 // "De Anza College → San Jose State University · Data Science, B.S. (2026–2027)"
 const AGREEMENT_RE = /^(.+?) → (.+?) · (.+) \((\d{4})[–-](\d{4})\)$/;
-const SHORT_NAMES: Record<string, string> = {
-  "De Anza College": "De Anza",
-  "San Jose State University": "SJSU",
-  "San José State University": "SJSU",
-};
 
 /** `college`: the sending college's short name, e.g. "De Anza", "Foothill"; `from`/`to`: full names. */
 type Agreement = {
@@ -127,13 +123,12 @@ function agreementOf(label: string): Agreement | undefined {
   if (!m) return undefined;
   const [, from, to, major, start, end] = m;
   const span = `${start}–${end!.slice(2)}`;
-  const name = (s: string) => SHORT_NAMES[s] ?? s;
   return {
     start: Number(start),
     span,
-    text: `ASSIST · ${name(from!)} → ${name(to!)} · ${major} · ${span} agreement`,
+    text: `ASSIST · ${shortCollege(from!)} → ${shortUniversity(to!)} · ${major} · ${span} agreement`,
     short: `ASSIST ${span}`,
-    college: SHORT_NAMES[from!] ?? from!.replace(/ College$/, ""),
+    college: shortCollege(from!),
     from: from!,
     to: to!,
   };
@@ -298,9 +293,16 @@ function Report({
   view: "plan" | "credits";
 }) {
   const majors = matches.map((m) => m.major_label);
-  // The planner only knows curated majors; the rest get the ASSIST rows above and no plan.
-  const planned = majors.filter((m) => catalogMajor(m));
-  const uncurated = majors.filter((m) => !catalogMajor(m));
+  // With the university's requirements (SJSU), the planner plans curated majors only; the rest get
+  // the ASSIST rows and no plan. Without them (any other university), every major gets its
+  // community-college terms and the after-transfer block says what's missing.
+  const fullPlan = hasFullPlan(profile.campus);
+  const planned = fullPlan
+    ? majors.filter((m) => catalogMajor(m, profile.campus))
+    : majors;
+  const uncurated = fullPlan
+    ? majors.filter((m) => !catalogMajor(m, profile.campus))
+    : [];
   // The student's start and transfer terms, if they picked them; otherwise the planner's defaults.
   const [picks, setPicks] = useState<TermPicks>(() => {
     const transfer = loadTerm("transfer", profile.id);
@@ -332,29 +334,36 @@ function Report({
   // Number the sources in reading order: agreements as the rows cite them, then the catalog.
   const sources = new Sources();
   const rows = buildRows(matches, courses, sources);
+  // Names as the ASSIST agreement gives them, so a Foothill report never says De Anza.
+  const agreement = matches
+    .flatMap((m) => m.requirements.map((r) => agreementOf(r.citation.label)))
+    .find(Boolean);
+  const campusLong = agreement?.to ?? universityName(profile);
+  const campus = shortUniversity(campusLong);
   const catalogRefs = majors.flatMap((label) => {
-    const c = catalogMajor(label);
+    const c = catalogMajor(label, profile.campus);
     return c
       ? [
           sources.add(
             c.source_url,
-            `${CAMPUS_SHORT[profile.campus]} Catalog ${yearSpan(c.catalog_year)} · ${label}${label.endsWith(".") ? "" : "."} Not yet checked against the current catalog.`,
+            `${campus} Catalog ${yearSpan(c.catalog_year)} · ${label}${label.endsWith(".") ? "" : "."} Not yet checked against the current catalog.`,
             `Catalog ${yearSpan(c.catalog_year)}`,
           ),
         ]
       : [];
   });
 
-  const campus = CAMPUS_SHORT[profile.campus];
-  // Names as the ASSIST agreement gives them, so a Foothill report never says De Anza.
-  const agreement = matches
-    .flatMap((m) => m.requirements.map((r) => agreementOf(r.citation.label)))
-    .find(Boolean);
+  const collegeLong = agreement?.from ?? collegeName(profile);
   const names: Names = {
-    college: agreement?.college ?? "your college",
-    collegeLong: agreement?.from ?? SENDING_LONG,
+    college:
+      agreement?.college ??
+      (profile.sending_institution_name
+        ? shortCollege(collegeLong)
+        : "your college"),
+    collegeLong,
     campus,
-    campusLong: agreement?.to ?? CAMPUS_LONG[profile.campus],
+    campusLong,
+    profileCampus: profile.campus,
   };
   const missed = rows.filter((r) => r.req.status === "satisfied" && r.older);
 
@@ -415,16 +424,25 @@ function Report({
               plans={ready}
               catalogRefs={catalogRefs}
               names={names}
+              fullPlan={fullPlan}
             />
           </Section>
-          {ready && (
+          {/* Without the university's requirements there's no finish term to check a goal against. */}
+          {fullPlan && ready && (
             <GoalCheck goals={profile.goals} majors={planned} plans={ready} />
           )}
           <Section
             id="course-plan"
             label="Plan"
             title="Your course plan"
-            notes={<PlanNotes majors={planned} plans={ready} names={names} />}
+            notes={
+              <PlanNotes
+                majors={planned}
+                plans={ready}
+                names={names}
+                fullPlan={fullPlan}
+              />
+            }
           >
             <NotPlanned majors={uncurated} campus={campus} />
             {ready && (
@@ -435,10 +453,11 @@ function Report({
                 names={names}
                 picks={picks}
                 onPick={pick}
+                fullPlan={fullPlan}
               />
             )}
           </Section>
-          <Ask />
+          <Ask names={names} fullPlan={fullPlan} />
         </>
       )}
       {citations}
@@ -452,6 +471,7 @@ type Names = {
   collegeLong: string;
   campus: string;
   campusLong: string;
+  profileCampus: string;
 };
 
 // ---- Abstract ----
@@ -479,12 +499,14 @@ function Abstract({
   plans,
   catalogRefs,
   names,
+  fullPlan,
 }: {
   rows: Row[];
   majors: string[];
   plans?: Plans;
   catalogRefs: number[];
   names: Names;
+  fullPlan: boolean;
 }) {
   const { campus, college } = names;
   const done = rows.filter((r) => r.req.status === "satisfied");
@@ -524,13 +546,16 @@ function Abstract({
                 <dd>{plans.response.transfer_term}</dd>
               </div>
             )}
-            <div>
-              <dt>
-                Estimated major completion
-                <Refs ns={catalogRefs} />
-              </dt>
-              <dd>{combined}</dd>
-            </div>
+            {/* Without the university's requirements the last planned term is a community-college one, not a finish. */}
+            {fullPlan && (
+              <div>
+                <dt>
+                  Estimated major completion
+                  <Refs ns={catalogRefs} />
+                </dt>
+                <dd>{combined}</dd>
+              </div>
+            )}
           </dl>
           {before && before.length > 0 && (
             <p className="plan-note">
@@ -538,7 +563,7 @@ function Abstract({
               at {college} before transfer.
             </p>
           )}
-          {majors.length > 1 && (
+          {fullPlan && majors.length > 1 && (
             <div className="major-comparison">
               {majors.map((major) => {
                 const term =
@@ -1029,6 +1054,7 @@ function Roadmap({
   names,
   picks,
   onPick,
+  fullPlan,
 }: {
   plans: Plans;
   majors: string[];
@@ -1036,6 +1062,7 @@ function Roadmap({
   names: Names;
   picks: TermPicks;
   onPick: (which: keyof TermPicks, term: string | undefined) => void;
+  fullPlan: boolean;
 }) {
   const before = beforeTransfer(plans.combined);
   const after = afterTransfer(plans.combined);
@@ -1050,7 +1077,11 @@ function Roadmap({
   const campus = after[0]?.institution ?? names.campusLong;
   const quarters = (before[0]?.term_system ?? "quarter") === "quarter";
   const years = [
-    ...new Set(majors.flatMap((m) => catalogMajor(m)?.catalog_year ?? [])),
+    ...new Set(
+      majors.flatMap(
+        (m) => catalogMajor(m, names.profileCampus)?.catalog_year ?? [],
+      ),
+    ),
   ].map(yearSpan);
   return (
     <>
@@ -1122,7 +1153,13 @@ function Roadmap({
         <h3 className="phase-head">
           <span className="phase-kicker">After transfer</span> at {campus}
         </h3>
-        {after.length ? (
+        {!fullPlan ? (
+          <p className="lede">
+            {names.campus}'s full degree requirements aren't available yet, so
+            upper-division courses aren't planned. Check with {names.campus}'s
+            advisors.
+          </p>
+        ) : after.length ? (
           <PlanShelves
             semesters={after}
             unitLabel="units"
@@ -1248,10 +1285,12 @@ function PlanNotes({
   majors,
   plans,
   names,
+  fullPlan,
 }: {
   majors: string[];
   plans?: Plans;
   names: Names;
+  fullPlan: boolean;
 }) {
   const combined = plans && lastTerm(plans.combined);
   const transfer = plans?.response.transfer_term;
@@ -1263,7 +1302,7 @@ function PlanNotes({
       )
     : [];
   const unscheduled = majors.flatMap((m) =>
-    (catalogMajor(m)?.unscheduled ?? []).map(
+    (catalogMajor(m, names.profileCampus)?.unscheduled ?? []).map(
       (g) => `${g.units} units of ${shortMajor(m)} ${g.title}`,
     ),
   );
@@ -1279,7 +1318,7 @@ function PlanNotes({
             : `${transfer}, as you picked. The earliest that fits every ${names.college} course is ${plans?.response.earliest_transfer_term}.`}
         </Note>
       )}
-      {combined && (
+      {combined && fullPlan && (
         <Note lead="Earliest finish.">
           {singles.length && majors.length > 1
             ? `${singles.map(([m, t]) => `${t} with ${shortMajor(m)} alone`).join("; ")}. Together, ${combined}.`
@@ -1356,7 +1395,7 @@ function PlanError({ error }: { error: unknown }) {
 
 // ---- 03 Ask ----
 
-function Ask() {
+function Ask({ names, fullPlan }: { names: Names; fullPlan: boolean }) {
   const navigate = useNavigate();
   const [question, setQuestion] = useState("");
   function submit(e: FormEvent) {
@@ -1383,8 +1422,8 @@ function Ask() {
           </button>
         </div>
         <p>
-          Answers grounded in your transcript, ASSIST and the university
-          catalog.
+          Answers grounded in your transcript
+          {fullPlan ? `, ASSIST and the ${names.campus} catalog.` : " and ASSIST."}
         </p>
       </form>
     </Section>

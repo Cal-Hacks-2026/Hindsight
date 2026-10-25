@@ -30,12 +30,11 @@ from typing import Any
 import anthropic
 from pydantic import BaseModel
 
-from app.config import ASSIST_YEAR_ID
 from app.models import ChatMessage, Citation, Course, MatchResult, Profile
 from app.services import claude_limits, planner
 from app.services.assist import AssistError, AssistNotFound, get_service
 from app.services.db import StoreError
-from app.services.radar import rank, store as radar_store
+from app.services.radar import rank, sources as radar_sources, store as radar_store
 from app.services.transcript import DEFAULT_MODEL, FALLBACK_MODELS, normalize_term
 
 log = logging.getLogger(__name__)
@@ -170,6 +169,15 @@ class Student:
     match_errors: dict[str, str] = field(default_factory=dict)
     planning_matches: dict[str, MatchResult | None] = field(default_factory=dict)
 
+    @property
+    def year(self) -> int:
+        """The ASSIST year for this college pair: 2026–27, or the latest published (I-17)."""
+        return get_service().year_for(self.profile.sending_institution_id, self.profile.receiving_institution_id)
+
+    @property
+    def university(self) -> str:
+        return self.profile.receiving_institution_name or planner.UNIVERSITY_FALLBACK
+
     def match(self, label: str) -> MatchResult | None:
         """ASSIST match for one major, computed once per question."""
         if label in self.matches:
@@ -179,7 +187,7 @@ class Student:
         p = self.profile
         try:
             self.matches[label] = get_service().match(
-                p.sending_institution_id, p.receiving_institution_id, ASSIST_YEAR_ID, label, self.courses)
+                p.sending_institution_id, p.receiving_institution_id, self.year, label, self.courses)
             return self.matches[label]
         except AssistNotFound as e:
             self.match_errors[label] = f"No ASSIST agreement found: {e}"
@@ -199,7 +207,7 @@ class Student:
             p = self.profile
             try:
                 self.planning_matches[label] = get_service().match(
-                    p.sending_institution_id, p.receiving_institution_id, ASSIST_YEAR_ID, label,
+                    p.sending_institution_id, p.receiving_institution_id, self.year, label,
                     planner.assume_in_progress_passed(self.courses))
             except AssistError as e:
                 log.warning("counselor: ASSIST planning match for %r failed: %s", label, e)
@@ -217,8 +225,8 @@ class Student:
         university semesters and named; their community-college courses are still planned.
         """
         try:
-            majors, uncurated = planner.resolve_majors(",".join(labels) if labels else None, self.profile.majors,
-                                                       self.profile.campus, planner.load_majors())
+            majors, uncurated, full = planner.plan_majors(",".join(labels) if labels else None, self.profile.majors,
+                                                          self.profile.campus, planner.load_majors())
             roadmap = planner.roadmap_for(self.profile, self.courses, majors, uncurated, self.planning_match,
                                           today=self.today, transfer_term=transfer_term)
         except planner.PlannerError as e:
@@ -302,7 +310,10 @@ class Student:
         }
         if roadmap.not_before_transfer:
             out["not_before_transfer"] = roadmap.not_before_transfer
-        if uncurated:
+        if not full:
+            # No curated requirements for this university: community-college terms only.
+            out["university_semesters_not_planned"] = planner.no_full_plan_message(self.university)
+        elif uncurated:
             out["not_planned_majors"] = uncurated
             out["not_planned_why"] = planner.uncurated_message(self.profile.campus, uncurated)
         if in_progress := self.in_progress():
@@ -331,7 +342,12 @@ def build_context(student: Student) -> dict[str, Any]:
             "university": "{} {}".format(*planner.next_term(student.today)),
         },
         "profile": {"name": p.name, "campus": p.campus, "majors": p.majors, "goals": p.goals,
-                    "interests": p.interests},
+                    "interests": p.interests,
+                    "community_college": p.sending_institution_name or "their community college",
+                    "university": student.university,
+                    "full_degree_plan": planner.full_plan(p.campus, planner.load_majors())},
+        # The ASSIST academic year the agreements come from, e.g. "2025-26" when 2026-27 isn't published.
+        "assist_agreement_year": _year_label(student.year),
         "confirmed_courses": [{
             "code": f"{c.prefix} {c.number}", "title": c.title, "units": c.units, "grade": c.grade,
             "term": c.term,
@@ -344,8 +360,16 @@ def build_context(student: Student) -> dict[str, Any]:
     }
 
 
+def _year_label(year_id: int) -> str:
+    """ASSIST year id → "2026-27" (id = fall year − 1949)."""
+    return f"{year_id + 1949}-{(year_id + 1950) % 100:02d}"
+
+
 def _opportunities(student: Student) -> list[dict[str, Any]] | dict[str, str]:
     """Deterministic ranking only; the feed's Claude-written reasons aren't needed here."""
+    if student.profile.campus not in radar_sources.load().campuses:
+        return {"error": f"Hindsight doesn't watch {student.university}'s campus yet, so there are no "
+                         "opportunities to show"}
     try:
         rows = radar_store.candidates(student.profile.campus)
     except StoreError as e:
@@ -418,7 +442,7 @@ def _suggest_labels(student: Student, query: str) -> list[str]:
     p = student.profile
     try:
         labels = [m.label for m in get_service().majors(p.sending_institution_id, p.receiving_institution_id,
-                                                        ASSIST_YEAR_ID)]
+                                                        student.year)]
     except AssistError:
         return []
     words = [w for w in re.findall(r"[a-z]+", query.lower()) if w not in {"b", "s", "a", "bs", "ba"}]
@@ -460,6 +484,16 @@ class _Answer(BaseModel):
 SYSTEM = """You are the counselor in Hindsight, an app for California community college students who are
 transferring to or attending a four-year university. You explain this one student's computed results so
 they can act on them. You answer from the data in <student_data> and from your tool results, nothing else.
+
+Which schools:
+- The student's community college and university are profile.community_college and profile.university.
+  Use those names. Never assume the university is SJSU or any other campus, and never describe another
+  campus's requirements, catalog, or opportunities.
+- When profile.full_degree_plan is false, the app doesn't have that university's degree requirements:
+  the plan has community-college terms only (university_semesters_not_planned says why). Say so, don't
+  describe the university's upper-division requirements from general knowledge, and point the student
+  to that university's advisors.
+- ASSIST agreements are from assist_agreement_year; mention it when it isn't 2026-27.
 
 Where the student is:
 - The app doesn't record whether the student has transferred or been admitted. Never say or imply they

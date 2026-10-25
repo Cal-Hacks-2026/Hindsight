@@ -2,19 +2,25 @@
 // Mirrored by Pydantic models in apps/api/app/models/contracts.py.
 // Any shape change needs integrator (Atishay) sign-off.
 
-export type Campus = "sjsu" | "berkeley";
+export type Campus = "sjsu" | "berkeley"; // campuses with Radar sources
+// The API sets a profile's campus from receiving_institution_id; "other" is any ASSIST
+// university without Radar sources or curated requirements.
+export type ProfileCampus = Campus | "other";
 
 // Not spelled out in §10; fields mirror the `profiles` table in §9.
 export type Profile = {
   id: string;
   name: string;
-  campus: Campus;
+  campus: ProfileCampus;
   sending_institution_id: number;
   receiving_institution_id: number;
   majors: string[];
   goals: string;
   interests: string[];
   created_at: string;
+  // ASSIST's names for the two institutions, when the API can give them (not stored).
+  sending_institution_name?: string;
+  receiving_institution_name?: string;
 };
 
 export type Course = {
@@ -102,13 +108,25 @@ export type ChatMessage = { role: "user" | "assistant"; content: string };
 
 export type AssistMajor = { label: string; key: string };
 
+export type AssistInstitution = {
+  id: number;
+  name: string;
+  term_system?: "quarter" | "semester"; // community colleges
+  // Universities, for one community college: the ASSIST year their agreements are read from
+  // (2026–27 = 77, or the latest year published before it), and whether we have curated
+  // requirements for a full degree plan.
+  year_id?: number;
+  full_plan?: boolean;
+};
+
 // ---- Request / response envelopes ----
 
-export type CreateProfileRequest = Omit<Profile, "id" | "created_at">;
+export type CreateProfileRequest = Omit<Profile, "id" | "created_at" | "sending_institution_name" | "receiving_institution_name">;
 export type ProfileResponse = { profile: Profile };
 export type CoursesResponse = { courses: Course[] };
 export type UpdateCoursesRequest = { courses: Course[] };
 export type AssistMajorsResponse = { majors: AssistMajor[] };
+export type AssistInstitutionsResponse = { institutions: AssistInstitution[] };
 export type MatchRequest = { major_label: string };
 /** uncurated_majors: chosen majors left out of the plan because they have no curated requirements yet. */
 export type PlanResponse = {
@@ -122,6 +140,8 @@ export type PlanResponse = {
   // Community-college courses that don't fit before a requested transfer_term; their
   // university equivalents are planned after transfer instead.
   not_before_transfer?: string[];
+  // false when we don't have the university's degree requirements: no after-transfer terms.
+  full_plan?: boolean;
 };
 export type OpportunitiesResponse = { items: RankedOpportunity[] };
 export type CounselorRequest = { message: string; history: ChatMessage[] };

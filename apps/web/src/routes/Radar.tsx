@@ -6,8 +6,9 @@ import {
   RadarEmpty,
   RadarError,
   RadarLoading,
+  RadarUnwatched,
 } from "../components/RadarStates";
-import { plural } from "../lib/format";
+import { plural, shortUniversity, universityName } from "../lib/format";
 import { useOpportunities } from "../lib/opportunities";
 import { loadSession } from "../lib/session";
 import { closeAt, formatWhen, useNow } from "../lib/time";
@@ -69,12 +70,17 @@ const monthOf = (at: number) =>
 
 export function Radar() {
   const { profile } = loadSession();
-  const { state, retry } = useOpportunities(profile?.id);
+  // "other": a university with no Radar sources. Nothing to fetch; another campus's feed would mislead.
+  const unwatched = profile?.campus === "other";
+  const campus = profile ? shortUniversity(universityName(profile)) : undefined;
+  const { state, retry } = useOpportunities(
+    unwatched ? undefined : profile?.id,
+  );
   const now = useNow(60_000);
   const ready =
     state.status === "ready" ? state.items.slice(0, SHOWN) : undefined;
   const week =
-    state.status === "ready" && state.items.length
+    !unwatched && state.status === "ready" && state.items.length
       ? thisWeek(state.items, now)
       : undefined;
   const next =
@@ -117,12 +123,14 @@ export function Radar() {
       >
         {!profile ? (
           <NoProfile />
+        ) : unwatched ? (
+          <RadarUnwatched university={campus!} />
         ) : state.status === "loading" ? (
           <RadarLoading startedAt={state.startedAt} skeletons={4} />
         ) : state.status === "error" ? (
           <RadarError error={state.error} onRetry={retry} />
         ) : !ready?.length ? (
-          <RadarEmpty campus={profile.campus} />
+          <RadarEmpty campus={campus!} />
         ) : (
           <ol className="entries">
             {ready.map((item, i) => (

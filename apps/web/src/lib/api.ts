@@ -4,6 +4,7 @@ import type {
   AgentLatestRunResponse,
   AgentRunRequest,
   AgentRunResponse,
+  AssistInstitutionsResponse,
   AssistMajorsResponse,
   Campus,
   CounselorRequest,
@@ -72,6 +73,11 @@ export const api = {
 
   confirmCourses: (id: string, courses: Course[]) =>
     request<CoursesResponse>(`/profiles/${enc(id)}/courses`, { method: "PUT", body: json({ courses }) }),
+
+  assistColleges: () => request<AssistInstitutionsResponse>("/assist/colleges"),
+
+  assistUniversities: (sending: number) =>
+    request<AssistInstitutionsResponse>(`/assist/universities?${new URLSearchParams({ sending: String(sending) })}`),
 
   assistMajors: (sending: number, receiving: number, year: number) =>
     request<AssistMajorsResponse>(
