@@ -18,7 +18,7 @@
       "modality": null,
       "tags": ["first-generation", "graduate school prep", "phd", "stipend"],
       "last_checked": "2026-10-25",
-      "reason": "Research with a faculty mentor and doctoral prep, for first-generation or limited-income students with 60 units who meet the GPA and residency rules."
+      "reason": "Research with a faculty mentor and doctoral prep, for first-generation or limited-income students who have 60 units and meet the other listed requirements."
     },
     {
       "id": "sjsu-student-rsca-fellowship",
@@ -34,7 +34,7 @@
       "modality": null,
       "tags": ["paid", "faculty mentor", "all majors", "undergraduate research"],
       "last_checked": "2026-10-25",
-      "reason": "A competitive fellowship of up to $3,000 for undergraduate or graduate research with an SJSU faculty mentor."
+      "reason": "Up to $3,000 for student salary and travel, for undergraduate or graduate students in any discipline doing research with an SJSU faculty mentor."
     },
     {
       "id": "sjsu-student-rsca-competition",
@@ -49,7 +49,8 @@
       "evidence": "Applications usually open in September and close in early February, so check back for updates.",
       "modality": null,
       "tags": ["presentations", "csu competition", "all majors"],
-      "last_checked": "2026-10-25"
+      "last_checked": "2026-10-25",
+      "reason": "Students present original research, scholarship or creative work and compete to represent SJSU at the CSU Student Research Competition."
     },
     {
       "id": "sjsu-urop",
@@ -80,7 +81,8 @@
       "evidence": "SJSU Research Week: April 12-20, 2027",
       "modality": null,
       "tags": ["posters", "showcase", "all majors"],
-      "last_checked": "2026-10-25"
+      "last_checked": "2026-10-25",
+      "reason": "An annual week of research, scholarship and creative work from across campus, including the Celebration of Research poster presentations."
     },
     {
       "id": "sjsu-peer-connections-peer-educators",
@@ -95,7 +97,8 @@
       "evidence": "Applications for Spring 2027 are open. Applications are due: October 31, 2026.",
       "modality": null,
       "tags": ["tutoring", "mentoring", "supplemental instruction", "student job"],
-      "last_checked": "2026-10-25"
+      "last_checked": "2026-10-25",
+      "reason": "Peer Connections hires students as Peer Tutors, Academic Peer Mentors, Supplemental Instruction Leaders and Learning Assistants."
     },
     {
       "id": "sjsu-writing-center-tutors",
@@ -110,7 +113,8 @@
       "evidence": "We usually invite applications for new writing tutors twice per year in the late fall (to start in the spring) and in the late spring",
       "modality": "hybrid",
       "tags": ["paid", "writing", "tutoring", "gpa 3.2"],
-      "last_checked": "2026-10-25"
+      "last_checked": "2026-10-25",
+      "reason": "Writing tutors lead one-on-one and small-group sessions, online or in person, 5 to 20 hours a week; pay starts at $20 an hour for undergraduates."
     },
     {
       "id": "sjsu-orientation-transition-team",
@@ -126,7 +130,7 @@
       "modality": null,
       "tags": ["paid", "orientation", "leadership", "summer"],
       "last_checked": "2026-10-25",
-      "reason": "A paid summer role leading orientation groups for first-year and transfer students; it hires current SJSU undergraduates with a 2.5 GPA."
+      "reason": "A paid summer role leading orientation groups for first-year and transfer students; applicants need a minimum SJSU cumulative GPA of 2.5."
     },
     {
       "id": "sjsu-housing-student-leaders",
@@ -141,7 +145,8 @@
       "evidence": "Applications open: November 2, 2026 ... Applications close: January 25, 2027",
       "modality": null,
       "tags": ["resident advisor", "housing", "front desk", "student leader"],
-      "last_checked": "2026-10-25"
+      "last_checked": "2026-10-25",
+      "reason": "Live-in Resident Advisor roles plus hourly paid jobs such as Peer Academic Success Coach, Student Administrative Assistant and Community Desk Assistant."
     },
     {
       "id": "sjsu-student-union-jobs",
@@ -156,7 +161,8 @@
       "evidence": "one of the largest student employers on campus",
       "modality": null,
       "tags": ["paid", "on-campus", "recreation", "events"],
-      "last_checked": "2026-10-25"
+      "last_checked": "2026-10-25",
+      "reason": "One of the largest student employers on campus, hiring in recreation, events, marketing, operations, customer service and administration."
     },
     {
       "id": "sjsu-associated-students-jobs",
@@ -171,7 +177,8 @@
       "evidence": "Student Assistants",
       "modality": null,
       "tags": ["paid", "on-campus", "office assistant"],
-      "last_checked": "2026-10-25"
+      "last_checked": "2026-10-25",
+      "reason": "Student assistant openings across A.S. areas such as the Child Development Center, General Services Center, Print Shop and Government Department."
     },
     {
       "id": "sjsu-on-campus-jobs-handshake",
@@ -186,7 +193,8 @@
       "evidence": "Handshake is SJSU’s primary job board for student employment.",
       "modality": null,
       "tags": ["handshake", "paid", "on-campus", "internships"],
-      "last_checked": "2026-10-25"
+      "last_checked": "2026-10-25",
+      "reason": "SJSU's main job board for student employment, listing on-campus jobs, Federal Work-Study roles, part-time off-campus work and internships."
     },
     {
       "id": "sjsu-federal-work-study",
@@ -202,7 +210,7 @@
       "modality": null,
       "tags": ["fafsa", "financial need", "paid"],
       "last_checked": "2026-10-25",
-      "reason": "Work-Study is awarded from FAFSA-based financial need and is paid only through an authorized work-study job."
+      "reason": "Students with unmet financial need on their FAFSA are considered for Work-Study, which is paid only through an authorized work-study job."
     },
     {
       "id": "sjsu-career-fairs",
@@ -217,7 +225,8 @@
       "evidence": "Registration for the SJSU Spring 2027 Career Fairs will open on Monday, November 2, 2026.",
       "modality": "in_person",
       "tags": ["internships", "jobs", "stem", "employers"],
-      "last_checked": "2026-10-25"
+      "last_checked": "2026-10-25",
+      "reason": "Job and internship fairs in the Student Union Ballroom, with separate fairs for STEM undergraduates and for other majors."
     },
     {
       "id": "sjsu-career-center-events",
@@ -232,7 +241,8 @@
       "evidence": "See a sampling of career fairs, events, and workshops to help you make the most of the semester.",
       "modality": null,
       "tags": ["workshops", "info sessions", "employers"],
-      "last_checked": "2026-10-25"
+      "last_checked": "2026-10-25",
+      "reason": "Career fairs, events, workshops and employer tabling through the semester, on an event listing the Career Center updates daily."
     },
     {
       "id": "sjsu-student-organizations-sammy",
@@ -247,7 +257,8 @@
       "evidence": "recognizes over 350+ student organizations",
       "modality": null,
       "tags": ["clubs", "sammy app", "community"],
-      "last_checked": "2026-10-25"
+      "last_checked": "2026-10-25",
+      "reason": "More than 350 recognized student organizations, including academic, cultural, club sports and fraternity and sorority groups, listed in the SAMMY App."
     },
     {
       "id": "sjsu-weeks-of-welcome",
@@ -262,7 +273,8 @@
       "evidence": "WOW is a campus-wide celebration powered by the Spartan community!",
       "modality": null,
       "tags": ["new students", "events", "get involved"],
-      "last_checked": "2026-10-25"
+      "last_checked": "2026-10-25",
+      "reason": "Events, activities and resources from over 30 campus offices in the first six weeks of each semester, starting with a street festival-style Kick-Off."
     },
     {
       "id": "sjsu-as-elections",
@@ -277,7 +289,8 @@
       "evidence": "The A.S. Student Elections happen in the Spring semester.",
       "modality": null,
       "tags": ["student government", "elections", "leadership"],
-      "last_checked": "2026-10-25"
+      "last_checked": "2026-10-25",
+      "reason": "Students elect the A.S. Board of Directors, and can help run the vote as an officer or student-at-large on the Students' Election Commission."
     },
     {
       "id": "sjsu-as-committees",
@@ -292,7 +305,8 @@
       "evidence": "Associated Students committees are the driving force behind impactful policies and initiatives within student government.",
       "modality": null,
       "tags": ["student government", "committees", "open to all students"],
-      "last_checked": "2026-10-25"
+      "last_checked": "2026-10-25",
+      "reason": "Committees open to all SJSU students, where student-at-large members vote on A.S. policies and initiatives."
     },
     {
       "id": "sjsu-spartan-scholarships",
@@ -307,7 +321,8 @@
       "evidence": "The 2026-2027 SJSU Spartan Scholarship Scholarship Application is now open.",
       "modality": null,
       "tags": ["scholarships", "financial aid"],
-      "last_checked": "2026-10-25"
+      "last_checked": "2026-10-25",
+      "reason": "SJSU's scholarship application for the academic year; international students are eligible only for merit-based scholarships."
     },
     {
       "id": "sjsu-as-scholarships",
@@ -322,7 +337,8 @@
       "evidence": "matriculated students who have completed a minimum of 15 semester units at SJSU",
       "modality": null,
       "tags": ["scholarships", "first-generation", "leadership"],
-      "last_checked": "2026-10-25"
+      "last_checked": "2026-10-25",
+      "reason": "A.S. scholarships of $750 to $1,500, including a First-Generation Student Scholarship, for students with 15 SJSU units and at least a 2.5 GPA."
     },
     {
       "id": "sjsu-as-key-leader-award",
@@ -337,7 +353,8 @@
       "evidence": "Please check back in Spring 2027 when the nomination forms reopen.",
       "modality": null,
       "tags": ["award", "leadership", "recognition"],
-      "last_checked": "2026-10-25"
+      "last_checked": "2026-10-25",
+      "reason": "Recognizes up to 12 student leaders who empower others, honored at the SJSU Student Leadership Gala."
     },
     {
       "id": "sjsu-phi-kappa-phi",
@@ -352,7 +369,8 @@
       "evidence": "The top 7.5% of Juniors are eligible",
       "modality": null,
       "tags": ["honor society", "invitation only", "gpa"],
-      "last_checked": "2026-10-25"
+      "last_checked": "2026-10-25",
+      "reason": "An invitation-only honor society for the top 7.5% of juniors and the top 10% of seniors and graduate students."
     },
     {
       "id": "sjsu-semester-study-abroad",
@@ -367,7 +385,8 @@
       "evidence": "SJSU Exchange: February 15 ... SJSU Exchange: September 15",
       "modality": null,
       "tags": ["study abroad", "exchange", "csu ip"],
-      "last_checked": "2026-10-25"
+      "last_checked": "2026-10-25",
+      "reason": "Semester or year programs such as SJSU Exchange, CSU International Programs, NSE and ISEP, applied for in the Spartans Abroad Portal."
     },
     {
       "id": "sjsu-faculty-led-study-abroad",
@@ -382,7 +401,8 @@
       "evidence": "Applications Due : February 3, 2027 at 11:59pm PT",
       "modality": null,
       "tags": ["study abroad", "summer", "winter session"],
-      "last_checked": "2026-10-25"
+      "last_checked": "2026-10-25",
+      "reason": "Short programs abroad led by SJSU faculty in summer and winter, plus Summer School Abroad and Global Internship programs."
     },
     {
       "id": "sjsu-transfer-orientation",
@@ -397,7 +417,8 @@
       "evidence": "All admitted transfer students must attend one orientation session",
       "modality": null,
       "tags": ["transfer students", "orientation", "required"],
-      "last_checked": "2026-10-25"
+      "last_checked": "2026-10-25",
+      "reason": "A required one-day orientation for admitted transfer students, after the Spartan Link online module, to learn the campus and meet other new students."
     },
     {
       "id": "sjsu-transfer-success-pathway",
@@ -428,7 +449,8 @@
       "evidence": "Staying informed about registration and payment deadlines is essential to your academic success.",
       "modality": null,
       "tags": ["deadlines", "registration", "add/drop"],
-      "last_checked": "2026-10-25"
+      "last_checked": "2026-10-25",
+      "reason": "The Registrar's calendars for the current and future terms, with key registration and payment dates."
     }
   ]
 }
