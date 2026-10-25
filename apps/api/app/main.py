@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 
 from app.config import APP_NAME, WEB_ORIGINS, supabase_rest_url
 from app.models import HealthResponse
-from app.routers import agent, assist, internal_agent, profiles, universities, webhooks
+from app.routers import agent, assist, internal_agent, profiles, schedule, universities, webhooks
 from app.routers.profiles import TRANSCRIPT_NOTES_HEADER
 from app.services.claude_limits import RateLimited
 from app.services.db import StoreError, StoreNotConfigured
@@ -55,6 +55,7 @@ async def store_error(request: Request, exc: StoreError) -> JSONResponse:
     return JSONResponse(status_code=exc.status, content={"detail": detail})
 
 app.include_router(profiles.router)
+app.include_router(schedule.router)
 app.include_router(assist.router)
 app.include_router(agent.router)
 app.include_router(webhooks.router)

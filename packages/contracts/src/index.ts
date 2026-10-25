@@ -206,3 +206,45 @@ export type UniversityGuideResponse = {
   university_name?: string;
   guide?: UniversityGuide;
 };
+
+// ---- Class schedule (SCHEDULE) ----
+
+export type ClassMode = "in_person" | "online" | "hybrid" | "asynchronous";
+export type Weekday = "Mon" | "Tue" | "Wed" | "Thu" | "Fri" | "Sat" | "Sun";
+
+/** One meeting pattern of a class; a lecture plus a lab is two rows with the same CRN. */
+export type ScheduledClass = {
+  term: string;
+  course: string; // as printed, e.g. "MATH 1B" or "MATH D001B"
+  title: string;
+  crn?: string;
+  section?: string;
+  professor?: string;
+  units?: number;
+  location?: string;
+  mode: ClassMode;
+  days: Weekday[]; // empty for asynchronous or TBA
+  start_time?: string; // "HH:MM", 24-hour
+  end_time?: string;
+  start_date?: string; // "YYYY-MM-DD", when the schedule prints class dates
+  end_date?: string;
+  // Upload only, for the confirm table: why a row needs a second look (never stored).
+  flags?: string[];
+  confirmed: boolean;
+};
+
+/** units: each class counted once, however many meeting rows it has. */
+export type ScheduleTerm = { term: string; units: number; classes: number };
+export type ScheduleResponse = { rows: ScheduledClass[]; terms?: ScheduleTerm[] }; // terms: saved schedules only
+export type UpdateScheduleRequest = { rows: ScheduledClass[] };
+export type FreeBlock = { start: string; end: string; minutes: number };
+export type FreeDay = { day: Weekday; date: string; blocks: FreeBlock[] };
+export type FreeBlocksResponse = {
+  week: string; // the Monday, "YYYY-MM-DD"
+  day_start: string; // "07:00"
+  day_end: string; // "22:00"
+  days: FreeDay[]; // Mon–Sun
+};
+export type ScheduledPlanCourse = { code: string; planned_term: string; scheduled_term: string; crn?: string };
+/** Planned courses that are on the saved schedule. */
+export type ScheduledPlanResponse = { courses: ScheduledPlanCourse[] };
