@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, Path
 
 from app.models import UniversityGuideResponse
 from app.services.assist import get_service, limits
@@ -9,7 +11,7 @@ router = APIRouter(prefix="/universities", tags=["universities"])
 
 @router.get("/{university_id}/guide", response_model=UniversityGuideResponse, response_model_exclude_none=True,
             dependencies=[Depends(limits.per_ip)])
-def guide(university_id: int) -> UniversityGuideResponse:
+def guide(university_id: Annotated[int, Path(ge=1, le=100_000)]) -> UniversityGuideResponse:
     """The "What to Expect" guide for an ASSIST university id. No guide yet is not an error:
     `available` is false, with ASSIST's name for the university when it can be looked up."""
     found = store.get_guide(university_id)

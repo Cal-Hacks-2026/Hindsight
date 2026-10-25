@@ -263,6 +263,19 @@ def test_route_says_when_there_is_no_guide():
     assert res.status_code == 200
     assert res.json() == {"university_id": 79, "available": False, "university_name": "University of California, Berkeley"}
     assert client.get("/universities/sjsu/guide").status_code == 422
+    assert client.get("/universities/0/guide").status_code == 422
+
+
+def test_unlisted_universities_are_not_looked_up_or_cached(monkeypatch):
+    monkeypatch.setenv("SUPABASE_URL", "https://example.supabase.co")
+    monkeypatch.setenv("SUPABASE_SERVICE_ROLE_KEY", "k")
+
+    def no_supabase(request):
+        raise AssertionError("looked up a university with no sources")
+
+    for uid in range(1000, 1050):
+        assert store.get_guide(uid, transport=httpx.MockTransport(no_supabase)) is None
+    assert store._memory == {}
 
 
 def test_newer_cached_guide_wins_over_the_file(monkeypatch, tmp_path):

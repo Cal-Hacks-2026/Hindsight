@@ -22,6 +22,7 @@ import httpx
 
 from app.config import supabase_rest_url
 from app.models.contracts import GuideItem, GuideSection, GuideSource, UniversityGuide
+from app.services.university import sources
 from app.services.university.fetch import Page
 
 log = logging.getLogger(__name__)
@@ -146,6 +147,10 @@ _lock = threading.Lock()
 
 
 def get_guide(university_id: int, transport: httpx.BaseTransport | None = None) -> UniversityGuide | None:
+    # Only universities with listed sources can have a guide (build.py requires them), so any other
+    # id is answered without touching the file system, Supabase, or the memory cache.
+    if sources.university(university_id) is None:
+        return None
     now = time.monotonic()
     with _lock:
         hit = _memory.get(university_id)

@@ -17,6 +17,7 @@ import type {
   OpportunitiesResponse,
   PlanResponse,
   ProfileResponse,
+  UniversityGuideResponse,
   WebhookResponse,
 } from "@hindsight/contracts";
 import { API_URL } from "./config";
@@ -106,6 +107,9 @@ export const api = {
 
   latestAgentRun: (campus: Campus) =>
     request<AgentLatestRunResponse>(`/agent/runs/latest?${new URLSearchParams({ campus })}`),
+
+  universityGuide: (universityId: number) =>
+    request<UniversityGuideResponse>(`/universities/${enc(String(universityId))}/guide`),
 
   agentEvents: (runId: string) =>
     request<AgentEventsResponse>(`/agent/events?${new URLSearchParams({ run_id: runId })}`),
