@@ -2,7 +2,6 @@
 const SEASON_ORDER: Record<string, number> = { winter: 0, spring: 1, summer: 2, fall: 3 };
 const TERM_RE = /\b(winter|spring|summer|fall)\s+(?:of\s+)?'?(20)?(\d{2})\b/i;
 const YEAR_RE = /\b(?:by|in|before|until)\s+(20\d{2})\b/i;
-const GRAD_RE = /graduat|finish|degree|complete/i;
 
 export type GoalTerm = { label: string; index: number };
 
@@ -23,5 +22,3 @@ export function parseGoalTerm(goals: string): GoalTerm | undefined {
   if (y) return { label: y[1]!, index: Number(y[1]) * 4 + SEASON_ORDER.fall! };
   return undefined;
 }
-
-export const mentionsGraduation = (goals: string) => GRAD_RE.test(goals);

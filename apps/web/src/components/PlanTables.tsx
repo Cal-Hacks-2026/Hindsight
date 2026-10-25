@@ -1,8 +1,8 @@
 // The plan as term tables, like a student's own class audit: terms in progress (the transcript's
 // IP courses and the saved class schedule), planned terms (before transfer, then after), then
-// completed terms from the transcript. The next two planned terms open; every other term is a
-// one-line row that opens on click. Also the printable ed plan ("Download Ed Plan"), which prints
-// every term open.
+// completed terms from the transcript. The term pickers and "Download Ed Plan" sit on top; the
+// next two planned terms open, After Transfer and Completed fold into one row each, and every
+// other term is a one-line row that opens on click. The printable ed plan prints every term open.
 import {
   Fragment,
   useEffect,
@@ -17,6 +17,7 @@ import type {
   Semester,
   SemesterCourse,
 } from "@hindsight/contracts";
+import { Link } from "react-router";
 import { Icon } from "./Icons";
 import { catalogMajor, yearSpan } from "../lib/catalog";
 import { formatLongDate, listing, plural, shortMajor } from "../lib/format";
@@ -251,18 +252,6 @@ function scheduledCounts(code: string, ctx: PlanContext): Count[] {
   return requirementCounts(hits, ctx, () => "in progress");
 }
 
-const GE_CHOICES_SHOWN = 4;
-
-/** "Take one of ARTS 1A, ARTS 1B, ARTS 2A, ARTS 2B or 40 more". */
-function geChoices(options: string[]): string {
-  const shown = options.slice(0, GE_CHOICES_SHOWN).join(", ");
-  const more = options.length - GE_CHOICES_SHOWN;
-  if (more > 0) return `Take one of ${shown} or ${more} more`;
-  return options.length > 1
-    ? `Take one of ${options.slice(0, -1).join(", ")} or ${options.at(-1)}`
-    : `Take ${options[0] ?? "an approved course"}`;
-}
-
 /** A planned course: the requirement the planner chose it for, from its reason. */
 function plannedCounts(
   course: SemesterCourse,
@@ -270,16 +259,9 @@ function plannedCounts(
   ctx: PlanContext,
 ): Count[] {
   const reason = course.reason.replace(PLACEHOLDER_PREFIX, "");
-  // A GE slot: any course on the area's approved list (/plan?ge=true).
+  // A GE slot: any course on the area's approved list (/plan?ge=true). The slot itself names the choices.
   if (course.ge_options)
-    return [
-      {
-        key: "ge",
-        text: `${course.ge_area}: ${course.title}`,
-        refs: [],
-        note: geChoices(course.ge_options),
-      },
-    ];
+    return [{ key: "ge", text: course.ge_area ?? course.code, refs: [] }];
   // A major course that also counts for a GE area.
   const ge: Count[] = course.ge_area
     ? [{ key: "ge", text: `Also ${course.ge_area}`, refs: [] }]
@@ -366,6 +348,31 @@ function SectionCell({ slot }: { slot?: ScheduledClass }) {
   );
 }
 
+// ---- GE slot: an open choice, not a class ----
+
+const GE_EXAMPLES = 2;
+
+/** "IGETC 3A" → "3A", the area's anchor on the Credits page. */
+export const geAreaCode = (area: string) => area.split(" ").at(-1) ?? area;
+
+/** A planned GE slot: "Pick 1 · IGETC 3A Arts", then a few examples linking to the area on Credits. */
+function GeSlot({ area, title, options }: { area: string; title: string; options: string[] }) {
+  const examples = options.slice(0, GE_EXAMPLES).join(", ");
+  return (
+    <span className="ge-slot">
+      <strong>
+        Pick 1 · {area} {title}
+      </strong>
+      <Link to={`/credits?show=ge#ge-area-${geAreaCode(area)}`}>
+        {examples && `e.g. ${examples} · `}
+        <span className="nowrap">
+          {options.length} {plural(options.length, "option")} →
+        </span>
+      </Link>
+    </span>
+  );
+}
+
 // ---- Term tables ----
 
 type TableRow = {
@@ -378,6 +385,8 @@ type TableRow = {
   grade?: string;
   agreement?: string;
   slot?: ScheduledClass;
+  /** A GE slot: any course from the area's list, drawn as an open slot rather than a class. */
+  ge?: { area: string; title: string; options: string[] };
   /** What "Counts Toward" says when the course counts toward nothing listed. */
   empty?: string;
 };
@@ -464,11 +473,15 @@ function TermTable({
             {rows.map((r) => (
               <tr key={r.key}>
                 <td>
-                  <SubjectTag
-                    code={r.code}
-                    title={r.title}
-                    tint={tint(r.code)}
-                  />
+                  {r.ge ? (
+                    <GeSlot {...r.ge} />
+                  ) : (
+                    <SubjectTag
+                      code={r.code}
+                      title={r.title}
+                      tint={tint(r.code)}
+                    />
+                  )}
                   {r.prereqs && r.prereqs.length > 0 && (
                     <span className="plan-prereqs">
                       Prerequisites: {r.prereqs.join(", ")}
@@ -567,6 +580,9 @@ function PlannedTerm({
         counts: plannedCounts(c, semester, ctx),
         prereqs: c.prereqs,
         slot: scheduledFor(schedule, semester.term, c.code),
+        ge: c.ge_options
+          ? { area: c.ge_area ?? c.code, title: c.title, options: c.ge_options }
+          : undefined,
       }))}
     />
   );
@@ -660,14 +676,6 @@ export function PlanTables({
   const college = before[0]?.institution ?? names.collegeLong;
   const campus = after[0]?.institution ?? names.campusLong;
   const quarters = (before[0]?.term_system ?? "quarter") === "quarter";
-  const years = [
-    ...new Set(
-      majors.flatMap(
-        (m) => catalogMajor(m, names.universityId)?.catalog_year ?? [],
-      ),
-    ),
-  ].map(yearSpan);
-  const allCatalogRefs = Object.values(ctx.catalogRefs);
 
   const taken = takenTerms(ctx, schedule);
   const current = taken.filter((t) => t.inProgress);
@@ -682,6 +690,10 @@ export function PlanTables({
   const toggle = (id: string) => () =>
     setToggled((t) => ({ ...t, [id]: !isOpen(id) }));
   const [showCompleted, setShowCompleted] = useState(false);
+  // After Transfer folds into one row, unless nothing is left before transfer.
+  const [showAfter, setShowAfter] = useState<boolean | undefined>(undefined);
+  const afterOpen =
+    showAfter ?? !before.some((s) => s.courses.length > 0);
   const unitLabel = quarters ? "quarter units" : "units";
 
   const takenTable = (t: TakenTerm) => {
@@ -751,6 +763,38 @@ export function PlanTables({
         </dl>
       </header>
 
+      {plans && (
+        <div className="plan-settings">
+          <div className="term-picks">
+            {response?.default_start_term && response.start_term_choices && (
+              <TermSelect
+                id="start-term"
+                label={`Starting at ${names.college} in`}
+                value={picks.start}
+                defaultTerm={response.default_start_term}
+                defaultNote="default"
+                choices={response.start_term_choices}
+                onPick={(t) => onPick("start", t)}
+              />
+            )}
+            {transfer && (
+              <TermSelect
+                id="transfer-term"
+                label={`Transfer to ${names.campus} in`}
+                value={picks.transfer}
+                defaultTerm={earliest ?? transfer}
+                defaultNote="earliest"
+                choices={transferChoices()}
+                onPick={(t) => onPick("transfer", t)}
+              />
+            )}
+          </div>
+          <div className="plan-actions">
+            <PrintButton title={`Ed Plan · ${pathway}`} disabled={loading} />
+          </div>
+        </div>
+      )}
+
       {plans && geLate && geLate.length > 0 && (
         <p className="plan-warning" role="status">
           {transfer} is too early to finish {listing(geLate)} at {names.college}
@@ -794,107 +838,143 @@ export function PlanTables({
                 {majors.map(shortMajor).join(" + ")}.
               </p>
             )}
-            <p className="phase-note">
-              Up to {CC_UNIT_CAP} {quarters ? "quarter" : "semester"} units per
-              term. Courses follow ASSIST sequences; check {names.college}{" "}
-              prerequisites.{" "}
-              {response?.ge_pattern
-                ? `${response.ge_pattern === "igetc" ? "IGETC" : "Cal-GETC"} general education comes after the major courses; pick each course from the area's list on the Credits page.`
-                : "General education isn't included."}
-            </p>
           </div>
 
-          <div className="phase">
-            <h3 className="phase-head">
-              <span className="phase-kicker">After Transfer</span> at {campus}
-            </h3>
-            {!fullPlan ? (
+          {!fullPlan ? (
+            <div className="phase">
+              <h3 className="phase-head">
+                <span className="phase-kicker">After Transfer</span> at{" "}
+                {campus}
+              </h3>
               <p className="lede">
                 {names.campus}'s full degree requirements aren't available yet,
                 so upper-division courses aren't planned. Check with{" "}
                 {names.campus}'s advisors.
               </p>
-            ) : after.length ? (
-              <>
-                <div className="plan-terms">{after.map(plannedTable)}</div>
-                <p className="phase-note">
-                  Up to {UNIT_CAP} units per term, following prerequisites in
-                  the {names.campus} Catalog {listing(years)}.
-                  <Cite ns={allCatalogRefs} />
-                </p>
-              </>
-            ) : (
+            </div>
+          ) : after.length ? (
+            <PhaseGroup
+              id="plan-after-terms"
+              kicker={`After Transfer (${after.length} ${plural(after.length, "term")})`}
+              rest={`at ${campus}`}
+              open={afterOpen}
+              onToggle={() => setShowAfter(!afterOpen)}
+            >
+              {after.map(plannedTable)}
+            </PhaseGroup>
+          ) : (
+            <div className="phase">
+              <h3 className="phase-head">
+                <span className="phase-kicker">After Transfer</span> at{" "}
+                {campus}
+              </h3>
               <p className="lede">
                 Nothing left to schedule at {names.campus}: every listed
                 requirement is done or planned before transfer.
               </p>
-            )}
-          </div>
+            </div>
+          )}
         </>
       )}
 
       {completed.length > 0 && (
-        <div
-          className={`phase plan-completed${showCompleted ? " is-open" : ""}`}
+        <PhaseGroup
+          id="plan-completed-terms"
+          kicker={`Completed (${completed.length} ${plural(completed.length, "term")})`}
+          rest="from Your Transcript"
+          open={showCompleted}
+          onToggle={() => setShowCompleted((o) => !o)}
         >
-          <h3 className="phase-head">
-            <button
-              type="button"
-              className="plan-group-toggle"
-              aria-expanded={showCompleted}
-              aria-controls="plan-completed-terms"
-              onClick={() => setShowCompleted((o) => !o)}
-            >
-              <span className="phase-kicker">
-                Completed ({completed.length} {plural(completed.length, "term")}
-                )
-              </span>{" "}
-              from Your Transcript
-              <Icon name="chevron" size={20} />
-            </button>
-          </h3>
-          <div id="plan-completed-terms" className="plan-terms">
-            {completed.map(takenTable)}
-          </div>
-        </div>
-      )}
-
-      {plans && (
-        <div className="plan-settings">
-          <div className="term-picks">
-            {response?.default_start_term && response.start_term_choices && (
-              <TermSelect
-                id="start-term"
-                label={`Starting at ${names.college} in`}
-                value={picks.start}
-                defaultTerm={response.default_start_term}
-                defaultNote="default"
-                choices={response.start_term_choices}
-                onPick={(t) => onPick("start", t)}
-              />
-            )}
-            {transfer && (
-              <TermSelect
-                id="transfer-term"
-                label={`Transfer to ${names.campus} in`}
-                value={picks.transfer}
-                defaultTerm={earliest ?? transfer}
-                defaultNote="earliest"
-                choices={transferChoices()}
-                onPick={(t) => onPick("transfer", t)}
-              />
-            )}
-          </div>
-          <div className="plan-actions">
-            <PrintButton title={`Ed Plan · ${pathway}`} disabled={loading} />
-          </div>
-          <p className="plan-caveat">
-            Course offerings aren’t confirmed. Check {names.college} and{" "}
-            {names.campus} schedules before registering.
-          </p>
-        </div>
+          {completed.map(takenTable)}
+        </PhaseGroup>
       )}
     </div>
+  );
+}
+
+/** A phase folded into one row (After Transfer, Completed) that opens to its terms. */
+function PhaseGroup({
+  id,
+  kicker,
+  rest,
+  open,
+  onToggle,
+  children,
+}: {
+  id: string;
+  kicker: string;
+  rest: string;
+  open: boolean;
+  onToggle: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <div className={`phase plan-group${open ? " is-open" : ""}`}>
+      <h3 className="phase-head">
+        <button
+          type="button"
+          className="plan-group-toggle"
+          aria-expanded={open}
+          aria-controls={id}
+          onClick={onToggle}
+        >
+          <span className="phase-kicker">{kicker}</span> {rest}
+          <Icon name="chevron" size={20} />
+        </button>
+      </h3>
+      <div id={id} className="plan-terms">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/** How the planner laid out the terms, for "How This Plan Was Built". */
+export function PlanMethodNotes({
+  ctx,
+  fullPlan,
+}: {
+  ctx: PlanContext;
+  fullPlan: boolean;
+}) {
+  const { plans, names, majors } = ctx;
+  if (!plans) return null;
+  const before = beforeTransfer(plans.combined);
+  const quarters = (before[0]?.term_system ?? "quarter") === "quarter";
+  const pattern = plans.response.ge_pattern;
+  const years = [
+    ...new Set(
+      majors.flatMap(
+        (m) => catalogMajor(m, names.universityId)?.catalog_year ?? [],
+      ),
+    ),
+  ].map(yearSpan);
+  return (
+    <>
+      <p>
+        <strong>Before transfer.</strong> Up to {CC_UNIT_CAP}{" "}
+        {quarters ? "quarter" : "semester"} units per term. Courses follow
+        ASSIST sequences; check {names.college} prerequisites.
+      </p>
+      <p>
+        <strong>General education.</strong>{" "}
+        {pattern
+          ? `${pattern === "igetc" ? "IGETC" : "Cal-GETC"} comes after the major courses. Each open slot links to its area on Credits, where you pick the course. Other graduation requirements aren’t included.`
+          : "Major requirements only. General education and other graduation requirements aren’t included."}
+      </p>
+      {fullPlan && afterTransfer(plans.combined).length > 0 && (
+        <p>
+          <strong>After transfer.</strong> Up to {UNIT_CAP} units per term,
+          following prerequisites in the {names.campus} Catalog{" "}
+          {listing(years)}.
+          <Cite ns={Object.values(ctx.catalogRefs)} />
+        </p>
+      )}
+      <p>
+        <strong>Offerings.</strong> Course offerings aren’t confirmed. Check{" "}
+        {names.college} and {names.campus} schedules before registering.
+      </p>
+    </>
   );
 }
 

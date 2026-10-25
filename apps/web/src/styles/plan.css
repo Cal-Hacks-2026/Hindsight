@@ -12,7 +12,7 @@
   margin-top: 16px;
 }
 .plan-term.is-collapsed .plan-table-scroll,
-.plan-completed:not(.is-open) > .plan-terms {
+.plan-group:not(.is-open) > .plan-terms {
   display: none;
 }
 .plan-term-head {
@@ -76,7 +76,7 @@
 .plan-group-toggle[aria-expanded="true"] > svg {
   transform: translateY(-50%) rotate(-90deg);
 }
-/* Completed (N terms): the phase head opens the transcript's terms. */
+/* After Transfer (N terms), Completed (N terms): the phase head opens its terms. */
 .section button.plan-group-toggle {
   position: relative;
   display: flex;
@@ -101,22 +101,27 @@
 .plan-group-toggle .phase-kicker {
   margin-right: 0;
 }
-.plan-completed .phase-head {
+.plan-group .phase-head {
   margin-bottom: 0;
 }
-.plan-completed.is-open .phase-head {
+.plan-group.is-open .phase-head {
   margin-bottom: 20px;
 }
+/* The term pickers and Download Ed Plan, right under the summary row. */
 .plan-settings {
-  margin-top: 32px;
-  padding-top: 28px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 20px 24px;
+  margin-top: 24px;
+  padding-top: 24px;
   border-top: 1px solid var(--hair);
 }
-.plan-settings .plan-actions {
-  margin: 24px 0 0;
+.plan-settings .term-picks {
+  flex: 1 1 520px;
 }
-.plan-settings .plan-caveat {
-  margin: 18px 0 0;
+.plan-settings .plan-actions {
+  margin: 0;
 }
 
 /* Wide tables scroll inside their own box, never the page. */
@@ -210,6 +215,70 @@
 .subject-tag span {
   font-size: var(--text-small);
   font-weight: 400;
+}
+
+/* A GE slot: an open choice, drawn as a dashed outline so it never reads as a real class. */
+.ge-slot {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 2px;
+  max-width: 100%;
+  padding: 8px 12px 9px;
+  border: 1.5px dashed var(--gray);
+  border-radius: 6px;
+  color: var(--ink);
+  line-height: 1.35;
+}
+.ge-slot strong {
+  font-size: 20px;
+  font-weight: 600;
+}
+.ge-slot a {
+  font-size: var(--text-small);
+  font-weight: 400;
+  color: var(--gray);
+  text-decoration-color: var(--hair);
+  text-underline-offset: 3px;
+}
+.ge-slot .nowrap {
+  white-space: nowrap;
+}
+.ge-slot a:hover {
+  color: var(--ink);
+  text-decoration-color: currentColor;
+}
+
+/* Needs Attention: short items, three across on wide screens. */
+.plan-attention {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 20px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+.plan-attention li {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 18px 20px;
+  border: 1px solid var(--hair);
+  border-radius: 8px;
+}
+.plan-attention strong {
+  font-size: 22px;
+  font-weight: 650;
+  letter-spacing: -0.4px;
+}
+.plan-attention p {
+  margin: 0;
+  font-size: var(--text-small);
+  color: var(--gray);
+}
+.plan-attention .inline-link {
+  margin-top: auto;
+  padding-top: 6px;
+  font-size: var(--text-small);
 }
 
 .plan-prereqs {
@@ -341,8 +410,13 @@
     display: none;
   }
   .subject-tag strong,
-  .plan-section strong {
+  .plan-section strong,
+  .ge-slot strong {
     font-size: 18px;
+  }
+  .plan-settings .plan-actions,
+  .plan-settings .plan-actions button {
+    width: 100%;
   }
 }
 
@@ -357,7 +431,7 @@
   }
   body:has(.ed-plan) .app-shell > :not(.workspace),
   body:has(.ed-plan) .workspace > :not(main),
-  body:has(.ed-plan) main > :not(#course-plan):not(#sources) {
+  body:has(.ed-plan) main > :not(#course-plan):not(#plan-how):not(#sources) {
     display: none !important;
   }
   body:has(.ed-plan) .workspace {
@@ -419,7 +493,7 @@
     font-weight: 600;
   }
   .ed-plan .plan-term.is-collapsed .plan-table-scroll,
-  .ed-plan .plan-completed > .plan-terms {
+  .ed-plan .plan-group > .plan-terms {
     display: block;
   }
   .ed-plan .plan-term-toggle,
@@ -491,6 +565,14 @@
   .ed-plan .plan-section {
     font-size: 8.5pt;
   }
+  .ed-plan .ge-slot strong {
+    font-size: 9.5pt;
+  }
+  .ed-plan .ge-slot a {
+    font-size: 8.5pt;
+    text-decoration: none;
+  }
+  .ed-plan .ge-slot,
   .ed-plan .subject-tag {
     padding: 2pt 5pt;
     border-left-width: 3pt;
@@ -504,6 +586,10 @@
   }
   #course-plan sup.ref a {
     text-decoration: none;
+  }
+  body:has(.ed-plan) .how-notes {
+    font-size: 9pt;
+    gap: 4pt;
   }
   body:has(.ed-plan) .notes {
     font-size: 9pt;
