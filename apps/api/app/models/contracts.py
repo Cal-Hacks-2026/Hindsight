@@ -151,6 +151,9 @@ class PlanResponse(BaseModel):
     uncurated_majors: list[str] | None = None  # chosen majors left out: no curated requirements yet
     transfer_term: str | None = None  # when the after-transfer terms start
     earliest_transfer_term: str | None = None  # the first Fall after the before-transfer terms finish
+    start_term: str | None = None  # first community-college term
+    default_start_term: str | None = None  # next Fall with no courses yet, else the next registrable term
+    start_term_choices: list[str] | None = None  # community-college terms the student can start in
     # Community-college courses that don't fit before a requested transfer_term; their
     # university equivalents are planned after transfer instead.
     not_before_transfer: list[str] | None = None

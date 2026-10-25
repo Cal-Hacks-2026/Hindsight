@@ -81,9 +81,13 @@ export const api = {
   match: (id: string, major_label: string) =>
     request<MatchResult>(`/profiles/${enc(id)}/match`, { method: "POST", body: json({ major_label }) }),
 
-  plan: (id: string, majors: string[], transferTerm?: string) =>
+  plan: (id: string, majors: string[], terms: { transfer?: string; start?: string } = {}) =>
     request<PlanResponse>(
-      `/profiles/${enc(id)}/plan?${new URLSearchParams({ majors: majors.join(","), ...(transferTerm ? { transfer_term: transferTerm } : {}) })}`,
+      `/profiles/${enc(id)}/plan?${new URLSearchParams({
+        majors: majors.join(","),
+        ...(terms.transfer ? { transfer_term: terms.transfer } : {}),
+        ...(terms.start ? { start_term: terms.start } : {}),
+      })}`,
     ),
 
   opportunities: (id: string) => request<OpportunitiesResponse>(`/profiles/${enc(id)}/opportunities`),

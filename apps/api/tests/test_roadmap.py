@@ -50,7 +50,7 @@ def transcript(terms) -> list[Course]:
             for term, rows in terms for p, n, u, g in rows]
 
 
-def roadmap(courses: list[Course], labels=(DS, ECON), transfer_term=None, today=OCT_2026):
+def roadmap(courses: list[Course], labels=(DS, ECON), transfer_term=None, today=OCT_2026, start_term=None):
     """Planned the way /plan and the counselor do it."""
     profile = Profile(id="p", created_at="", **PROFILE)
     majors, uncurated = planner.resolve_majors(",".join(labels), [], "sjsu", planner.load_majors())
@@ -62,7 +62,8 @@ def roadmap(courses: list[Course], labels=(DS, ECON), transfer_term=None, today=
         except AssistError:
             return None
 
-    return planner.roadmap_for(profile, courses, majors, uncurated, match, today=today, transfer_term=transfer_term)
+    return planner.roadmap_for(profile, courses, majors, uncurated, match, today=today, transfer_term=transfer_term,
+                               start_term=start_term)
 
 
 def phase(r, name) -> list:
@@ -86,8 +87,8 @@ def test_p2_zero_courses_plans_de_anza_quarters_then_sjsu():
     assert r.semesters == before + after  # college terms first
     assert {s.institution for s in before} == {"De Anza College"} and {s.term_system for s in before} == {"quarter"}
     assert {s.institution for s in after} == {"San Jose State University"}
-    assert before[0].term == "Winter 2027"  # next De Anza quarter after Oct 24, 2026
-    assert [s.term.split()[0] for s in before[:3]] == ["Winter", "Spring", "Fall"]
+    assert before[0].term == "Fall 2027"  # no courses yet: a high-school senior starts in Fall
+    assert [s.term.split()[0] for s in before[:4]] == ["Fall", "Winter", "Spring", "Fall"]
     assert all(sum(c.units for c in s.courses) <= planner.DEFAULT_CC_UNIT_CAP for s in before)
     # One option per requirement, fewest courses: MATH 1A (not 1AH), CIS 35A for CS 46A.
     t = term_of(before)
@@ -100,7 +101,7 @@ def test_p2_zero_courses_plans_de_anza_quarters_then_sjsu():
     # Units come from the agreement: CIS courses are 4.5 quarter units.
     assert {c.code: c.units for s in before for c in s.courses}["CIS 22C"] == 4.5
     # Transfer: the first Fall after De Anza; SJSU semesters start then, with no lower division left.
-    assert r.transfer_term == r.earliest_transfer_term == "Fall 2028" == after[0].term
+    assert r.transfer_term == r.earliest_transfer_term == "Fall 2029" == after[0].term
     assert LOWER_DIVISION.isdisjoint(codes(after)) and {"CS 146", "ECON 101"} <= set(codes(after))
     assert not r.not_before_transfer
 
@@ -133,7 +134,7 @@ def test_p7_withdrawn_failed_and_repeated_courses():
 
 
 def test_requested_transfer_term_too_early_moves_requirements_after_transfer():
-    r = roadmap([], transfer_term="Fall 2027")
+    r = roadmap([], transfer_term="Fall 2027", start_term="Winter 2027")
     before, after = phase(r, "before_transfer"), phase(r, "after_transfer")
     assert r.transfer_term == after[0].term == "Fall 2027" and r.earliest_transfer_term == "Fall 2028"
     assert all(planner.term_key(s.term) < planner.term_key("Fall 2027") for s in before)
@@ -164,8 +165,8 @@ def test_plan_route_returns_both_phases_and_the_transfer_term():
     assert body.semesters[0].phase == "before_transfer" and body.semesters[-1].phase == "after_transfer"
     assert body.transfer_term == body.earliest_transfer_term
     assert body.transfer_term.startswith("Fall ")
-    early = client.get(f"/profiles/{pid}/plan", params={"transfer_term": body.semesters[0].term.replace(
-        "Winter", "Spring")}).json()
+    # Transferring the Fall the college terms start (no courses yet: a Fall) leaves no room for them.
+    early = client.get(f"/profiles/{pid}/plan", params={"transfer_term": body.semesters[0].term}).json()
     assert early["not_before_transfer"]
     res = client.get(f"/profiles/{pid}/plan", params={"transfer_term": "Winter 2030"})
     assert res.status_code == 422 and "Fall" in res.json()["detail"]
@@ -211,3 +212,35 @@ def test_unknown_uncurated_labels_never_reach_assist(assist_fake):
     fake = [f"Basket Weaving {i}, B.A." for i in range(20)]
     planner.roadmap_for(profile, [], majors, fake, match, today=OCT_2026)
     assert asked == [DS]
+
+
+def test_default_start_is_next_fall_with_no_courses_else_the_next_term():
+    fresh = roadmap([])
+    assert fresh.default_start_term == fresh.start_term == "Fall 2027"
+    assert phase(fresh, "before_transfer")[0].term == "Fall 2027"
+    returning = roadmap(transcript(P3), labels=(DS,))
+    assert returning.default_start_term == returning.start_term == "Winter 2027"  # next De Anza quarter
+    assert phase(returning, "before_transfer")[0].term == "Winter 2027"
+    # Before September, the next Fall is this year's.
+    assert planner.default_start(date(2026, 5, 1), "quarter", []) == ("Fall", 2026)
+    assert planner.default_start(date(2026, 5, 1), "semester", transcript(P3)) == ("Fall", 2026)
+
+
+def test_requested_start_term():
+    r = roadmap([], start_term="Winter 2027")
+    assert r.start_term == phase(r, "before_transfer")[0].term == "Winter 2027"
+    assert r.default_start_term == "Fall 2027" and r.start_term_choices[0] == "Winter 2027"
+    with pytest.raises(planner.PlannerError):
+        roadmap([], start_term="Fall 2026")  # already started
+    with pytest.raises(planner.PlannerError):
+        roadmap([], start_term="Summer 2027")
+
+
+def test_plan_route_takes_a_start_term():
+    pid = make_profile()
+    assert client.put(f"/profiles/{pid}/courses", json={"courses": []}).status_code == 200
+    body = client.get(f"/profiles/{pid}/plan").json()
+    assert body["start_term"] == body["default_start_term"] == body["semesters"][0]["term"]
+    later = body["start_term_choices"][-1]
+    assert client.get(f"/profiles/{pid}/plan", params={"start_term": later}).json()["semesters"][0]["term"] == later
+    assert client.get(f"/profiles/{pid}/plan", params={"start_term": "Fall 1999"}).status_code == 422

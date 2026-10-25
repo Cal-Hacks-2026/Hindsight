@@ -268,6 +268,8 @@ class Student:
             "before_transfer": {
                 "college": roadmap.college,
                 "term_system": roadmap.term_system,
+                # The next Fall for a student with no courses yet, otherwise the next registrable term.
+                "start_term": roadmap.start_term,
                 "units_per_term_cap": planner.DEFAULT_CC_UNIT_CAP,
                 "how_chosen": ("One ASSIST option per open requirement: the fewest courses still to take, ties to "
                                "the first listed. Requirements with no community-college option are after transfer."),

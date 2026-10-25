@@ -107,7 +107,9 @@ def match(profile_id: str, body: MatchRequest) -> MatchResult:
             response_model_exclude_none=True, dependencies=[Depends(assist_limits.per_ip)])
 def plan(profile_id: str, majors: str | None = Query(None, description="Comma-separated major labels"),
          transfer_term: str | None = Query(None, description="'Fall 2028' or 'Spring 2028'; default: the "
-                                                             "first Fall after the community-college terms")
+                                                             "first Fall after the community-college terms"),
+         start_term: str | None = Query(None, description="First community-college term, e.g. 'Winter 2027'; "
+                                                          "default: next Fall with no courses, else the next term")
          ) -> PlanResponse:
     profile = _get_profile(profile_id)
     try:
@@ -131,11 +133,13 @@ def plan(profile_id: str, majors: str | None = Query(None, description="Comma-se
 
     try:
         roadmap = planner.roadmap_for(profile, courses, chosen, uncurated, planning_match,
-                                      transfer_term=transfer_term)
+                                      transfer_term=transfer_term, start_term=start_term)
     except planner.PlannerError as e:
         raise HTTPException(status_code=e.status, detail=str(e)) from e
     return PlanResponse(semesters=roadmap.semesters, uncurated_majors=uncurated or None,
                         transfer_term=roadmap.transfer_term, earliest_transfer_term=roadmap.earliest_transfer_term,
+                        start_term=roadmap.start_term, default_start_term=roadmap.default_start_term,
+                        start_term_choices=roadmap.start_term_choices,
                         not_before_transfer=roadmap.not_before_transfer or None)
 
 

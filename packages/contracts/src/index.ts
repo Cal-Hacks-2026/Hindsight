@@ -116,6 +116,9 @@ export type PlanResponse = {
   uncurated_majors?: string[];
   transfer_term?: string; // when the after-transfer terms start
   earliest_transfer_term?: string; // the first Fall after the before-transfer terms finish
+  start_term?: string; // first community-college term
+  default_start_term?: string; // next Fall with no courses yet, else the next registrable term
+  start_term_choices?: string[]; // community-college terms the student can start in
   // Community-college courses that don't fit before a requested transfer_term; their
   // university equivalents are planned after transfer instead.
   not_before_transfer?: string[];

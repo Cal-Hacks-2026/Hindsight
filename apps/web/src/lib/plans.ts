@@ -14,15 +14,18 @@ export type PlansState =
 
 const cache = new Map<string, Promise<Plans>>();
 
-function load(profileId: string, majors: string[], transferTerm?: string): Promise<Plans> {
-  const key = JSON.stringify([profileId, majors, transferTerm ?? null]);
+/** The student's picks ("Fall 2028", "Winter 2027"); undefined = the planner's default. */
+export type TermPicks = { transfer?: string; start?: string };
+
+function load(profileId: string, majors: string[], terms: TermPicks): Promise<Plans> {
+  const key = JSON.stringify([profileId, majors, terms.transfer ?? null, terms.start ?? null]);
   let promise = cache.get(key);
   if (!promise) {
     // One major alone is optional context: a failure there only drops the comparison.
     const singles = majors.length > 1 ? majors : [];
     promise = Promise.all([
-      api.plan(profileId, majors, transferTerm),
-      ...singles.map((m) => api.plan(profileId, [m], transferTerm).catch(() => null)),
+      api.plan(profileId, majors, terms),
+      ...singles.map((m) => api.plan(profileId, [m], terms).catch(() => null)),
     ]).then(([combined, ...rest]) => ({
       combined: combined!.semesters,
       response: combined!,
@@ -36,25 +39,25 @@ function load(profileId: string, majors: string[], transferTerm?: string): Promi
   return promise;
 }
 
-/** `transferTerm`: the student's pick ("Fall 2028"); undefined = the planner's default. */
-export function usePlans(profileId: string | undefined, majors: string[], transferTerm?: string): PlansState {
+export function usePlans(profileId: string | undefined, majors: string[], terms: TermPicks = {}): PlansState {
   const [state, setState] = useState<PlansState>({ status: "loading" });
   // Labels contain commas ("Data Science, B.S."), so the dependency key is JSON.
   const key = JSON.stringify(majors);
+  const { transfer, start } = terms;
 
   useEffect(() => {
     const chosen = JSON.parse(key) as string[];
     if (!profileId || chosen.length === 0) return;
     let live = true;
     setState({ status: "loading" });
-    load(profileId, chosen, transferTerm).then(
+    load(profileId, chosen, { transfer, start }).then(
       (plans) => live && setState({ status: "ready", plans }),
       (error: unknown) => live && setState({ status: "error", error }),
     );
     return () => {
       live = false;
     };
-  }, [profileId, key, transferTerm]);
+  }, [profileId, key, transfer, start]);
 
   return state;
 }
@@ -64,25 +67,28 @@ export const termUnits = (s: Semester) => s.courses.reduce((n, c) => n + c.units
 export const beforeTransfer = (semesters: Semester[]) => semesters.filter((s) => s.phase === "before_transfer");
 export const afterTransfer = (semesters: Semester[]) => semesters.filter((s) => s.phase !== "before_transfer");
 
-// ---- The student's transfer term, remembered per profile in this browser ----
+// ---- The student's start and transfer terms, remembered per profile in this browser ----
 
-const TRANSFER_KEY = "hindsight.transferTerm.v1";
+const TERM_KEYS: Record<keyof TermPicks, string> = {
+  transfer: "hindsight.transferTerm.v1",
+  start: "hindsight.startTerm.v1",
+};
 
-export function loadTransferTerm(profileId: string): string | undefined {
+export function loadTerm(which: keyof TermPicks, profileId: string): string | undefined {
   try {
-    const all = JSON.parse(localStorage.getItem(TRANSFER_KEY) ?? "{}") as Record<string, string>;
+    const all = JSON.parse(localStorage.getItem(TERM_KEYS[which]) ?? "{}") as Record<string, string>;
     return all[profileId] || undefined;
   } catch {
     return undefined;
   }
 }
 
-export function saveTransferTerm(profileId: string, term: string | undefined): void {
+export function saveTerm(which: keyof TermPicks, profileId: string, term: string | undefined): void {
   try {
-    const all = JSON.parse(localStorage.getItem(TRANSFER_KEY) ?? "{}") as Record<string, string>;
+    const all = JSON.parse(localStorage.getItem(TERM_KEYS[which]) ?? "{}") as Record<string, string>;
     if (term) all[profileId] = term;
     else delete all[profileId];
-    localStorage.setItem(TRANSFER_KEY, JSON.stringify(all));
+    localStorage.setItem(TERM_KEYS[which], JSON.stringify(all));
   } catch {
     // storage unavailable: the pick lasts for this page only
   }

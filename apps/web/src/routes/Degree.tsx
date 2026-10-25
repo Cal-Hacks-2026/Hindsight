@@ -1,4 +1,4 @@
-import { Fragment, useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
+import { Fragment, useEffect, useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 import type { Course, MatchResult, Profile, Requirement, Semester } from "@hindsight/contracts";
 import { Masthead, Note, Section, StatusMark, type StatusTone } from "../components/Paper";
@@ -23,12 +23,13 @@ import {
   afterTransfer,
   beforeTransfer,
   lastTerm,
-  loadTransferTerm,
-  saveTransferTerm,
+  loadTerm,
+  saveTerm,
   termUnits,
   transferChoices,
   usePlans,
   type Plans,
+  type TermPicks,
 } from "../lib/plans";
 import { loadSession } from "../lib/session";
 import { departmentColor, parseReceiving, spineHeight, spineWidth, type ParsedCourse } from "../lib/shelf";
@@ -216,16 +217,24 @@ function Report({ profile, matches, courses }: { profile: Profile; matches: Matc
   // The planner only knows curated majors; the rest get the ASSIST rows above and no plan.
   const planned = majors.filter((m) => catalogMajor(m));
   const uncurated = majors.filter((m) => !catalogMajor(m));
-  // The student's transfer term, if they picked one; otherwise the planner's earliest.
-  const [transferTerm, setTransferTerm] = useState(() => {
-    const saved = loadTransferTerm(profile.id);
-    return saved && transferChoices().includes(saved) ? saved : undefined;
+  // The student's start and transfer terms, if they picked them; otherwise the planner's defaults.
+  const [picks, setPicks] = useState<TermPicks>(() => {
+    const transfer = loadTerm("transfer", profile.id);
+    return {
+      transfer: transfer && transferChoices().includes(transfer) ? transfer : undefined,
+      start: loadTerm("start", profile.id),
+    };
   });
-  const plans = usePlans(profile.id, planned.length ? majors : [], transferTerm);
-  function pickTransfer(term: string | undefined) {
-    saveTransferTerm(profile.id, term);
-    setTransferTerm(term);
+  const plans = usePlans(profile.id, planned.length ? majors : [], picks);
+  function pick(which: keyof TermPicks, term: string | undefined) {
+    saveTerm(which, profile.id, term);
+    setPicks((p) => ({ ...p, [which]: term }));
   }
+  // A saved start term that has since passed is rejected (422): fall back to the default.
+  const staleStart = plans.status === "error" && plans.error instanceof ApiError && plans.error.status === 422 && !!picks.start;
+  useEffect(() => {
+    if (staleStart) pick("start", undefined);
+  });
 
   // Number the sources in reading order: agreements as the rows cite them, then the catalog.
   const sources = new Sources();
@@ -285,7 +294,7 @@ function Report({ profile, matches, courses }: { profile: Profile; matches: Matc
         ) : plans.status === "error" ? (
           <PlanError error={plans.error} />
         ) : (
-          <Roadmap plans={plans.plans} majors={planned} catalogRefs={catalogRefs} names={names} picked={transferTerm} onPick={pickTransfer} />
+          <Roadmap plans={plans.plans} majors={planned} catalogRefs={catalogRefs} names={names} picks={picks} onPick={pick} />
         )}
       </Section>
 
@@ -703,19 +712,25 @@ function Roadmap({
   majors,
   catalogRefs,
   names,
-  picked,
+  picks,
   onPick,
 }: {
   plans: Plans;
   majors: string[];
   catalogRefs: number[];
   names: Names;
-  picked?: string;
-  onPick: (term: string | undefined) => void;
+  picks: TermPicks;
+  onPick: (which: keyof TermPicks, term: string | undefined) => void;
 }) {
   const before = beforeTransfer(plans.combined);
   const after = afterTransfer(plans.combined);
-  const { transfer_term: transfer, earliest_transfer_term: earliest, not_before_transfer: late } = plans.response;
+  const {
+    transfer_term: transfer,
+    earliest_transfer_term: earliest,
+    not_before_transfer: late,
+    default_start_term: defaultStart,
+    start_term_choices: startChoices,
+  } = plans.response;
   const college = before[0]?.institution ?? names.collegeLong;
   const campus = after[0]?.institution ?? names.campusLong;
   const quarters = (before[0]?.term_system ?? "quarter") === "quarter";
@@ -726,6 +741,38 @@ function Roadmap({
         Planned terms are proposals: we haven't confirmed which terms {names.college} and {names.campus} offer each
         course, so check the schedule before you register.
       </p>
+
+      <div className="term-picks">
+        {defaultStart && startChoices && (
+          <TermSelect
+            id="start-term"
+            label={`Starting at ${names.college} in`}
+            value={picks.start}
+            defaultTerm={defaultStart}
+            defaultNote="default"
+            choices={startChoices}
+            onPick={(t) => onPick("start", t)}
+          />
+        )}
+        {transfer && (
+          <TermSelect
+            id="transfer-term"
+            label={`Transfer to ${names.campus} in`}
+            value={picks.transfer}
+            defaultTerm={earliest ?? transfer}
+            defaultNote="earliest"
+            choices={transferChoices()}
+            onPick={(t) => onPick("transfer", t)}
+          />
+        )}
+      </div>
+      {late && late.length > 0 && (
+        <p className="plan-warning" role="status">
+          {transfer} is too early for {listing(late)} at {names.college}, so {late.length === 1 ? "its" : "their"}{" "}
+          {names.campus} {late.length === 1 ? "equivalent is" : "equivalents are"} planned after transfer instead.
+          {earliest && ` Transferring in ${earliest} leaves time for all of them.`}
+        </p>
+      )}
 
       <div className="phase">
         <h3 className="phase-head">
@@ -748,17 +795,6 @@ function Roadmap({
         )}
         <p className="phase-note">GE (Cal-GETC) isn't included yet.</p>
       </div>
-
-      {transfer && (
-        <TransferPick transfer={transfer} earliest={earliest} picked={picked} onPick={onPick} campus={names.campus} />
-      )}
-      {late && late.length > 0 && (
-        <p className="plan-warning" role="status">
-          {transfer} is too early for {listing(late)} at {names.college}, so {late.length === 1 ? "its" : "their"}{" "}
-          {names.campus} {late.length === 1 ? "equivalent is" : "equivalents are"} planned after transfer instead.
-          {earliest && ` Transferring in ${earliest} leaves time for all of them.`}
-        </p>
-      )}
 
       <div className="phase">
         <h3 className="phase-head">
@@ -784,30 +820,36 @@ function Roadmap({
   );
 }
 
-function TransferPick({
-  transfer,
-  earliest,
-  picked,
+/** A term picker whose empty value means the planner's default ("Fall 2028 (earliest)"). */
+function TermSelect({
+  id,
+  label,
+  value,
+  defaultTerm,
+  defaultNote,
+  choices,
   onPick,
-  campus,
 }: {
-  transfer: string;
-  earliest?: string;
-  picked?: string;
+  id: string;
+  label: string;
+  value?: string;
+  defaultTerm: string;
+  defaultNote: string;
+  choices: string[];
   onPick: (term: string | undefined) => void;
-  campus: string;
 }) {
-  const choices = transferChoices();
   function change(e: ChangeEvent<HTMLSelectElement>) {
     onPick(e.target.value || undefined);
   }
   return (
-    <div className="transfer-pick">
-      <label htmlFor="transfer-term">Transfer to {campus} in</label>
-      <select id="transfer-term" value={picked ?? ""} onChange={change}>
-        <option value="">{earliest ?? transfer} (earliest)</option>
+    <div className="term-pick">
+      <label htmlFor={id}>{label}</label>
+      <select id={id} value={value ?? ""} onChange={change}>
+        <option value="">
+          {defaultTerm} ({defaultNote})
+        </option>
         {choices
-          .filter((t) => t !== earliest)
+          .filter((t) => t !== defaultTerm)
           .map((t) => (
             <option key={t} value={t}>
               {t}
@@ -885,7 +927,7 @@ function PlanNotes({ majors, plans, names }: { majors: string[]; plans?: Plans; 
       {transfer && (
         <Note lead="Transfer.">
           {plans?.response.earliest_transfer_term === transfer
-            ? `${transfer}, the first Fall after your ${names.college} courses. You can pick another term in the plan.`
+            ? `${transfer}, the first Fall after your ${names.college} courses. You can pick another term above the plan.`
             : `${transfer}, as you picked. The earliest that fits every ${names.college} course is ${plans?.response.earliest_transfer_term}.`}
         </Note>
       )}

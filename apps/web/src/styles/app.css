@@ -1320,14 +1320,9 @@ table.confirm button {
 /* Plan phases: before transfer (community college), after transfer (university) */
 
 .phase {
+  margin-top: 32px;
   padding-top: 20px;
   border-top: 1px solid var(--hair);
-}
-
-.phase + .phase,
-.transfer-pick + .phase,
-.plan-warning + .phase {
-  margin-top: 32px;
 }
 
 .phase-head {
@@ -1353,31 +1348,35 @@ table.confirm button {
   color: var(--gray);
 }
 
-.transfer-pick {
+.term-picks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 40px;
+  margin-bottom: 8px;
+}
+
+.term-pick {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 8px 16px;
-  margin-top: 32px;
-  padding-top: 20px;
-  border-top: 1px solid var(--hair);
 }
 
-.transfer-pick label {
+.term-pick label {
   font-size: 11px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   font-weight: 600;
 }
 
-.section .transfer-pick select {
+.section .term-pick select {
   height: 40px;
   padding: 0 12px;
   font-size: 14px;
 }
 
 .plan-warning {
-  margin: 16px 0 0;
+  margin: 8px 0 0;
   max-width: 640px;
   font-size: 15px;
   line-height: 1.5;

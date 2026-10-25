@@ -470,6 +470,9 @@ class Roadmap:
     semesters: list[Semester]  # before transfer, then after
     transfer_term: str
     earliest_transfer_term: str
+    start_term: str  # first community-college term
+    default_start_term: str
+    start_term_choices: list[str]
     not_before_transfer: list[str] = field(default_factory=list)
     picks: list[CCPick] = field(default_factory=list)  # the ones scheduled before transfer
     college: str | None = None
@@ -583,6 +586,30 @@ def next_cc_term(today: date, system: TermSystem) -> tuple[str, int]:
     if today.month <= 8:
         return "Fall", today.year
     return "Winter", today.year + 1
+
+
+def default_start(today: date, system: TermSystem, courses: Iterable[Course]) -> tuple[str, int]:
+    """Where the college terms start by default: the next Fall for a student with no courses yet
+    (a high-school senior starts in Fall), otherwise the next term they can register for."""
+    if any(c.confirmed for c in courses):
+        return next_cc_term(today, system)
+    return "Fall", today.year if today.month <= 8 else today.year + 1
+
+
+def start_choices(today: date, system: TermSystem, n: int = 12) -> list[str]:
+    """College terms a student can start in: the next registrable term on."""
+    terms = _cc_terms(next_cc_term(today, system), system)
+    return ["{} {}".format(*next(terms)) for _ in range(n)]
+
+
+def parse_start_term(raw: str, today: date, system: TermSystem) -> tuple[str, int]:
+    """A requested first college term: one of `start_choices`."""
+    term = raw.strip().title()
+    choices = start_choices(today, system)
+    if term not in choices:
+        raise PlannerError(f"Pick a starting term from {choices[0]} to {choices[-1]}.")
+    season, year = term.split()
+    return season, int(year)
 
 
 def _cc_terms(start: tuple[str, int], system: TermSystem):
@@ -731,13 +758,12 @@ def parse_transfer_term(raw: str, today: date) -> tuple[Season, int]:
     return season, year  # type: ignore[return-value]
 
 
-def earliest_transfer(cc_terms: list[Semester], today: date) -> tuple[Season, int]:
-    """The first Fall after the community-college terms finish (or from the next term, with none)."""
+def earliest_transfer(cc_terms: list[Semester], start: tuple[str, int]) -> tuple[Season, int]:
+    """The first Fall after the community-college terms finish (or from their start, with none)."""
     if cc_terms:
         season, year = cc_terms[-1].term.split()
         return "Fall", int(year) + (1 if season == "Fall" else 0)
-    season, year = next_term(today)
-    return "Fall", year
+    return "Fall", start[1]
 
 
 def build_roadmap(
@@ -749,12 +775,14 @@ def build_roadmap(
     system: TermSystem,
     today: date | None = None,
     transfer_term: str | None = None,
+    start_term: str | None = None,
     cc_unit_cap: float = DEFAULT_CC_UNIT_CAP,
     unit_cap: float = DEFAULT_UNIT_CAP,
 ) -> Roadmap:
     """Community-college terms for what the college can cover, then university terms from the
     transfer term for the rest. With a requested transfer term earlier than the college terms
-    allow, a requirement whose courses don't all fit before it moves to after transfer."""
+    allow, a requirement whose courses don't all fit before it moves to after transfer.
+    College terms start at `start_term`, or `default_start`."""
     today = today or date.today()
     # A requirement already met by its university course code (taken there) needs nothing here.
     picks = [p for p in pick_cc_courses(matches, catalogs, courses) if not set(p.covers) <= satisfied]
@@ -771,7 +799,8 @@ def build_roadmap(
             titles.setdefault(code, code)
     college = next((c.college for c in catalogs.values()), None)
     campus = next((c.campus for c in catalogs.values()), None)
-    start = next_cc_term(today, system)
+    default = default_start(today, system, courses)
+    start = default if start_term is None else parse_start_term(start_term, today, system)
 
     def schedule(chosen: list[CCPick]) -> list[Semester]:
         return schedule_cc(chosen, units, titles, system, start, majors, cc_unit_cap, college)
@@ -789,7 +818,7 @@ def build_roadmap(
     while unready := [p for p in kept if not ready(p, [q for q in kept if q is not p])]:
         kept = [p for p in kept if p not in unready]
     cc = schedule(kept)
-    earliest = earliest_transfer(cc, today)
+    earliest = earliest_transfer(cc, start)
     transfer = earliest if transfer_term is None else parse_transfer_term(transfer_term, today)
     limit = term_key("{} {}".format(*transfer))
     if cc and term_key(cc[-1].term) >= limit:
@@ -812,6 +841,9 @@ def build_roadmap(
         semesters=cc + after,
         transfer_term="{} {}".format(*transfer),
         earliest_transfer_term="{} {}".format(*earliest),
+        start_term="{} {}".format(*start),
+        default_start_term="{} {}".format(*default),
+        start_term_choices=start_choices(today, system),
         not_before_transfer=not_before,
         picks=kept,
         college=college,
@@ -855,7 +887,7 @@ def _known_labels(profile: Profile, labels: list[str]) -> list[str]:
 
 def roadmap_for(profile: Profile, courses: list[Course], majors: list[Major], uncurated: list[str],
                 planning_match: Callable[[str], MatchResult | None], today: date | None = None,
-                transfer_term: str | None = None) -> Roadmap:
+                transfer_term: str | None = None, start_term: str | None = None) -> Roadmap:
     """The roadmap /plan and the counselor both show. `planning_match` gives a major's ASSIST
     match with in-progress courses as passed (None when there's no agreement or ASSIST is down).
     Majors without curated requirements still get their community-college courses."""
@@ -865,4 +897,4 @@ def roadmap_for(profile: Profile, courses: list[Course], majors: list[Major], un
     done = satisfied(courses, matches.values(), majors)
     system = get_service().term_system(profile.sending_institution_id)
     return build_roadmap(majors, done, list(matches.values()), catalogs, courses, system,
-                         today=today, transfer_term=transfer_term)
+                         today=today, transfer_term=transfer_term, start_term=start_term)
