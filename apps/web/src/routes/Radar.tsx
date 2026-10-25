@@ -154,7 +154,7 @@ export function Radar() {
         <Section
           num={1}
           label="This week"
-          title={week.length ? "This week" : undefined}
+          title={week.length ? "This Week" : undefined}
         >
           {week.length ? (
             <ol className="week">

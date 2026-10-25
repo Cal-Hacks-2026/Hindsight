@@ -1,0 +1,143 @@
+/* ---- Home: This Week beside the path summary and this week's classes ---- */
+.home-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+}
+.home-main > .section,
+.home-side > .section:last-child {
+  margin-bottom: 28px;
+}
+
+/* Moves: ruled like the attention list, with a category tag over each title */
+.moves {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.move {
+  padding: 24px 0;
+  border-top: 1px solid var(--hair);
+}
+.move:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+.move-kind {
+  display: inline-block;
+  padding: 3px 10px;
+  border: 1px solid var(--hair);
+  border-radius: 999px;
+  background: var(--soft);
+  font-size: var(--text-small);
+  font-weight: 600;
+  color: var(--check);
+}
+.move-title {
+  margin: 12px 0 0;
+  font-size: 26px;
+  font-weight: 650;
+  letter-spacing: -0.5px;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+.move-why {
+  margin: 8px 0 8px;
+  font-size: 22px;
+  line-height: 1.45;
+  color: var(--gray);
+  font-weight: 400;
+}
+.home-pending {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 20px;
+}
+.home-pending p {
+  margin: 0;
+  color: var(--gray);
+  font-size: var(--text-small);
+}
+
+/* Right column */
+.home-path {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px 24px;
+  margin: 0 0 20px;
+}
+.home-path dt {
+  font-size: var(--text-small);
+  color: var(--gray);
+  line-height: 1.4;
+}
+.home-path dd {
+  margin: 6px 0 0;
+  font-size: 30px;
+  font-weight: 650;
+  letter-spacing: -0.8px;
+  line-height: 1.2;
+}
+.home-empty {
+  margin: 0 0 12px;
+  font-size: 22px;
+  color: var(--gray);
+}
+.home-day {
+  margin: 0 0 10px;
+  font-size: var(--text-small);
+  font-weight: 600;
+  color: var(--gray);
+}
+.home-day + .home-empty {
+  margin-bottom: 24px;
+}
+.home-classes {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  font-size: 20px;
+  line-height: 1.4;
+}
+.home-classes li {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.home-classes strong {
+  font-weight: 650;
+}
+.home-class-time {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+.home-class-meta {
+  color: var(--gray);
+}
+
+@media (max-width: 1100px) {
+  .home-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+}
+@media (max-width: 700px) {
+  .home-main > .section,
+  .home-side > .section:last-child {
+    margin-bottom: 20px;
+  }
+  .move-title {
+    font-size: 24px;
+  }
+  .move-why {
+    font-size: 20px;
+  }
+  .home-path dd {
+    font-size: 26px;
+  }
+}
