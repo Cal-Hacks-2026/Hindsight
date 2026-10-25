@@ -294,6 +294,28 @@ table.confirm.schedule-confirm tr.flagged {
 
 /* ---- List by term ---- */
 
+.sched-terms {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+.sched-term {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.sched-term-label {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 650;
+}
+.sched-term-label span {
+  color: var(--gray);
+  font-size: 20px;
+  font-weight: 500;
+  margin-left: 14px;
+}
+
 table.paper.schedule-list td {
   font-size: 20px;
 }
@@ -413,6 +435,12 @@ table.paper.schedule-list tfoot td {
   }
   table.confirm.schedule-confirm select {
     font-size: 18px;
+  }
+
+  .sched-term-label span {
+    display: block;
+    margin: 4px 0 0;
+    font-size: var(--text-small);
   }
 
   /* List: one block per class. */

@@ -911,10 +911,10 @@ function ListView({
 }) {
   const plannedBy = new Map(planned.map((p) => [courseKey(p.code), p]));
   return (
-    <div className="terms">
+    <div className="sched-terms">
       {terms.map((t) => (
-        <div className="term" key={t.term}>
-          <h3 className="term-label">
+        <div className="sched-term" key={t.term}>
+          <h3 className="sched-term-label">
             {t.term}
             <span>
               {t.units} {plural(t.units, "unit")} · {t.classes} {plural(t.classes, "class", "classes")}
