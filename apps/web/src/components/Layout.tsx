@@ -1,23 +1,55 @@
-import { useEffect, useState } from "react";
-import { Link, NavLink, Outlet } from "react-router";
+import { useCallback, useEffect, useState } from "react";
+import { Link, NavLink, Outlet, useLocation } from "react-router";
 import { api } from "../lib/api";
 import { APP_NAME, TAGLINE } from "../lib/config";
 import { loadSession } from "../lib/session";
+import { ASK_PANEL_ID, AskPanel } from "./AskPanel";
 import { Icon, type IconName } from "./Icons";
+import "../styles/shell.css";
 
 const HEALTH_RETRIES = 4;
 const HEALTH_RETRY_MS = 8000;
 
+// Ask isn't a page in the nav: it opens as a panel over any page (/counselor still works for links).
 const NAV: { to: string; label: string; icon: IconName }[] = [
-  { to: "/plan", label: "My plan", icon: "calendar" },
-  { to: "/credits", label: "My credits", icon: "book" },
+  { to: "/", label: "Home", icon: "home" },
+  { to: "/plan", label: "Plan", icon: "calendar" },
+  { to: "/credits", label: "Credits", icon: "book" },
+  { to: "/schedule", label: "Schedule", icon: "clock" },
   { to: "/radar", label: "Opportunities", icon: "compass" },
-  { to: "/counselor", label: "Ask Hindsight", icon: "chat" },
+  { to: "/university", label: "University", icon: "school" },
 ];
 
 export function Layout() {
   const { profile } = loadSession();
   const [degraded, setDegraded] = useState<string | null>(null);
+  const { pathname } = useLocation();
+  const [askOpen, setAskOpen] = useState(false);
+  const [askMounted, setAskMounted] = useState(false);
+  const closeAsk = useCallback(() => setAskOpen(false), []);
+  const toggleAsk = () => {
+    setAskMounted(true);
+    setAskOpen((o) => !o);
+  };
+  // The Counselor page is Ask already; a second copy in the panel would just repeat it.
+  const askHere = pathname !== "/counselor";
+  useEffect(() => {
+    if (!askHere) setAskOpen(false);
+  }, [askHere]);
+  const askButton = (className: string) =>
+    askHere && (
+      <button
+        type="button"
+        className={`ask-open ${className}`}
+        aria-expanded={askOpen}
+        aria-controls={ASK_PANEL_ID}
+        aria-label="Ask Hindsight"
+        onClick={toggleAsk}
+      >
+        <Icon name="chat" size={24} />
+        <span>Ask Hindsight</span>
+      </button>
+    );
 
   // The API host sleeps when idle and takes a while to wake, so retry before calling it unreachable.
   useEffect(() => {
@@ -78,6 +110,7 @@ export function Layout() {
             </NavLink>
           ))}
         </nav>
+        {askButton("ask-open-compact")}
         <div className="sidebar-bottom">
           <Link
             to="/onboarding"
@@ -99,6 +132,7 @@ export function Layout() {
         </div>
       </aside>
       <div className="workspace">
+        {askHere && <div className="topbar">{askButton("ask-open-wide")}</div>}
         {degraded && (
           <p className="status-banner" role="status">
             {degraded}
@@ -108,6 +142,14 @@ export function Layout() {
           <Outlet />
         </main>
       </div>
+      {askHere && (
+        <AskPanel
+          open={askOpen}
+          mounted={askMounted}
+          pathname={pathname}
+          onClose={closeAsk}
+        />
+      )}
     </div>
   );
 }

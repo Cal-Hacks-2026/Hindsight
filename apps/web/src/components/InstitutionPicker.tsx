@@ -1,6 +1,8 @@
-// A searchable pick from one of ASSIST's institution lists. Closed, it reads like the old
-// transfer-path line (label over the chosen name); "Change" opens a filter box and the list.
-import { useState, type KeyboardEvent, type ReactNode } from "react";
+// A searchable pick from one of ASSIST's institution lists. Nothing is picked by default: with no
+// choice yet it shows the filter box and the list. Once picked, it reads like the old transfer-path
+// line (label over the chosen name) and "Change" opens the box again. `locked` (with the reason as
+// its text) keeps it closed until an earlier choice is made.
+import { useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import type { AssistInstitution } from "@hindsight/contracts";
 import { shortUniversity } from "../lib/format";
 
@@ -21,6 +23,7 @@ export function InstitutionPicker({
   onChange,
   badge,
   hint,
+  locked,
 }: {
   id: string;
   label: string;
@@ -35,9 +38,12 @@ export function InstitutionPicker({
   onChange: (i: AssistInstitution) => void;
   badge?: (i: AssistInstitution) => string | undefined;
   hint?: ReactNode;
+  /** Why it can't be used yet: "Pick a community college first." */
+  locked?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const change = useRef<HTMLButtonElement>(null);
   const words = fold(query).split(/[\s,]+/).filter(Boolean);
   const shown = (options ?? []).filter((o) => words.every((w) => haystack(o).includes(w)));
 
@@ -45,6 +51,8 @@ export function InstitutionPicker({
     onChange(o);
     setOpen(false);
     setQuery("");
+    // The list it was picked from is gone; keep focus on this field rather than the page.
+    requestAnimationFrame(() => change.current?.focus());
   }
 
   function key(e: KeyboardEvent<HTMLInputElement>) {
@@ -58,16 +66,19 @@ export function InstitutionPicker({
   }
 
   const tag = value && badge?.(value);
+  const searching = !locked && (open || (!value && !!options?.length));
   return (
     <div className="field picker">
       <span className="label" id={`${id}-label`}>
         {label}
       </span>
-      {open ? (
+      {locked ? (
+        <input type="search" disabled placeholder={locked} aria-labelledby={`${id}-label`} />
+      ) : searching ? (
         <>
           <input
             type="search"
-            autoFocus
+            autoFocus={open}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={key}
@@ -93,25 +104,30 @@ export function InstitutionPicker({
               </li>
             )}
           </ul>
-          <button type="button" className="text picker-cancel" onClick={() => setOpen(false)}>
-            Keep {value ? value.name : "the current choice"}
-          </button>
+          {value && (
+            <button type="button" className="text picker-cancel" onClick={() => setOpen(false)}>
+              Keep {value.name}
+            </button>
+          )}
         </>
       ) : (
         <div className="picker-current">
           <span className="picker-name" aria-live="polite">
-            {value?.name ?? (options ? `Choose a ${noun}` : `Loading ${nouns}…`)}
+            {value?.name ?? (options ? `No ${nouns} to choose from` : `Loading ${nouns}…`)}
           </span>
           {tag && <span className="picker-tag">{tag}</span>}
-          <button
-            type="button"
-            className="text"
-            onClick={() => setOpen(true)}
-            disabled={!options?.length}
-            aria-label={`Change ${label.toLowerCase()}`}
-          >
-            Change
-          </button>
+          {value && (
+            <button
+              ref={change}
+              type="button"
+              className="text"
+              onClick={() => setOpen(true)}
+              disabled={!options?.length}
+              aria-label={`Change ${label.toLowerCase()}`}
+            >
+              Change
+            </button>
+          )}
         </div>
       )}
       {hint && <span className="field-hint">{hint}</span>}

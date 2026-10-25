@@ -7,6 +7,9 @@ export type Campus = "sjsu" | "berkeley"; // campuses with Radar sources
 // university without Radar sources or curated requirements.
 export type ProfileCampus = Campus | "other";
 
+// ---- SKELETON: where the student is now, asked before the pathway ----
+export type ProfileStage = "high_school" | "community_college" | "transferred" | "returning";
+
 // Not spelled out in §10; fields mirror the `profiles` table in §9.
 export type Profile = {
   id: string;
@@ -21,6 +24,9 @@ export type Profile = {
   // ASSIST's names for the two institutions, when the API can give them (not stored).
   sending_institution_name?: string;
   receiving_institution_name?: string;
+  // SKELETON: optional so older profiles still load.
+  stage?: ProfileStage;
+  minor?: string;
 };
 
 export type Course = {
