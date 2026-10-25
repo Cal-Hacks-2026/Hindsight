@@ -18,7 +18,7 @@ The goal is to prevent wasted courses, missed requirements, and lost semesters f
 
 Use existing confirmed transcript rows, deterministic match results, plans, and opportunity data. Separate planning and credit review into dedicated screens. Keep prerequisites, course alternatives, agreement years, confidence, exceptions, citations, term controls, and follow-up questions accessible. Do not claim that the major-preparation plan is a complete transfer-admission or graduation audit.
 
-The first supported onboarding pathway remains De Anza to SJSU. A consistent nationwide interface does not establish nationwide data coverage. Any community college and university with ASSIST agreements is selectable; credit matching and community-college terms come from ASSIST. Only schools with verified degree requirements (SJSU today) get a Full Plan, and the others say so plainly.
+De Anza to SJSU is the default pathway. A consistent nationwide interface does not establish nationwide data coverage. Any community college and university with ASSIST agreements is selectable; credit matching and community-college terms come from ASSIST. Only schools with verified degree requirements (SJSU today) get a Full Plan, and the others say so plainly.
 
 ## Subsequent work
 
