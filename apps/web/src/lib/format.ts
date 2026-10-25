@@ -1,5 +1,5 @@
 import type { Profile } from "@hindsight/contracts";
-import { DE_ANZA_ID, DE_ANZA_NAME, SJSU_NAME } from "./config";
+import { SJSU_NAME } from "./config";
 
 // For profiles saved before the API sent institution names.
 const CAMPUS_LONG: Record<string, string> = { sjsu: SJSU_NAME, berkeley: "University of California, Berkeley" };
@@ -23,7 +23,7 @@ export const universityName = (p: Pick<Profile, "campus" | "receiving_institutio
 
 /** The student's community college, full name. */
 export const collegeName = (p: Pick<Profile, "sending_institution_id" | "sending_institution_name">) =>
-  p.sending_institution_name ?? (p.sending_institution_id === DE_ANZA_ID ? DE_ANZA_NAME : "your community college");
+  p.sending_institution_name ?? "your community college";
 
 /** "Data Science, B.S." → "Data Science" */
 export const shortMajor = (label: string) => label.replace(/,\s*B\.[AS]\.?$/i, "").trim();

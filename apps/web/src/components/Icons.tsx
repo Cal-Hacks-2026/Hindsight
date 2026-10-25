@@ -13,7 +13,10 @@ export type IconName =
   | "calendar"
   | "school"
   | "user"
-  | "chevron";
+  | "chevron"
+  | "home"
+  | "clock"
+  | "close";
 
 const paths: Record<IconName, ReactNode> = {
   book: (
@@ -67,6 +70,14 @@ const paths: Record<IconName, ReactNode> = {
     </>
   ),
   chevron: <path d="m9 5 7 7-7 7" />,
+  home: <path d="M3 11 12 4l9 7M5 9.5V20h5v-6h4v6h5V9.5" />,
+  clock: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3 2" />
+    </>
+  ),
+  close: <path d="M6 6l12 12M18 6 6 18" />,
 };
 
 export function Icon({

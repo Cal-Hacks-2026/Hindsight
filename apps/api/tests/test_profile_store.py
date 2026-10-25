@@ -167,3 +167,50 @@ def test_storage_outage_is_reported_without_upstream_detail(monkeypatch, error, 
     assert client.post("/profiles", json=PROFILE).status_code == status
     res = client.get(f"/profiles/{PID}")
     assert res.status_code == status and res.json() == {"detail": detail}
+
+
+# ---- SKELETON: stage and minor ----
+
+SKELETON_PROFILE = {**PROFILE, "stage": "community_college", "minor": "Business"}
+
+
+def test_create_profile_saves_stage_and_minor(supabase_env):
+    row = {**SKELETON_PROFILE, "id": PID, "created_at": "2026-10-25T09:00:00+00:00"}
+    transport, seen = recorder(httpx.Response(201, json=[row]))
+    profile = real_create_profile(CreateProfileRequest(**SKELETON_PROFILE), transport=transport)
+    assert profile.stage == "community_college" and profile.minor == "Business"
+    (req,) = seen
+    assert json.loads(req.content) == SKELETON_PROFILE
+    assert req.url.params["select"].endswith(",stage,minor")
+
+
+def test_create_profile_before_the_skeleton_migration_drops_stage_and_minor(supabase_env):
+    missing = httpx.Response(400, json={"code": "PGRST204", "message": "Could not find the 'minor' column"})
+    row = {**PROFILE, "id": PID, "created_at": "2026-10-25T09:00:00+00:00"}
+    transport, seen = recorder(missing, httpx.Response(201, json=[row]))
+    profile = real_create_profile(CreateProfileRequest(**SKELETON_PROFILE), transport=transport)
+    assert profile.id == PID and profile.stage is None
+    first, retry = seen
+    assert json.loads(retry.content) == PROFILE
+    assert "stage" not in retry.url.params["select"]
+
+
+def test_get_profile_before_the_skeleton_migration(supabase_env):
+    missing = httpx.Response(400, json={"code": "42703", "message": "column profiles.stage does not exist"})
+    row = {**PROFILE, "id": PID, "created_at": "2026-10-25T09:00:00+00:00"}
+    transport, seen = recorder(missing, httpx.Response(200, json=[row]))
+    assert real_get_profile(PID, transport=transport).stage is None
+    assert len(seen) == 2
+
+
+def test_other_store_errors_are_not_retried(supabase_env):
+    transport, seen = recorder(httpx.Response(500, text="boom"))
+    with pytest.raises(StoreError):
+        real_get_profile(PID, transport=transport)
+    assert len(seen) == 1
+
+
+def test_profile_without_stage_still_validates():
+    assert CreateProfileRequest(**PROFILE).stage is None
+    with pytest.raises(ValueError):
+        CreateProfileRequest(**{**PROFILE, "stage": "graduated"})

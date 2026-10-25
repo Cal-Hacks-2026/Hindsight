@@ -3,7 +3,7 @@
 // so typing never calls ASSIST.
 import type { AssistInstitution } from "@hindsight/contracts";
 import { api } from "./api";
-import { ASSIST_YEAR_2026_27, DE_ANZA_ID, DE_ANZA_NAME, SJSU_ID, SJSU_NAME } from "./config";
+import { SJSU_ID } from "./config";
 
 let colleges: Promise<AssistInstitution[]> | undefined;
 const universities = new Map<number, Promise<AssistInstitution[]>>();
@@ -25,10 +25,6 @@ export function loadUniversities(collegeId: number): Promise<AssistInstitution[]
   }
   return found;
 }
-
-// The defaults, for when ASSIST's lists can't be loaded: the demo path still works.
-export const DE_ANZA: AssistInstitution = { id: DE_ANZA_ID, name: DE_ANZA_NAME, term_system: "quarter" };
-export const SJSU: AssistInstitution = { id: SJSU_ID, name: SJSU_NAME, year_id: ASSIST_YEAR_2026_27, full_plan: true };
 
 /** The profile campus the API will assign (apps/api/app/config.py campus_for). */
 export const campusFor = (universityId: number) =>

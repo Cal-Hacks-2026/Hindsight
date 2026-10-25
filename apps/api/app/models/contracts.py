@@ -14,6 +14,9 @@ Campus = Literal["sjsu", "berkeley"]  # campuses with Radar sources
 # ASSIST university without Radar sources or curated requirements.
 ProfileCampus = Literal["sjsu", "berkeley", "other"]
 
+# ---- SKELETON: where the student is now, asked before the pathway ----
+ProfileStage = Literal["high_school", "community_college", "transferred", "returning"]
+
 
 class CreateProfileRequest(BaseModel):
     name: str
@@ -23,6 +26,9 @@ class CreateProfileRequest(BaseModel):
     majors: list[str]
     goals: str
     interests: list[str]
+    # SKELETON: optional so older profiles and clients still validate.
+    stage: ProfileStage | None = None
+    minor: str | None = None
 
 
 class Profile(CreateProfileRequest):
