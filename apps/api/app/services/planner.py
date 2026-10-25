@@ -25,7 +25,7 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-from app.models import Course, MatchResult, Profile, Requirement, Semester, SemesterCourse
+from app.models import Course, MatchResult, Profile, ProfileStage, Requirement, Semester, SemesterCourse
 from app.services import campuses
 from app.services.assist import AssistError, get_service
 from app.services.assist.evaluator import LETTER_GRADES, grade_verdict, option_receivers, sending_courses
@@ -625,10 +625,12 @@ def next_cc_term(today: date, system: TermSystem) -> tuple[str, int]:
     return "Winter", today.year + 1
 
 
-def default_start(today: date, system: TermSystem, courses: Iterable[Course]) -> tuple[str, int]:
-    """Where the college terms start by default: the next Fall for a student with no courses yet
-    (a high-school senior starts in Fall), otherwise the next term they can register for."""
-    if any(c.confirmed for c in courses):
+def default_start(today: date, system: TermSystem, courses: Iterable[Course],
+                  stage: ProfileStage | None = None) -> tuple[str, int]:
+    """Where the college terms start by default: the next term they can register for when they're
+    already at a community college or have courses, otherwise the next Fall (a high-school senior
+    starts in Fall)."""
+    if stage == "community_college" or any(c.confirmed for c in courses):
         return next_cc_term(today, system)
     return "Fall", today.year if today.month <= 8 else today.year + 1
 
@@ -886,6 +888,7 @@ def build_roadmap(
     cc_unit_cap: float = DEFAULT_CC_UNIT_CAP,
     unit_cap: float = DEFAULT_UNIT_CAP,
     ge_slots: Iterable[GeSlot] = (),
+    stage: ProfileStage | None = None,
 ) -> Roadmap:
     """Community-college terms for what the college can cover, then university terms from the
     transfer term for the rest. With a requested transfer term earlier than the college terms
@@ -907,7 +910,7 @@ def build_roadmap(
             titles.setdefault(code, code)
     college = next((c.college for c in catalogs.values()), None)
     campus = next((c.campus for c in catalogs.values()), None)
-    default = default_start(today, system, courses)
+    default = default_start(today, system, courses, stage)
     start = default if start_term is None else parse_start_term(start_term, today, system)
 
     def schedule(chosen: list[CCPick]) -> list[Semester]:
@@ -1019,4 +1022,5 @@ def roadmap_for(profile: Profile, courses: list[Course], majors: list[Major], un
     done = satisfied(courses, matches.values(), majors)
     system = get_service().term_system(profile.sending_institution_id)
     return build_roadmap(majors, done, list(matches.values()), catalogs, courses, system,
-                         today=today, transfer_term=transfer_term, start_term=start_term, ge_slots=ge_slots)
+                         today=today, transfer_term=transfer_term, start_term=start_term, ge_slots=ge_slots,
+                         stage=profile.stage)

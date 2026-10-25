@@ -43,8 +43,9 @@ def test_majors_are_real_assist_reports():
 
 
 def test_majors_for_pair_without_agreements_is_empty():
-    res = client.get("/assist/majors", params={"sending": 113, "receiving": 79, "year": 77})
-    assert res.json() == {"majors": []}
+    # No UCLA majors in the fake for any year: nothing to fall back to (MAJORS-YEAR).
+    res = client.get("/assist/majors", params={"sending": 113, "receiving": 117, "year": 77})
+    assert res.json() == {"majors": [], "year_id": 77}
 
 
 @pytest.mark.parametrize(("sending", "receiving", "year"), [
@@ -76,7 +77,7 @@ def test_majors_cache_is_size_capped(monkeypatch):
     monkeypatch.setattr(service_mod, "MAX_CACHED_MAJOR_LISTS", 2)
     svc = service_mod.get_service()
     for year in (75, 76, 77):
-        svc.majors(113, 39, year)
+        svc._reports(113, 39, year)  # one year each (majors() would fall back from the empty ones)
     assert list(svc._majors) == [(113, 39, 76), (113, 39, 77)]
 
 

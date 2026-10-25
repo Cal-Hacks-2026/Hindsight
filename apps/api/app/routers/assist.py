@@ -11,9 +11,11 @@ router = APIRouter(prefix="/assist", tags=["assist"])
             dependencies=[Depends(limits.per_ip)])
 def majors(sending: int, receiving: int, year: int) -> AssistMajorsResponse:
     try:
-        found, saved_at = get_service().majors_and_saved_at(sending, receiving, year)
-        # saved_on only when ASSIST failed and the pair's kept list was used (MAJORS-FALLBACK).
-        return AssistMajorsResponse(majors=found, saved_on=saved_at[:10] if saved_at else None)
+        found, used, saved_at = get_service().majors_in_year(sending, receiving, year)
+        # year_id: the year the majors come from, earlier than `year` when it has none yet
+        # (MAJORS-YEAR). saved_on only when ASSIST failed and the pair's kept list was used
+        # (MAJORS-FALLBACK).
+        return AssistMajorsResponse(majors=found, year_id=used, saved_on=saved_at[:10] if saved_at else None)
     except AssistNotFound as e:
         raise HTTPException(status_code=404, detail=str(e)) from e
     except AssistError as e:

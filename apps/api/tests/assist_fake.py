@@ -21,6 +21,8 @@ ECON_BS_KEY = "77/113/to/39/Major/18619712-eec7-4023-3ef3-08dec89fcc4a"
 BERKELEY_ECON_KEY = "76/113/to/79/Major/a7e5abb1-a30f-46eb-acf1-08ddbf3f4ee7"
 DS_2023_KEY = "74/113/to/39/Major/351029ac-76f7-44c8-99b2-f1b56d2b5224"
 ECON_BS_2023_KEY = "74/113/to/39/Major/2767db96-1510-485f-0091-08dc647f2147"
+# Foothill → UC Davis: ASSIST lists 2026–27 (77) for the pair but has no majors in it yet.
+DAVIS_DS_KEY = "76/51/to/89/Major/3e0b21af-b126-4c4c-3486-08ddb349963e"
 
 AGREEMENT_FILES = {
     DS_KEY: "agreement-113-39-77-data-science-bs.json",
@@ -28,6 +30,7 @@ AGREEMENT_FILES = {
     BERKELEY_ECON_KEY: "agreement-113-79-76-economics-ba.json",
     DS_2023_KEY: "agreement-113-39-74-data-science-bs.json",
     ECON_BS_2023_KEY: "agreement-113-39-74-economics-bs.json",
+    DAVIS_DS_KEY: "agreement-51-89-76-data-science-bs.json",
 }
 
 INSTITUTIONS = [
@@ -35,6 +38,7 @@ INSTITUTIONS = [
     {"id": 51, "names": [{"name": "Foothill College"}], "isCommunityCollege": True, "termType": 1},
     {"id": 58, "names": [{"name": "Berkeley City College"}], "isCommunityCollege": True},
     {"id": 79, "names": [{"name": "University of California, Berkeley"}], "isCommunityCollege": False},
+    {"id": 89, "names": [{"name": "University of California, Davis"}], "isCommunityCollege": False},
     {"id": 113, "names": [{"name": "De Anza College"}], "isCommunityCollege": True},
     {"id": 117, "names": [{"name": "UCLA", "hideInList": True}, {"name": "University of California, Los Angeles"}],
      "isCommunityCollege": False},
@@ -91,10 +95,12 @@ class FakeAssist:
                 {"institutionParentId": 117, "sendingYearIds": [], "receivingYearIds": [76]},
                 {"institutionParentId": 58, "sendingYearIds": [76, 77], "receivingYearIds": []},  # CC → CC
             ])
+        if path == "/api/institutions/51/agreements":
+            return httpx.Response(200, json=load("agreements-51.json"))
         if path == "/api/agreements":
             pair = (q.get("sendingInstitutionId"), q.get("receivingInstitutionId"), q.get("academicYearId"))
-            if pair in (("113", "39", "77"), ("113", "39", "74")):
-                return httpx.Response(200, json=load(f"majors-113-39-{pair[2]}.json"))
+            if (FIXTURES / (recorded := "majors-{}-{}-{}.json".format(*pair))).exists():
+                return httpx.Response(200, json=load(recorded))
             if pair == ("113", "79", "76"):
                 return httpx.Response(200, json={"reports": [
                     {"label": "Economics, B.A.", "key": BERKELEY_ECON_KEY, "ownerInstitutionId": 79},
