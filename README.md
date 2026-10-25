@@ -5,7 +5,7 @@
 <p align="center">
   <a href="https://hindsight-web-yl0k.onrender.com">Live app</a> ·
   <a href="https://cal-hacks-2026.github.io/Hindsight/">Website</a> ·
-  <!-- VIDEO LINK -->Demo video (coming soon) ·
+  <a href="https://youtu.be/Qcck7i22dz8">Demo video</a> ·
   <a href="https://devpost.com/software/hindsight-68sruh">Devpost</a> ·
   <a href="#run-locally">Run locally</a>
 </p>
@@ -15,6 +15,8 @@
 Hindsight is a transfer planner for California community-college students, from the first class to graduation. It works for any of California's 116 community colleges and every university each one has ASSIST agreements with. Every answer cites its source.
 
 [![Hindsight’s Home screen on a laptop: the student’s path, next term and this week’s opportunities](docs/media/hindsight-02-hero.jpg)](https://hindsight-web-yl0k.onrender.com)
+
+Watch the 3-minute demo: [youtu.be/Qcck7i22dz8](https://youtu.be/Qcck7i22dz8)
 
 ## Why we built it
 
