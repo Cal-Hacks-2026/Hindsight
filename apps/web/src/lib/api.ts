@@ -80,6 +80,10 @@ export const api = {
   createProfile: (body: CreateProfileRequest) =>
     request<ProfileResponse>("/profiles", { method: "POST", body: json(body) }),
 
+  // Edits keep the id, so courses, the saved schedule and the ranked feed stay attached.
+  updateProfile: (id: string, body: CreateProfileRequest) =>
+    request<ProfileResponse>(`/profiles/${enc(id)}`, { method: "PUT", body: json(body) }),
+
   getProfile: (id: string) => request<ProfileResponse>(`/profiles/${enc(id)}`),
 
   uploadTranscript: (id: string, file: File) => {

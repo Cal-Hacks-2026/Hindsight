@@ -140,6 +140,13 @@ class FakeProfileStore:
     def get_profile(self, profile_id, transport=None):
         return self.profiles.get(profile_id)
 
+    def update_profile(self, profile_id, body, transport=None):
+        old = self.profiles.get(profile_id)
+        if old is None:
+            return None
+        self.profiles[profile_id] = old.model_copy(update=body.model_dump())
+        return self.profiles[profile_id]
+
     def replace_courses(self, profile_id, courses, transport=None):
         self.courses[profile_id] = list(courses)
 
@@ -153,7 +160,7 @@ def profile_fake(monkeypatch) -> FakeProfileStore:
     from app.services import profile_store
 
     fake = FakeProfileStore()
-    for name in ("create_profile", "get_profile", "replace_courses", "confirmed_courses"):
+    for name in ("create_profile", "get_profile", "update_profile", "replace_courses", "confirmed_courses"):
         monkeypatch.setattr(profile_store, name, getattr(fake, name))
     return fake
 

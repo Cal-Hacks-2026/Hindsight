@@ -1,10 +1,9 @@
-// Home: this week's moves (next course, a missing GE area, the next transfer milestone,
-// opportunities that fit the student's free time), the path at a glance, and this week's classes.
-// Everything comes from the same endpoints as Plan, Credits, Schedule and Opportunities.
-import { Fragment, useEffect, useState, type ReactNode } from "react";
+// Home, in order: the path at a glance, next term's courses, what's dated in the next 7 days (listings
+// and transfer deadlines, as Opportunities' compact cards), deadlines further out, and this week's
+// classes. Everything comes from the same endpoints as Plan, Credits, Schedule and Opportunities.
+import { Fragment, useEffect, useState } from "react";
 import { Link } from "react-router";
 import type {
-  GeResponse,
   MatchResult,
   OpportunityCategory,
   Profile,
@@ -15,19 +14,19 @@ import type {
   Weekday,
 } from "@hindsight/contracts";
 import { Icon } from "../components/Icons";
-import { safeUrl } from "../components/Listing";
+import { hostOf, Listing, safeUrl } from "../components/Listing";
 import { Masthead, Section, SourceList } from "../components/Paper";
 import { api } from "../lib/api";
-import { watched as readsAFeed } from "../lib/campuses";
+import { campusLabel, watched as readsAFeed } from "../lib/campuses";
 import { catalogMajor, yearSpan } from "../lib/catalog";
 import {
-  collapse,
-  shortMajor,
+  plural,
   shortUniversity,
   universityName,
+  withPeriod,
 } from "../lib/format";
 import { loadGePattern, useGe, type GeState } from "../lib/ge";
-import { nextMilestone } from "../lib/milestones";
+import { upcomingMilestones, type Milestone } from "../lib/milestones";
 import { fitFor, nextSevenDays, useFreeWeek, type FreeWeek } from "../lib/fits";
 import { useOpportunities } from "../lib/opportunities";
 import {
@@ -40,14 +39,16 @@ import {
 } from "../lib/plans";
 import { courseKey } from "../lib/schedule";
 import { loadSession } from "../lib/session";
-import { closeAt, formatWhen, useNow } from "../lib/time";
+import { closeAt, useNow } from "../lib/time";
 import { Landing } from "./Landing";
+import "../styles/opportunities.css";
 import "../styles/home.css";
 
 const DAY = 24 * 60 * 60 * 1000;
 const WEEK = 7 * DAY;
-const ROOMS_SHOWN = 2;
-const OPTIONS_SHOWN = 4;
+const LISTINGS_SHOWN = 4;
+// Phones show fewer (home.css); the link to Opportunities has the rest.
+const LISTINGS_SHOWN_NARROW = 2;
 const NEXT_CLASSES = 3;
 
 const DAYS: Weekday[] = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -188,260 +189,120 @@ function useSavedSchedule(profileId: string): ScheduleState {
   return state;
 }
 
-// ---- This week's moves ----
+// ---- Next term: what the plan has the student register for next ----
 
-type Kind = "Courses" | "Deadline" | "Rooms" | "Schedule";
-type Move = {
-  key: string;
-  kind: Kind;
-  title: string;
-  why: ReactNode;
-  refs: number[];
-  action: { label: string; to?: string; href?: string };
-  /** The GE area code a GE-slot course fills ("1A"), so the GE move picks another. */
-  geArea?: string;
-};
+type NextTerm = { term: string; courses: string[]; geSlots: number };
 
-const areaCode = (geArea: string) => geArea.split(" ").at(-1) ?? geArea;
-
-/** "Data Science, B.S." → "Data Science"; ASSIST's UC labels too: "Business Economics/B.A." → "Business Economics". */
-const majorName = (label: string) =>
-  shortMajor(label).replace(/\/\s*B\.[AS]\.?$/i, "");
-
-/** The ASSIST agreement or catalog page behind a planned course, and what it counts toward. */
-function courseWhy(
-  c: SemesterCourse,
-  matches: MatchResult[],
-  profile: Profile,
-  university: string,
-  sources: Sources,
-  ge: GeResponse | undefined,
-): { text: string; refs: number[] } {
-  if (c.ge_area && c.ge_options) {
-    const area = ge?.areas.find((a) => a.code === areaCode(c.ge_area!));
-    return {
-      text: `Fills ${c.ge_area} (${c.title}). Take one of: ${collapse(c.ge_options, ", ", OPTIONS_SHOWN)}.`,
-      refs: area ? sources.add(area.citation.url, area.citation.label) : [],
-    };
-  }
-  // Community-college course: "For CS 46A - Introduction to Programming (Data Science, B.S.); ASSIST option: …"
-  const cc = /^For (.+) \(([^()]+)\); ASSIST option:/.exec(c.reason);
-  if (cc) {
-    const [, receiving, major] = cc;
-    const req = matches
-      .flatMap((m) => m.requirements)
-      .find((r) => r.receiving_course === receiving);
-    const choose = receiving!.startsWith("Choose from:")
-      ? receiving!
-          .slice("Choose from:".length)
-          .split(";")
-          .map((s) => s.trim().split(" - ")[0]!)
-      : undefined;
-    const target = choose
-      ? `one of ${university}'s ${collapse(choose, ", ", 3)}`
-      : `${university}'s ${receiving!.replace(" - ", " ")}`;
-    return {
-      text: `Counts toward ${target} for ${majorName(major!)}.${c.ge_area ? ` Also fills ${c.ge_area}.` : ""}`,
-      refs: req ? sources.add(req.citation.url, `ASSIST · ${req.citation.label}`) : [],
-    };
-  }
-  // University course: "Major Requirements: Upper Division (Data Science, B.S.); Prerequisite for …"
-  const group = /^(.+?) \(([^()]+)\)/.exec(c.reason.split(";")[0] ?? "");
-  const major = group ? catalogMajor(group[2]!, profile.receiving_institution_id) : undefined;
-  return {
-    text: group
-      ? `Counts toward ${majorName(group[2]!)} ${group[1]}.`
-      : c.reason,
-    refs: major
-      ? sources.add(
-          major.source_url,
-          `${university} Catalog ${yearSpan(major.catalog_year)} · ${major.major_label}`,
-        )
-      : [],
-  };
-}
-
-function courseMove(
-  plans: PlansState,
-  matches: MatchResult[],
-  profile: Profile,
-  university: string,
-  sources: Sources,
-  ge: GeResponse | undefined,
-  scheduled: Set<string>,
-): Move | undefined {
+/** The first planned term with a course not already on the saved schedule (those are registered for). */
+function nextTerm(plans: PlansState, scheduled: Set<string>): NextTerm | undefined {
   if (plans.status !== "ready") return undefined;
-  // Courses already on the saved schedule are registered for, so the next one to register for comes after.
   const open = (c: SemesterCourse) => !scheduled.has(courseKey(c.code));
-  const next = plans.plans.combined.find((s) => s.courses.some(open));
-  // A major course first: GE gets its own move.
-  const course =
-    next?.courses.find((c) => open(c) && !c.ge_options) ??
-    next?.courses.find(open);
-  if (!next || !course) return undefined;
-  const why = courseWhy(course, matches, profile, university, sources, ge);
+  const s = plans.plans.combined.find((s) => s.courses.some(open));
+  if (!s) return undefined;
+  const left = s.courses.filter(open);
   return {
-    key: `course-${course.code}`,
-    kind: "Courses",
-    title: course.ge_options
-      ? `Pick a ${course.ge_area} Course for ${next.term}`
-      : `Take ${course.code} in ${next.term}`,
-    why: why.text,
-    refs: why.refs,
-    action: { label: "See Your Plan", to: "/plan" },
-    geArea: course.ge_options && course.ge_area ? areaCode(course.ge_area) : undefined,
+    term: s.term,
+    courses: left.filter((c) => !c.ge_options).map((c) => c.code),
+    geSlots: left.filter((c) => c.ge_options).length,
   };
 }
 
-/** The missing GE area the plan schedules first (or the first in the pattern), with its options. */
-function geMove(
-  state: GeState,
-  plans: PlansState,
-  skip: string | undefined,
-  sources: Sources,
-  schedule: ScheduledClass[],
-): Move | undefined {
-  if (state.status !== "ready") return undefined;
-  const ge = state.ge;
-  const planned = new Map<string, string>();
-  if (plans.status === "ready")
-    for (const s of plans.plans.combined)
-      for (const c of s.courses)
-        if (c.ge_area && c.ge_options && !planned.has(areaCode(c.ge_area)))
-          planned.set(areaCode(c.ge_area), s.term);
-  const order = [...planned.keys()];
-  const rank = (code: string) =>
-    order.includes(code) ? order.indexOf(code) : order.length;
-  const area = ge.areas
-    .filter((a) => a.required && a.status === "missing" && a.code !== skip)
-    .map((a, i) => ({ a, i }))
-    .sort((x, y) => rank(x.a.code) - rank(y.a.code) || x.i - y.i)[0]?.a;
-  if (!area) return undefined;
-  const options = (area.options ?? []).map((o) => o.code);
-  const term = planned.get(area.code);
-  // An option already on the saved schedule isn't on the confirmed transcript, so it isn't counted yet.
-  const taking = schedule.find((r) =>
-    options.some((o) => courseKey(o) === courseKey(r.course)),
-  );
-  const dash = (s: string) => s.replace(/[–-]/g, "-");
-  const list = ge.citations.find(
-    (c) => c.source === "assist" && dash(c.label).includes(dash(ge.options_year)),
-  );
-  return {
-    key: `ge-${area.code}`,
-    kind: "Courses",
-    title: `${ge.pattern_name} Area ${area.code}: ${area.title}`,
-    why: taking ? (
-      <>
-        {taking.course} is on your {taking.term} schedule and counts here, but
-        it isn't on your confirmed courses yet, so this area still shows as
-        needed.
-      </>
-    ) : (
-      <>
-        {area.still_needed > 1
-          ? `${area.still_needed} courses still needed`
-          : "Still needed"}
-        {term ? `, planned for ${term}` : ""}.
-        {options.length > 0 &&
-          ` Take one of: ${collapse(options, ", ", OPTIONS_SHOWN)}.`}
-      </>
-    ),
-    refs: [
-      ...sources.add(area.citation.url, area.citation.label),
-      ...(options.length && list ? sources.add(list.url, list.label) : []),
-    ],
-    action: { label: "See GE Progress", to: "/credits#general-education" },
-  };
+/** "CIS 22C, CIS 40 + 1 GE slot" */
+function termLine({ courses, geSlots }: NextTerm): string {
+  const ge = geSlots ? `${geSlots} GE ${plural(geSlots, "slot")}` : "";
+  return courses.length ? [courses.join(", "), ge].filter(Boolean).join(" + ") : ge;
 }
 
-function deadlineMove(
-  university: string,
-  universityId: number,
-  transfer: string | undefined,
-  today: string,
-  sources: Sources,
-): Move | undefined {
-  const m = nextMilestone(university, universityId, transfer, today);
-  if (!m) return undefined;
-  return {
-    key: m.id,
-    kind: "Deadline",
-    title: m.title,
-    why: `${m.dates}. ${m.why}`,
-    refs: sources.add(m.url, m.source),
-    action: { label: m.action, href: m.url },
-  };
-}
+// ---- This week: only what's dated in the next 7 days ----
 
-/** Up to two listings that start or close in the next 7 days, best-ranked first; with a schedule, ones
- *  that fit the student's free time come first (Opportunities' Fits Your Week rule). */
-function roomMoves(
-  items: RankedOpportunity[],
-  categories: OpportunityCategory[],
-  free: FreeWeek,
-  now: number,
-  sources: Sources,
-): Move[] {
-  const label = new Map(
-    categories.flatMap((c) => [
-      [c.id, c.label] as const,
-      ...c.subcategories.map((sub) => [`${c.id}/${sub.id}`, sub.label] as const),
-    ]),
-  );
-  const kindOf = (item: RankedOpportunity) =>
-    (item.category &&
-      (label.get(`${item.category}/${item.subcategory}`) ?? label.get(item.category))) ||
-    undefined;
+type WeekPick = { item: RankedOpportunity; at: number; fit?: string };
+
+/** Listings that start or close in the next 7 days, best-ranked first; with a schedule, ones that fit the
+ *  student's free time come first (Opportunities' Fits Your Week rule). */
+function weekListings(items: RankedOpportunity[], free: FreeWeek, now: number): WeekPick[] {
   const picks = items.flatMap((item) => {
-    const dates = [
-      { iso: item.starts_at, verb: "Starts" },
-      {
-        iso: closeAt(item, now),
-        verb: item.type === "hackathon" ? "Ends" : "Closes",
-      },
-    ]
-      .map((d) => ({ ...d, at: Date.parse(d.iso ?? "") }))
-      .filter((d) => d.at >= now && d.at - now <= WEEK)
-      .sort((a, b) => a.at - b.at);
-    const first = dates[0];
-    if (!first) return [];
+    const at = [item.starts_at, closeAt(item, now)]
+      .map((d) => Date.parse(d ?? ""))
+      .filter((t) => t >= now && t - now <= WEEK)
+      .sort((a, b) => a - b)[0];
+    if (at === undefined) return [];
     const fit = free.status === "ready" ? fitFor(item, free.days, now) : undefined;
-    return [{ item, first, fit }];
+    return [{ item, at, fit }];
   });
   picks.sort(
     (a, b) =>
       Number(!!b.fit) - Number(!!a.fit) ||
       Number(b.item.notified) - Number(a.item.notified) ||
       b.item.score - a.item.score ||
-      a.first.at - b.first.at,
+      a.at - b.at,
   );
   // The same event can be listed twice (two sources); show it once.
   const seen = new Set<string>();
-  const unique = picks.filter(({ item }) => {
+  return picks.filter(({ item }) => {
     const key = item.title.toLowerCase();
     return !seen.has(key) && !!seen.add(key);
   });
-  return unique.slice(0, ROOMS_SHOWN).map(({ item, first, fit }) => {
-    const when = `${first.verb} ${formatWhen(first.iso!)}.`;
-    const kind = kindOf(item);
-    const link = safeUrl(item.url);
-    return {
-      key: `room-${item.id}`,
-      kind: "Rooms",
-      title: item.title,
-      why: [kind && `${kind}.`, fit && `${fit}.`, when, !fit && item.reason]
-        .filter(Boolean)
-        .join(" "),
-      refs: sources.add(
-        item.url,
-        [item.org, item.title].filter(Boolean).join(" · "),
-      ),
-      action: link
-        ? { label: "Open the Listing", href: link.href }
-        : { label: "See Opportunities", to: "/radar" },
-    };
-  });
+}
+
+/** Opportunities' name for a listing's kind: its subcategory ("Workshops"), else its category. */
+function kindLabels(categories: OpportunityCategory[]) {
+  const label = new Map(
+    categories.flatMap((c) => [
+      [c.id, c.label] as const,
+      ...c.subcategories.map((sub) => [`${c.id}/${sub.id}`, sub.label] as const),
+    ]),
+  );
+  return (item: RankedOpportunity) =>
+    (item.category &&
+      (label.get(`${item.category}/${item.subcategory}`) ?? label.get(item.category))) ||
+    undefined;
+}
+
+/** "YYYY-MM-DD" → "Mar 2", with the year when it isn't this one: "Mar 2, 2027". */
+function dayLabel(day: string, today: string): string {
+  const at = new Date(`${day}T12:00:00Z`);
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    ...(day.slice(0, 4) !== today.slice(0, 4) ? { year: "numeric" } : {}),
+    timeZone: "UTC",
+  }).format(at);
+}
+
+/** A milestone that opens or closes this week, as the same compact card as an opportunity. */
+function MilestoneCard({ m, today }: { m: Milestone; today: string }) {
+  const link = safeUrl(m.url);
+  const opening = m.opens > today;
+  return (
+    <li className="opp-card">
+      <h3 className="opp-title">
+        {link ? (
+          <a href={link.href} target="_blank" rel="noreferrer">
+            {m.title}
+          </a>
+        ) : (
+          m.title
+        )}
+      </h3>
+      <p className="opp-when">
+        {opening ? `Opens ${dayLabel(m.opens, today)}` : `Closes ${dayLabel(m.closes, today)}`}
+      </p>
+      <p className="opp-reason" title={m.why}>
+        {withPeriod(m.why)}
+      </p>
+      <p className="opp-foot">
+        Transfer Deadline · {m.source}
+        {link && (
+          <>
+            {" · "}
+            <a href={link.href} target="_blank" rel="noreferrer" aria-label={`Source: ${hostOf(link)}`}>
+              {hostOf(link)} ↗
+            </a>
+          </>
+        )}
+      </p>
+    </li>
+  );
 }
 
 // ---- Page ----
@@ -492,74 +353,40 @@ function HomePage({
     now,
   );
 
-  // Footnotes in reading order: moves first, then the path summary.
   const sources = new Sources();
-  const geReady = ge.status === "ready" ? ge.ge : undefined;
-  const moves: Move[] = [];
-  if (!matches?.length)
-    moves.push({
-      key: "courses-setup",
-      kind: "Courses",
-      title: "Add Your Courses",
-      why: "Upload a transcript, or continue with no courses, to see what to take next.",
-      refs: [],
-      action: { label: "Add Your Courses", to: "/onboarding" },
-    });
-  const course = matches?.length
-    ? courseMove(
-        plans,
-        matches,
-        profile,
-        university,
-        sources,
-        geReady,
-        new Set(rows.map((r) => courseKey(r.course))),
-      )
-    : undefined;
-  if (course) moves.push(course);
-  // Without confirmed courses (none is fine) there's nothing to measure GE against yet.
-  const geNext = matches?.length
-    ? geMove(ge, plans, course?.geArea, sources, rows)
-    : undefined;
-  if (geNext) moves.push(geNext);
-  // The application milestone depends on the transfer term, so wait for the plan.
-  const planSettled = planState.status !== "loading";
+  const next =
+    planState.status === "ready"
+      ? nextTerm(planState, new Set(rows.map((r) => courseKey(r.course))))
+      : undefined;
+
+  // Milestones depend on the transfer term, so wait for the plan. This week: opening or closing in the
+  // next 7 days; the rest are Coming Up.
   const transfer =
-    plans.status === "ready"
-      ? plans.plans.response.transfer_term
-      : picks.transfer;
-  const deadline = planSettled
-    ? deadlineMove(
-        universityName(profile),
-        profile.receiving_institution_id,
-        transfer,
-        pacificDay.format(new Date(now)),
-        sources,
-      )
-    : undefined;
-  if (deadline) moves.push(deadline);
+    plans.status === "ready" ? plans.plans.response.transfer_term : picks.transfer;
+  const pacificToday = pacificDay.format(today);
+  const weekEnd = pacificDay.format(new Date(now + WEEK));
+  const thisWeek = (m: Milestone) =>
+    m.closes <= weekEnd || (m.opens > pacificToday && m.opens <= weekEnd);
+  const milestones =
+    planState.status !== "loading"
+      ? upcomingMilestones(
+          universityName(profile),
+          profile.receiving_institution_id,
+          transfer,
+          pacificToday,
+        )
+      : undefined;
+  const dueThisWeek = milestones?.filter(thisWeek) ?? [];
+  const comingUp = milestones?.filter((m) => !thisWeek(m)) ?? [];
+
   // With a saved schedule, wait for its free time so the order doesn't jump.
   const freeSettled = !rows.length || free.status !== "loading";
-  const rooms =
-    watched && opps.status === "ready" && schedule.status !== "loading" && freeSettled
-      ? roomMoves(opps.items, opps.categories, free, now, sources)
-      : [];
-  moves.push(...rooms);
-  if (schedule.status === "ready" && !rows.length)
-    moves.push({
-      key: "schedule",
-      kind: "Schedule",
-      title: "Add Your Class Schedule",
-      why: "With your classes saved, Home shows your week and which opportunities fit your free time.",
-      refs: [],
-      action: { label: "Add Your Class Schedule", to: "/schedule" },
-    });
-
-  const pending = [
-    !!matches?.length && planState.status === "loading" && "your plan",
-    !!matches?.length && ge.status === "loading" && "your GE progress",
-    watched && opps.status === "loading" && "this week's opportunities",
-  ].filter((x): x is string => !!x);
+  const listingsReady =
+    watched && opps.status === "ready" && schedule.status !== "loading" && freeSettled;
+  const listings = listingsReady ? weekListings(opps.items, free, now) : [];
+  const kindOf = kindLabels(opps.status === "ready" ? opps.categories : []);
+  const weekPending = !milestones || (watched && opps.status !== "error" && !listingsReady);
+  const weekCount = dueThisWeek.length + listings.length;
 
   return (
     <>
@@ -567,73 +394,138 @@ function HomePage({
         Home
       </Masthead>
       <div className="home-grid">
-        <div className="home-main">
-          <Section label="This week" title="This Week">
-            {moves.length > 0 && (
-              <ol className="moves">
-                {moves.map((m) => (
-                  <MoveRow key={m.key} move={m} />
-                ))}
-              </ol>
-            )}
-            {pending.length > 0 ? (
-              <div className="home-pending" role="status" aria-live="polite">
-                <div className="loading-bar" aria-hidden="true" />
-                <p>Loading {pending.join(", ")}.</p>
-              </div>
-            ) : (
-              moves.length === 0 &&
-              !!matches?.length && (
-                <p className="lede">Nothing needs your attention this week.</p>
-              )
-            )}
-            {watched &&
-              opps.status === "ready" &&
-              schedule.status !== "loading" &&
-              freeSettled &&
-              rooms.length === 0 && (
-                <p className="plan-note">
-                  No opportunities start or close in the next 7 days.{" "}
-                  <Link to="/radar">See all opportunities</Link>
+        <PathSummary
+          matches={matches}
+          plans={planState}
+          ge={ge}
+          fullPlan={fullPlan}
+          university={university}
+          catalogRefs={planned.flatMap((label) => {
+            const c = catalogMajor(label, profile.receiving_institution_id);
+            return c
+              ? sources.add(
+                  c.source_url,
+                  `${university} Catalog ${yearSpan(c.catalog_year)} · ${c.major_label}`,
+                )
+              : [];
+          })}
+        />
+        <Section label="Plan" title="Next Term">
+          {!matches?.length ? (
+            <>
+              <p className="home-empty">Add your courses to see what to take next term.</p>
+              <Link className="inline-link" to="/onboarding">
+                Add Your Courses <Icon name="arrow" size={20} />
+              </Link>
+            </>
+          ) : planState.status === "loading" ? (
+            <div role="status" aria-live="polite">
+              <div className="loading-bar" aria-hidden="true" />
+              <p className="sr-only">Loading your plan.</p>
+            </div>
+          ) : (
+            <>
+              {next ? (
+                <p className="home-next">
+                  <strong>{next.term}:</strong> {termLine(next)}
+                </p>
+              ) : (
+                <p className="home-empty">
+                  {planState.status === "error"
+                    ? "Your plan didn't load."
+                    : planState.status === "none"
+                      ? `None of your majors has a full plan at ${university} yet.`
+                      : "Nothing left to plan before transfer."}
                 </p>
               )}
-            {rooms.length > 0 && rows.length > 0 && (
+              <Link className="inline-link" to="/plan">
+                See Your Plan <Icon name="arrow" size={20} />
+              </Link>
+            </>
+          )}
+        </Section>
+        <Section label="This week" title="This Week" id="this-week">
+          {weekCount > 0 && (
+            <ol className="opp-cards">
+              {dueThisWeek.map((m) => (
+                <MilestoneCard key={m.id} m={m} today={pacificToday} />
+              ))}
+              {listings.slice(0, LISTINGS_SHOWN).map(({ item, fit }) => (
+                <Listing
+                  key={item.id}
+                  item={item}
+                  now={now}
+                  kind={kindOf(item)}
+                  fit={fit}
+                  campus={campusLabel(item.campus_id, profile)}
+                />
+              ))}
+            </ol>
+          )}
+          {weekPending ? (
+            <div className="home-pending" role="status" aria-live="polite">
+              <div className="loading-bar" aria-hidden="true" />
+              <p>Loading this week.</p>
+            </div>
+          ) : (
+            weekCount === 0 && (
+              <p className="home-empty">Nothing is dated in the next 7 days.</p>
+            )
+          )}
+          {opps.status === "error" ? (
+            <p className="plan-note">
+              Opportunities didn't load. <Link to="/radar">Try the Opportunities page</Link>
+            </p>
+          ) : (
+            watched &&
+            listingsReady && (
               <p className="plan-note">
-                <Link to="/radar?fits=1">See everything that fits your week</Link>
+                {rows.length > 0 ? (
+                  <Link to="/radar?fits=1">See everything that fits your week</Link>
+                ) : listings.length > LISTINGS_SHOWN_NARROW ? (
+                  <Link to="/radar?week=1">
+                    See all {listings.length} this week on Opportunities
+                  </Link>
+                ) : (
+                  <Link to="/radar">See all opportunities</Link>
+                )}
               </p>
-              )}
-            {opps.status === "error" && (
-              <p className="plan-note">
-                Opportunities didn't load.{" "}
-                <Link to="/radar">Try the Opportunities page</Link>
-              </p>
-            )}
-            {planState.status === "error" && (
-              <p className="plan-note">
-                Your plan didn't load. <Link to="/plan">Open your plan</Link>
-              </p>
-            )}
-          </Section>
-        </div>
-        <div className="home-side">
-          <PathSummary
-            matches={matches}
-            plans={planState}
-            ge={ge}
-            fullPlan={fullPlan}
-            university={university}
-            catalogRefs={planned.flatMap((label) => {
-              const c = catalogMajor(label, profile.receiving_institution_id);
-              return c
-                ? sources.add(
-                    c.source_url,
-                    `${university} Catalog ${yearSpan(c.catalog_year)} · ${c.major_label}`,
-                  )
-                : [];
-            })}
-          />
-          <YourWeek state={schedule} term={term} today={today} now={now} />
-        </div>
+            )
+          )}
+        </Section>
+        <Section label="Heads up" title="Coming Up">
+          {!milestones ? (
+            <div role="status" aria-live="polite">
+              <div className="loading-bar" aria-hidden="true" />
+              <p className="sr-only">Loading deadlines.</p>
+            </div>
+          ) : comingUp.length ? (
+            <ul className="home-coming">
+              {comingUp.map((m) => {
+                const link = safeUrl(m.url);
+                return (
+                  <li key={m.id}>
+                    <span className="home-coming-date">
+                      {m.opens > pacificToday
+                        ? `Opens ${dayLabel(m.opens, pacificToday)}`
+                        : dayLabel(m.closes, pacificToday)}
+                    </span>
+                    {link ? (
+                      <a href={link.href} target="_blank" rel="noreferrer">
+                        {m.title}
+                      </a>
+                    ) : (
+                      <span>{m.title}</span>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <p className="home-empty">No other deadlines ahead.</p>
+          )}
+        </Section>
+        <YourWeek state={schedule} term={term} today={today} now={now} />
       </div>
       {sources.list.length > 0 && (
         <SourceList count={sources.list.length}>
@@ -648,34 +540,6 @@ function HomePage({
         </SourceList>
       )}
     </>
-  );
-}
-
-function MoveRow({ move }: { move: Move }) {
-  const { kind, title, why, refs, action } = move;
-  return (
-    <li className="move">
-      <span className="move-kind">{kind}</span>
-      <h3 className="move-title">{title}</h3>
-      <p className="move-why">
-        {why}
-        <Refs ns={refs} />
-      </p>
-      {action.href ? (
-        <a
-          className="inline-link"
-          href={action.href}
-          target="_blank"
-          rel="noreferrer"
-        >
-          {action.label} <Icon name="arrow" size={20} />
-        </a>
-      ) : (
-        <Link className="inline-link" to={action.to!}>
-          {action.label} <Icon name="arrow" size={20} />
-        </Link>
-      )}
-    </li>
   );
 }
 

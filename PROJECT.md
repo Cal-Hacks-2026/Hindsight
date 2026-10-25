@@ -206,6 +206,7 @@ All responses JSON. Phase 0 stubs return exactly these shapes with mock data.
 |---|---|---|---|
 | POST | `/profiles` | `{name, campus, sending_institution_id, receiving_institution_id, majors[], goals, interests[]}` | `{profile}` |
 | GET | `/profiles/{id}` | — | `{profile}` |
+| PUT | `/profiles/{id}` | same body as POST `/profiles` | `{profile}` (same id; edits in place) |
 | POST | `/profiles/{id}/transcript` | multipart PDF/image | `{courses: Course[]}` (unconfirmed) |
 | PUT | `/profiles/{id}/courses` | `{courses: Course[]}` | `{courses: Course[]}` (confirmed) |
 | GET | `/assist/majors` | `?sending=&receiving=&year=` | `{majors: [{label, key}]}` |

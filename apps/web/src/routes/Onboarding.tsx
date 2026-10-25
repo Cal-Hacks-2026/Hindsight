@@ -12,13 +12,13 @@ import { InstitutionPicker } from "../components/InstitutionPicker";
 import { Masthead, Note, Section } from "../components/Paper";
 import { api } from "../lib/api";
 import { ASSIST_YEAR_2026_27, assistYear } from "../lib/config";
-import { shortUniversity } from "../lib/format";
+import { plural, shortUniversity, withPeriod } from "../lib/format";
 import {
   loadColleges,
   loadUniversities,
   savedOnLabel,
 } from "../lib/institutions";
-import { saveSession } from "../lib/session";
+import { loadSession, saveSession } from "../lib/session";
 
 type Step = "profile" | "upload" | "confirm";
 type Row = { key: number; course: Course };
@@ -64,12 +64,33 @@ const errorText = (e: unknown) =>
   e instanceof Error ? e.message : "Something went wrong";
 
 export function Onboarding() {
+  const navigate = useNavigate();
+  const matchAndOpenDegree = useMatchAndOpenDegree();
+  // With a saved profile this edits it: same id, fields prefilled, transcript kept unless replaced.
+  const [saved] = useState(loadSession);
+  const editing = saved.profile;
   const [step, setStep] = useState<Step>("profile");
   const [profile, setProfile] = useState<Profile | null>(null);
   const [rows, setRows] = useState<Row[]>([]);
+  // Editing: whether the college, university or majors changed, so matching and the plan must re-run.
+  const [pathChanged, setPathChanged] = useState(false);
 
   const index = STEPS.findIndex((s) => s.id === step);
   const current = STEPS[index]!;
+  const rematch = !editing || pathChanged || !saved.matches?.length;
+  // Back to wherever the student opened the profile from; Home when they came straight here.
+  const goBack = () =>
+    (window.history.state as { idx?: number } | null)?.idx
+      ? navigate(-1)
+      : navigate("/");
+  const keepCourses = async () => {
+    if (rematch) await matchAndOpenDegree(profile!, saved.courses ?? [], false);
+    else goBack();
+  };
+  const withoutCourses = async () => {
+    if (!rematch && !saved.courses?.length) goBack();
+    else await matchAndOpenDegree(profile!, [], true);
+  };
 
   return (
     <div className="intake">
@@ -78,7 +99,13 @@ export function Onboarding() {
           step === "upload" ? "pencil" : step === "confirm" ? "cap" : "books"
         }
       >
-        {step === "profile" ? (
+        {step === "profile" && editing ? (
+          <>
+            Edit Your
+            <br />
+            Profile.
+          </>
+        ) : step === "profile" ? (
           <>
             Start With
             <br />
@@ -126,13 +153,16 @@ export function Onboarding() {
 
         {step === "profile" && (
           <ProfileStep
-            onDone={(p) => {
+            initial={editing}
+            onDone={(p, changed) => {
               setProfile(p);
-              saveSession({
-                profile: p,
-                courses: undefined,
-                matches: undefined,
-              });
+              setPathChanged(changed);
+              // An edit keeps the confirmed courses; matches for another path no longer apply.
+              saveSession(
+                editing
+                  ? { profile: p, ...(changed ? { matches: undefined } : {}) }
+                  : { profile: p, courses: undefined, matches: undefined },
+              );
               setStep("upload");
             }}
           />
@@ -140,6 +170,9 @@ export function Onboarding() {
         {step === "upload" && profile && (
           <UploadStep
             profile={profile}
+            kept={editing && saved.courses?.length ? saved.courses : undefined}
+            onKeep={keepCourses}
+            onWithoutCourses={withoutCourses}
             onDone={(courses) => {
               setRows(courses.map((course, i) => ({ key: i, course })));
               setStep("confirm");
@@ -147,7 +180,11 @@ export function Onboarding() {
           />
         )}
         {step === "confirm" && profile && (
-          <ConfirmStep profile={profile} rows={rows} setRows={setRows} />
+          <ConfirmStep
+            rows={rows}
+            setRows={setRows}
+            onConfirm={(courses) => matchAndOpenDegree(profile, courses, true)}
+          />
         )}
       </Section>
     </div>
@@ -157,11 +194,12 @@ export function Onboarding() {
 /**
  * Saves the confirmed courses (none is fine), matches every major, and opens Degree.
  * With no courses every requirement comes back Missing, which is the honest picture for a freshman.
+ * `confirm: false` when the courses are the ones already saved (an edit that keeps the transcript).
  */
-function useMatchAndOpenDegree(profile: Profile) {
+function useMatchAndOpenDegree() {
   const navigate = useNavigate();
-  return async (courses: Course[]) => {
-    await api.confirmCourses(profile.id, courses);
+  return async (profile: Profile, courses: Course[], confirm: boolean) => {
+    if (confirm) await api.confirmCourses(profile.id, courses);
     const matches = await Promise.all(
       profile.majors.map((m) => api.match(profile.id, m)),
     );
@@ -181,14 +219,27 @@ const STAGES: { id: ProfileStage; label: string }[] = [
 // ASSIST's academic years, current first. Only the current one has agreements we read.
 const ACADEMIC_YEARS = [ASSIST_YEAR_2026_27];
 
-function ProfileStep({ onDone }: { onDone: (p: Profile) => void }) {
-  const [name, setName] = useState("");
-  const [stage, setStage] = useState<ProfileStage>();
+const sameSet = (a: string[], b: string[]) =>
+  a.length === b.length && a.every((x) => b.includes(x));
+
+function ProfileStep({
+  initial,
+  onDone,
+}: {
+  /** The saved profile when editing: every field starts from it. */
+  initial?: Profile;
+  /** `pathChanged`: the college, university or majors differ from `initial`. */
+  onDone: (p: Profile, pathChanged: boolean) => void;
+}) {
+  const [name, setName] = useState(initial?.name ?? "");
+  const [stage, setStage] = useState<ProfileStage | undefined>(initial?.stage);
   const [yearId, setYearId] = useState(ASSIST_YEAR_2026_27);
-  const [majors, setMajors] = useState<string[]>([]);
-  const [minor, setMinor] = useState("");
-  const [goals, setGoals] = useState("");
-  const [interests, setInterests] = useState("");
+  const [majors, setMajors] = useState<string[]>(initial?.majors ?? []);
+  const [minor, setMinor] = useState(initial?.minor ?? "");
+  const [goals, setGoals] = useState(initial?.goals ?? "");
+  const [interests, setInterests] = useState(initial?.interests.join(", ") ?? "");
+  // The saved university, picked once its college's list loads.
+  const savedUniversity = useRef(initial?.receiving_institution_id);
   const [colleges, setColleges] = useState<AssistInstitution[]>();
   const [college, setCollege] = useState<AssistInstitution>();
   const [universities, setUniversities] = useState<AssistInstitution[]>();
@@ -212,6 +263,10 @@ function ProfileStep({ onDone }: { onDone: (p: Profile) => void }) {
       (l) => {
         setColleges(l.institutions);
         setCollegesSavedOn(l.savedOn);
+        if (initial)
+          setCollege(
+            (c) => c ?? l.institutions.find((i) => i.id === initial.sending_institution_id),
+          );
       },
       (e) => {
         setListError(`Couldn't load ASSIST's college list: ${errorText(e)}. Reload to try again.`);
@@ -232,7 +287,9 @@ function ProfileStep({ onDone }: { onDone: (p: Profile) => void }) {
         if (!live) return;
         setUniversities(list);
         setUniversitiesSavedOn(savedOn);
-        setUniversity((u) => list.find((x) => x.id === u?.id));
+        const wanted = savedUniversity.current;
+        savedUniversity.current = undefined;
+        setUniversity((u) => list.find((x) => x.id === (u?.id ?? wanted)));
       },
       (e) => {
         if (!live) return;
@@ -321,7 +378,7 @@ function ProfileStep({ onDone }: { onDone: (p: Profile) => void }) {
     setBusy(true);
     setError(null);
     try {
-      const { profile } = await api.createProfile({
+      const body = {
         name: name.trim(),
         stage,
         sending_institution_id: college.id,
@@ -333,8 +390,17 @@ function ProfileStep({ onDone }: { onDone: (p: Profile) => void }) {
           .split(",")
           .map((s) => s.trim())
           .filter(Boolean),
-      });
-      onDone(profile);
+      };
+      const { profile } = initial
+        ? await api.updateProfile(initial.id, body)
+        : await api.createProfile(body);
+      onDone(
+        profile,
+        !!initial &&
+          (initial.sending_institution_id !== college.id ||
+            initial.receiving_institution_id !== university.id ||
+            !sameSet(initial.majors, majors)),
+      );
     } catch (e) {
       setError(errorText(e));
     } finally {
@@ -400,22 +466,15 @@ function ProfileStep({ onDone }: { onDone: (p: Profile) => void }) {
         value={university}
         options={universities}
         onChange={setUniversity}
-        locked={college ? undefined : "Pick a community college first."}
+        locked={college ? undefined : "Pick a college first."}
         badge={(u) => (u.full_plan ? "Full Plan" : undefined)}
         hint={universityHint}
       />
       {listError && <p className="error">{listError}</p>}
       <fieldset className="field" disabled={!university}>
         <legend>Majors</legend>
-        <input
-          type="search"
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          placeholder={university ? "Search majors" : "Pick a university first."}
-          aria-label="Filter majors"
-        />
         {majors.length > 0 && (
-          <div className="chips" aria-label="Selected majors">
+          <div className="chips majors-chips" aria-label="Selected majors">
             {majors.map((label) => (
               <button
                 type="button"
@@ -429,6 +488,13 @@ function ProfileStep({ onDone }: { onDone: (p: Profile) => void }) {
             ))}
           </div>
         )}
+        <input
+          type="search"
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+          placeholder={university ? "Search majors" : "Pick a university first."}
+          aria-label="Filter majors"
+        />
         {university && (
           <div className="choices scroll">
             {!options && !error && (
@@ -436,9 +502,9 @@ function ProfileStep({ onDone }: { onDone: (p: Profile) => void }) {
             )}
             {options?.length === 0 && (
               <span className="muted">
-                ASSIST lists no major agreements from {college?.name} to{" "}
-                {university.name}
-                {year ? ` for ${assistYear(year)}` : ""}.
+                {withPeriod(
+                  `ASSIST lists no major agreements from ${college?.name} to ${university.name}${year ? ` for ${assistYear(year)}` : ""}`,
+                )}
               </span>
             )}
             {!!options?.length && shown.length === 0 && (
@@ -491,7 +557,7 @@ function ProfileStep({ onDone }: { onDone: (p: Profile) => void }) {
           rows={2}
           value={goals}
           onChange={(e) => setGoals(e.target.value)}
-          placeholder="Graduate by Spring 2028, find an internship…"
+          placeholder="Find an internship, join a research lab…"
         />
         {goalsTooShort && (
           <span className="field-hint">
@@ -527,7 +593,8 @@ function ProfileStep({ onDone }: { onDone: (p: Profile) => void }) {
             "Saving…"
           ) : (
             <>
-              Continue <Icon name="arrow" size={16} />
+              {initial ? "Save and Continue" : "Continue"}{" "}
+              <Icon name="arrow" size={16} />
             </>
           )}
         </button>
@@ -555,12 +622,19 @@ function UniversityHint({ university }: { university: AssistInstitution }) {
 
 function UploadStep({
   profile,
+  kept,
+  onKeep,
+  onWithoutCourses,
   onDone,
 }: {
   profile: Profile;
+  /** Editing with courses already saved: offer to keep them (the default) or replace the transcript. */
+  kept?: Course[];
+  onKeep: () => Promise<void>;
+  onWithoutCourses: () => Promise<void>;
   onDone: (courses: Course[]) => void;
 }) {
-  const matchAndOpenDegree = useMatchAndOpenDegree(profile);
+  const [replacing, setReplacing] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState<"reading" | "matching" | null>(null);
@@ -584,16 +658,54 @@ function UploadStep({
     }
   }
 
-  async function continueWithoutCourses() {
+  async function finish(next: () => Promise<void>) {
     setBusy("matching");
     setError(null);
     try {
-      await matchAndOpenDegree([]);
+      await next();
     } catch (e) {
       setError(errorText(e));
       setBusy(null);
     }
   }
+  const continueWithoutCourses = () => finish(onWithoutCourses);
+
+  if (kept && !replacing)
+    return (
+      <div className="form">
+        <p className="lede">
+          {kept.length} {plural(kept.length, "course")} from your transcript.
+        </p>
+        <p className="field-hint">
+          Keep them, or upload a new transcript to replace them.
+        </p>
+        {error && <p className="error">{error}</p>}
+        <div className="actions">
+          <button
+            className="primary"
+            type="button"
+            autoFocus
+            onClick={() => void finish(onKeep)}
+            disabled={!!busy}
+          >
+            {busy === "matching" ? (
+              "Matching…"
+            ) : (
+              <>
+                Keep and Continue <Icon name="arrow" size={16} />
+              </>
+            )}
+          </button>
+          <button
+            type="button"
+            onClick={() => setReplacing(true)}
+            disabled={!!busy}
+          >
+            Replace Transcript
+          </button>
+        </div>
+      </div>
+    );
 
   // Opens the file picker; picking a file brings back the Upload button.
   function tryAnother() {
@@ -666,16 +778,27 @@ function UploadStep({
             >
               {busy === "reading" ? "Reading transcript…" : "Upload"}
             </button>
-            <button
-              className="text"
-              type="button"
-              onClick={() => void continueWithoutCourses()}
-              disabled={!!busy}
-            >
-              {busy === "matching"
-                ? "Matching…"
-                : "I Haven’t Taken College Courses Yet"}
-            </button>
+            {kept ? (
+              <button
+                className="text"
+                type="button"
+                onClick={() => setReplacing(false)}
+                disabled={!!busy}
+              >
+                Keep My {kept.length} {plural(kept.length, "Course")}
+              </button>
+            ) : (
+              <button
+                className="text"
+                type="button"
+                onClick={() => void continueWithoutCourses()}
+                disabled={!!busy}
+              >
+                {busy === "matching"
+                  ? "Matching…"
+                  : "I Haven’t Taken College Courses Yet"}
+              </button>
+            )}
           </>
         )}
       </div>
@@ -694,15 +817,14 @@ const EMPTY_COURSE: Course = {
 };
 
 function ConfirmStep({
-  profile,
   rows,
   setRows,
+  onConfirm,
 }: {
-  profile: Profile;
   rows: Row[];
   setRows: (fn: (rows: Row[]) => Row[]) => void;
+  onConfirm: (courses: Course[]) => Promise<void>;
 }) {
-  const matchAndOpenDegree = useMatchAndOpenDegree(profile);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -727,7 +849,7 @@ function ConfirmStep({
     setBusy(true);
     setError(null);
     try {
-      await matchAndOpenDegree(rows.map((r) => r.course));
+      await onConfirm(rows.map((r) => r.course));
     } catch (e) {
       setError(errorText(e));
       setBusy(false);

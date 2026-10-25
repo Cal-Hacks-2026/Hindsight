@@ -111,8 +111,6 @@
 
 /* ---- Landing ---- */
 .landing {
-  max-width: 1040px;
-  margin: 0 auto;
   padding-bottom: 48px;
 }
 .landing .masthead {
@@ -144,6 +142,33 @@
   color: var(--ink);
 }
 
+/* ---- Onboarding: college and university comboboxes ---- */
+/* The label with the chosen university's tag ("Full Plan") beside it. */
+.picker-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 12px;
+}
+.picker-head .label {
+  font-size: 22px;
+  font-weight: 600;
+}
+/* Picked and closed, the field reads as the chosen name rather than an empty search. */
+.picker input[role="combobox"]:not(:focus)::placeholder {
+  color: var(--gray);
+}
+.picker-list {
+  margin-top: -4px;
+}
+.picker-list > li.active .picker-option {
+  background: var(--soft);
+}
+/* Majors: the chosen ones as chips above the search. */
+.majors-chips {
+  margin-bottom: 2px;
+}
+
 @media (max-width: 1100px) {
   .topbar {
     display: none;
@@ -155,6 +180,9 @@
   }
 }
 @media (max-width: 700px) {
+  .picker-head .label {
+    font-size: 20px;
+  }
   .ask-open-compact span {
     display: none;
   }

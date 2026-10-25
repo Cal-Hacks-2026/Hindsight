@@ -1,54 +1,51 @@
-/* ---- Home: This Week beside the path summary and this week's classes ---- */
+/* ---- Home, in reading order: Your Path · Next Term / This Week / Coming Up · Your Week ---- */
 .home-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
   gap: 28px;
   align-items: start;
-}
-.home-main > .section,
-.home-side > .section:last-child {
   margin-bottom: 28px;
 }
-
-/* Moves: ruled like the attention list, with a category tag over each title */
-.moves {
+.home-grid > .section {
+  margin: 0;
+}
+/* This Week's cards need the full width. */
+.home-grid > #this-week {
+  grid-column: 1 / -1;
+}
+.home-next {
+  margin: 0 0 16px;
+  font-size: 24px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.home-next strong {
+  font-weight: 650;
+}
+#this-week .opp-cards + .plan-note {
+  margin-top: 20px;
+}
+/* Coming Up: one line per deadline, the date first. */
+.home-coming {
   list-style: none;
   padding: 0;
   margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  font-size: 20px;
+  line-height: 1.4;
 }
-.move {
-  padding: 24px 0;
-  border-top: 1px solid var(--hair);
+.home-coming li {
+  display: grid;
+  grid-template-columns: 8.5em minmax(0, 1fr);
+  gap: 12px;
 }
-.move:first-child {
-  border-top: 0;
-  padding-top: 0;
-}
-.move-kind {
-  display: inline-block;
-  padding: 3px 10px;
-  border: 1px solid var(--hair);
-  border-radius: 999px;
-  background: var(--soft);
-  font-size: var(--text-small);
+.home-coming-date {
+  font-variant-numeric: tabular-nums;
   font-weight: 600;
-  color: var(--check);
 }
-.move-title {
-  margin: 12px 0 0;
-  font-size: 26px;
-  font-weight: 650;
-  letter-spacing: -0.5px;
-  line-height: 1.3;
-  overflow-wrap: anywhere;
-}
-.move-why {
-  margin: 8px 0 8px;
-  font-size: 22px;
-  line-height: 1.45;
-  color: var(--gray);
-  font-weight: 400;
-}
+
 .home-pending {
   display: flex;
   flex-direction: column;
@@ -64,7 +61,7 @@
 /* Right column */
 .home-path {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 22px 24px;
   margin: 0 0 20px;
 }
@@ -123,19 +120,29 @@
 @media (max-width: 1100px) {
   .home-grid {
     grid-template-columns: minmax(0, 1fr);
-    gap: 0;
   }
 }
 @media (max-width: 700px) {
-  .home-main > .section,
-  .home-side > .section:last-child {
+  .home-grid {
+    gap: 20px;
     margin-bottom: 20px;
   }
-  .move-title {
-    font-size: 24px;
+  .home-path {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .move-why {
-    font-size: 20px;
+  .home-next {
+    font-size: 22px;
+  }
+  /* LISTINGS_SHOWN_NARROW in Home.tsx */
+  #this-week .opp-cards > .opp-card:nth-child(n + 3) {
+    display: none;
+  }
+  .home-coming {
+    font-size: 18px;
+  }
+  .home-coming li {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 2px;
   }
   .home-path dd {
     font-size: 26px;

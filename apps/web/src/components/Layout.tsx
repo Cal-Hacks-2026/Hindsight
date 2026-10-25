@@ -44,8 +44,9 @@ export function Layout() {
     setAskMounted(true);
     setAskOpen((o) => !o);
   };
-  // The Counselor page is Ask already; a second copy in the panel would just repeat it.
-  const askHere = pathname !== "/counselor";
+  // The Counselor page is Ask already; a second copy in the panel would just repeat it. Without a
+  // profile there's nothing to ask about yet.
+  const askHere = pathname !== "/counselor" && !!profile;
   useEffect(() => {
     if (!askHere) setAskOpen(false);
   }, [askHere]);
@@ -151,7 +152,7 @@ export function Layout() {
             to="/onboarding"
             className="profile-link"
             aria-label={
-              profile ? `${profile.name}, profile setup` : "Set up your profile"
+              profile ? `${profile.name}, edit your profile` : "Set up your profile"
             }
           >
             <span className="avatar">
@@ -172,7 +173,12 @@ export function Layout() {
             {degraded}
           </p>
         )}
-        <main id="main-content" tabIndex={-1}>
+        {/* One container for every page; forms (onboarding) take the narrower width, same left edge. */}
+        <main
+          id="main-content"
+          tabIndex={-1}
+          className={pathname === "/onboarding" ? "page-form" : undefined}
+        >
           {/* Floats beside the page header, so it takes no height of its own. */}
           {askHere && (
             <div className="topbar">{askButton("ask-open-wide")}</div>
