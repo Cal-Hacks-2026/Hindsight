@@ -4,6 +4,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router";
 import type { AgentEvent } from "@hindsight/contracts";
+import { Masthead } from "../components/Paper";
 import { api, ApiError } from "../lib/api";
 import { loadSession } from "../lib/session";
 import { useNow } from "../lib/time";
@@ -95,14 +96,7 @@ export function Agent() {
 
   return (
     <div className="cs">
-      <header className="cs-title">
-        <div className="cs-label">Droid · Run log</div>
-        <h1>
-          Every run, on
-          <br />
-          the <em>record</em>.
-        </h1>
-      </header>
+      <Masthead>How Listings Stay Fresh</Masthead>
 
       <section className="cs-row">
         <div className="cs-label cs-row-label">Run</div>
@@ -113,7 +107,7 @@ export function Agent() {
           </p>
           <div className="cs-actions">
             <button type="button" className="cs-btn cs-btn-solid" onClick={() => void runNow()} disabled={starting || running}>
-              {starting ? "Starting…" : running ? "Running…" : "Run now"}
+              {starting ? "Starting…" : running ? "Running…" : "Run Now"}
             </button>
           </div>
           {!runId && latest === "loading" && (
@@ -288,7 +282,7 @@ function ResultMeta({ payload }: { payload: unknown }) {
 
 // ---- helpers ----
 
-const STATUS_LABEL: Record<string, string> = { completed: "Done", in_progress: "Doing", pending: "To do" };
+const STATUS_LABEL: Record<string, string> = { completed: "Done", in_progress: "Doing", pending: "To Do" };
 
 // Droid's TodoWrite lines arrive as "1. [completed] Scan sources"; the <ol> already numbers them.
 function planLine(line: string): { status?: string; text: string } {

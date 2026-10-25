@@ -1,7 +1,7 @@
 {
   "name": "Hindsight",
   "short_name": "Hindsight",
-  "description": "Everything you'd wish you knew, before you need it.",
+  "description": "Plan your four-year journey from community college to university.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

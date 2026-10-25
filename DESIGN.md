@@ -42,20 +42,24 @@ Around the ring, the Latin motto ***Respice · Prospice*** ("look back, look for
 **Rule:** the seal must be **original**. Evoke Stanford/Harvard/Oxford; never copy their marks.
 
 ### Wordmark
-`HINDSIGHT` in the display serif, uppercase, generous tracking. Tagline: *Everything you'd wish you knew, before you need it.*
+`HINDSIGHT` in Helvetica bold, uppercase, slight tracking (0.08em), with the subline *Plan Your Four-Year Journey* beneath it in small gray type. The logo and wordmark appear once, in the header; no page repeats them.
 
 ---
 
 ## 4. Typography
 
+**One family for the whole site:** `"Helvetica Neue", Helvetica, Arial, sans-serif` (the `--font` token). No web fonts, no second family. Hierarchy comes from **weight and size**, and from **value** (ink vs. warm gray).
+
 | Role | Style | Usage |
 |---|---|---|
-| **Display** | High-contrast classical serif, tightly stacked (tight leading, slight negative tracking) | Page titles only. One italic word in the accent color: "Your *degree*", "What you'd *wish* you knew" |
-| **Interface** | Clean Helvetica-style grotesk | Buttons, labels, body, tables: everything functional |
-| **Meta labels** | Tiny uppercase grotesk, wide tracking | Pinned to page corners: `HINDSIGHT · SJSU · DATA SCIENCE + ECONOMICS · FALL 2026` |
-| **Course codes** | Grotesk with tabular figures (or mono) | `MATH 1A`, `ECON 101` scan like data |
+| **Page title** | Bold, 28–40px, tight leading | One per page, plain words in Title Case: "Your Degree", "Opportunities". Kept compact: header + title stay within ~20% of the first screen |
+| **Section titles** | Bold, 22–26px | Title Case: "Credits Toward Your Requirements" |
+| **Labels** | Bold, 13–14px, sentence or Title Case as written; never uppercase-tracked | Section labels, field labels, table heads |
+| **Body** | Regular, 15px base; 19–22px for a lead sentence | Everything you read; sentence case |
+| **Large numerals** | Light (300), warm gray | Section numbers, listing ranks |
+| **Course codes** | Tabular figures | `MATH 1A`, `ECON 101` scan like data |
 
-Hierarchy comes from **value** (ink vs. warm gray) as much as size.
+**Copy rules.** Title Case for headings, nav items, buttons and section titles; sentence case for body sentences. No eyebrow or kicker lines above titles, no copy that describes the page's own structure ("Methods", "How it was made", "Prepared for…"), no taglines inside pages. Where a section needs a title, name it plainly.
 
 ---
 
@@ -67,7 +71,7 @@ Hierarchy comes from **value** (ink vs. warm gray) as much as size.
 | **Ink** | Near-black text and rules |
 | **Gray** | Secondary text, receding section numerals |
 | **Hairline** | Thin full-width rules (ink at low opacity) |
-| **Accent: institutional blue** | The ONE accent (the Yale italic blue). Max once per screen, usually an italic word or the active state |
+| **Accent: institutional blue** | The ONE accent. Max once per screen: link hover, the active state, or a single callout rule |
 | **Status (muted)** | Satisfied = muted green · Partial = muted ochre · Missing = muted red · At-university-only = slate blue |
 
 Color inside objects (book spines by department, chips) is allowed; the page itself stays neutral.
@@ -106,7 +110,7 @@ A judge understands "I have most of my books; here's what's missing" instantly.
 ```
 HINDSIGHT · SJSU                                   DATA SCIENCE + ECONOMICS · FALL 2026
 ────────────────────────────────────────────────────────────────────────────────────────
-                         Your  degree,  in  *hindsight*.          ← big serif, one italic blue word
+Your Degree                                                       ← compact bold page title
 
 ABSTRACT  34 units remain. Two requirements need attention.¹ Earliest finish: Spring 2029.²
 ────────────────────────────────────────────────────────────────────────────────────────
@@ -134,7 +138,7 @@ ABSTRACT  34 units remain. Two requirements need attention.¹ Earliest finish: S
 ## 10. Rules for anyone building UI (including Claude Code)
 
 1. One accent color, used at most once per screen.
-2. Display serif for page titles only; everything functional is grotesk.
+2. One family (Helvetica) everywhere; hierarchy through weight and size, not a second font.
 3. No boxes where a hairline rule will do.
 4. Every academic claim shows its citation.
 5. Generous whitespace; let it breathe.

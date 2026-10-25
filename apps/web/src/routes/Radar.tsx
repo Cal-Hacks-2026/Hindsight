@@ -1,9 +1,8 @@
-import { Link } from "react-router";
 import type { RankedOpportunity } from "@hindsight/contracts";
 import { Listing, NewLabel, safeUrl, typeLabel } from "../components/Listing";
 import { Masthead, Note, Section } from "../components/Paper";
 import { NoProfile, RadarEmpty, RadarError, RadarLoading } from "../components/RadarStates";
-import { CAMPUS_SHORT, plural } from "../lib/format";
+import { plural } from "../lib/format";
 import { useOpportunities } from "../lib/opportunities";
 import { loadSession } from "../lib/session";
 import { closeAt, formatWhen, useNow } from "../lib/time";
@@ -55,20 +54,15 @@ export function Radar() {
 
   return (
     <>
-      <Masthead kicker={`Campus opportunities${profile ? ` · ${CAMPUS_SHORT[profile.campus]}` : ""}`}>
-        Opportunities,
-        <br />
-        <em>ranked</em> for you.
-      </Masthead>
+      <Masthead>Opportunities</Masthead>
       {week && (
         <Section
           num={1}
-          label="This week"
-          title={week.length ? `${week.length} ${plural(week.length, "listing")} in the next 7 days.` : undefined}
+          label="This Week"
+          title={week.length ? `${week.length} ${plural(week.length, "Listing")} in the Next 7 Days` : undefined}
           notes={
-            <Note lead="Starting or closing soon.">
-              Listings that start or close within a week. <NewLabel /> marks the ones Droid
-              flagged on a scan; they come first. <Link to="/agent">See the Droid activity log →</Link>
+            <Note>
+              <NewLabel /> marks listings found on the latest scan; they come first.
             </Note>
           }
         >
@@ -88,19 +82,9 @@ export function Radar() {
       <Section
         num={week ? 2 : 1}
         label="Ranked"
-        title={ready?.length ? `${ready.length} ${plural(ready.length, "listing")}, best fit first.` : undefined}
+        title={ready?.length ? `${ready.length} ${plural(ready.length, "Listing")}, Best Fit First` : undefined}
         last
-        notes={
-          ready?.length ? (
-            <>
-              <Note lead="How it's ranked.">
-                How well each one matches your majors, goals and interests, plus how soon it closes. The italic line
-                is Claude's reason; dates come only from the source page.
-              </Note>
-              <Note lead="Time left.">Red closes within two days, amber within a week.</Note>
-            </>
-          ) : undefined
-        }
+        notes={ready?.length ? <Note lead="Time left.">Red closes within two days, amber within a week.</Note> : undefined}
       >
         {!profile ? (
           <NoProfile />

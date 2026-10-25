@@ -1,5 +1,4 @@
 export const APP_NAME = "Hindsight";
-export const TAGLINE = "Everything you'd wish you knew, before you need it.";
 
 export const API_URL: string = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
 
