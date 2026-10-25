@@ -1,0 +1,63 @@
+{
+  "version": 1,
+  "verified_on": "2026-10-25",
+  "notes": "Radar sources for this campus (PROJECT.md §8.3). Every url was fetched and returned real, current listings on verified_on. `url` is what the Apify Cheerio Scraper fetches; `homepage` is the human-facing page it mirrors. `kind` picks the parser in apps/api/app/services/radar/normalize.py.",
+  "sources": [
+    {
+      "id": "sjsu-events-ai-tech",
+      "name": "SJSU Events: Artificial Intelligence + Science and Technology",
+      "kind": "localist",
+      "url": "https://events.sjsu.edu/api/2/events?type%5B%5D=45325508707422&type%5B%5D=32174662713644&days=90&pp=100&distinct=true",
+      "homepage": "https://events.sjsu.edu/",
+      "org": "San José State University",
+      "tags": [
+        "ai",
+        "tech"
+      ]
+    },
+    {
+      "id": "sjsu-events-workshops",
+      "name": "SJSU Events: Conferences, Training, Workshops",
+      "kind": "localist",
+      "url": "https://events.sjsu.edu/api/2/events?type%5B%5D=32174659381001&days=60&pp=100&distinct=true",
+      "homepage": "https://events.sjsu.edu/",
+      "org": "San José State University",
+      "tags": [
+        "workshop"
+      ]
+    },
+    {
+      "id": "sjsu-events-career",
+      "name": "SJSU Events: Professional Development + Info Sessions and Fairs",
+      "kind": "localist",
+      "url": "https://events.sjsu.edu/api/2/events?type%5B%5D=32174662715051&type%5B%5D=48801459064507&days=60&pp=100&distinct=true",
+      "homepage": "https://events.sjsu.edu/",
+      "org": "San José State University",
+      "tags": [
+        "career"
+      ]
+    },
+    {
+      "id": "sjsu-club-events",
+      "name": "SAMMY App (SJSU student organizations) event feed",
+      "kind": "campusgroups_rss",
+      "url": "https://sammyapp.sjsu.edu/rss_events",
+      "homepage": "https://sammyapp.sjsu.edu/events",
+      "org": "SJSU student organizations",
+      "tags": [
+        "clubs"
+      ]
+    },
+    {
+      "id": "sjsu-devpost",
+      "name": "Devpost: open and upcoming hackathons matching \"San Jose\"",
+      "kind": "devpost",
+      "url": "https://devpost.com/api/hackathons?search=san%20jose&status%5B%5D=upcoming&status%5B%5D=open",
+      "homepage": "https://devpost.com/hackathons",
+      "org": "Devpost",
+      "tags": [
+        "hackathon"
+      ]
+    }
+  ]
+}

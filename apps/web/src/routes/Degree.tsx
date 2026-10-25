@@ -100,10 +100,10 @@ class Sources {
   }
 }
 
-// "De Anza College → San Jose State University · Data Science, B.S. (2026–2027)"
+// "<College> → <University> · Data Science, B.S. (2026–2027)"
 const AGREEMENT_RE = /^(.+?) → (.+?) · (.+) \((\d{4})[–-](\d{4})\)$/;
 
-/** `college`: the sending college's short name, e.g. "De Anza", "Foothill"; `from`/`to`: full names. */
+/** `college`: the sending college's short name ("<Name> College" → "<Name>"); `from`/`to`: full names. */
 type Agreement = {
   start: number;
   span: string;
@@ -223,7 +223,7 @@ function tone(req: Requirement): { tone: StatusTone; label: string } {
     case "missing":
       return { tone: "missing", label: "Still needed" };
     case "at_university":
-      return { tone: "sjsu", label: "No published match" };
+      return { tone: "neutral", label: "No published match" };
   }
 }
 
@@ -289,15 +289,15 @@ function Report({
   view: "plan" | "credits";
 }) {
   const majors = matches.map((m) => m.major_label);
-  // With the university's requirements (SJSU), the planner plans curated majors only; the rest get
+  // With the university's requirements (a registry entry that lists them), the planner plans curated majors only; the rest get
   // the ASSIST rows and no plan. Without them (any other university), every major gets its
   // community-college terms and the after-transfer block says what's missing.
-  const fullPlan = hasFullPlan(profile.campus);
+  const fullPlan = hasFullPlan(profile.receiving_institution_id);
   const planned = fullPlan
-    ? majors.filter((m) => catalogMajor(m, profile.campus))
+    ? majors.filter((m) => catalogMajor(m, profile.receiving_institution_id))
     : majors;
   const uncurated = fullPlan
-    ? majors.filter((m) => !catalogMajor(m, profile.campus))
+    ? majors.filter((m) => !catalogMajor(m, profile.receiving_institution_id))
     : [];
   // The student's start and transfer terms, if they picked them; otherwise the planner's defaults.
   const [picks, setPicks] = useState<TermPicks>(() => {
@@ -330,15 +330,15 @@ function Report({
   // Number the sources in reading order: agreements as the rows cite them, then the catalog.
   const sources = new Sources();
   const rows = buildRows(matches, courses, sources);
-  // Names as the ASSIST agreement gives them, so a Foothill report never says De Anza.
+  // Names as the ASSIST agreement gives them, so a report never names another college.
   const agreement = matches
     .flatMap((m) => m.requirements.map((r) => agreementOf(r.citation.label)))
     .find(Boolean);
   const campusLong = agreement?.to ?? universityName(profile);
-  const campus = shortUniversity(campusLong);
+  const campus = shortUniversity(campusLong, profile.receiving_institution_id);
   const catalogRefByMajor: Record<string, number> = {};
   const catalogRefs = majors.flatMap((label) => {
-    const c = catalogMajor(label, profile.campus);
+    const c = catalogMajor(label, profile.receiving_institution_id);
     if (!c) return [];
     const n = sources.add(
       c.source_url,
@@ -359,7 +359,7 @@ function Report({
     collegeLong,
     campus,
     campusLong,
-    profileCampus: profile.campus,
+    universityId: profile.receiving_institution_id,
   };
   const missed = rows.filter((r) => r.req.status === "satisfied" && r.older);
 
@@ -472,13 +472,14 @@ function Report({
   );
 }
 
-/** Institution names for copy, from the agreement: "De Anza" / "De Anza College", "SJSU" / "San Jose State University". */
+/** Institution names for copy, from the agreement: short and full, for the college and the university. */
 type Names = {
   college: string;
   collegeLong: string;
   campus: string;
   campusLong: string;
-  profileCampus: string;
+  /** The profile's university (ASSIST id). */
+  universityId: number;
 };
 
 // ---- Abstract ----
@@ -937,7 +938,7 @@ function RequirementRow({
 const keepCodes = (text: string) =>
   text.replace(/\b([A-Z][A-Z0-9]{1,5}) (?=C?\d)/g, "$1\u00a0");
 
-/** "Take at De Anza:" for rows still open, with how many of the listed options it takes. */
+/** "Take at <college>:" for rows still open, with how many of the listed options it takes. */
 function takeAtLead(req: Requirement): string | undefined {
   if (
     !req.options?.length ||
@@ -1020,7 +1021,7 @@ function PlanNotes({
       )
     : [];
   const unscheduled = majors.flatMap((m) =>
-    (catalogMajor(m, names.profileCampus)?.unscheduled ?? []).map(
+    (catalogMajor(m, names.universityId)?.unscheduled ?? []).map(
       (g) => `${g.units} units of ${shortMajor(m)} ${g.title}`,
     ),
   );

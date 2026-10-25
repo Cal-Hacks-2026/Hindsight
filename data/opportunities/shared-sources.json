@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "verified_on": "2026-10-25",
+  "notes": "Radar sources scanned with every campus that has a feed (open hackathon listings). Same format as data/campuses/<id>/opportunity-sources.json.",
+  "sources": [
+    {
+      "id": "mlh-2027-california",
+      "name": "MLH 2027 season: hackathons in California",
+      "kind": "mlh_season",
+      "url": "https://www.mlh.com/seasons/2027/events",
+      "homepage": "https://www.mlh.com/seasons/2027/events",
+      "org": "Major League Hacking",
+      "tags": [
+        "hackathon",
+        "mlh"
+      ],
+      "json_selector": "script[data-page=app]",
+      "location_contains": [
+        "California"
+      ]
+    }
+  ]
+}

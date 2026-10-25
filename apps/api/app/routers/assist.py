@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
 
-from app.config import campus_for
 from app.models import AssistInstitution, AssistInstitutionsResponse, AssistMajorsResponse
 from app.services import planner
 from app.services.assist import AssistError, AssistNotFound, get_service, limits
@@ -43,8 +42,8 @@ def universities(sending: int) -> AssistInstitutionsResponse:
         raise HTTPException(status_code=404, detail=str(e)) from e
     except AssistError as e:
         raise HTTPException(status_code=502, detail=f"ASSIST unavailable: {e}") from e
-    curated = {m.campus for m in planner.load_majors()}
+    curated = {m.university_id for m in planner.load_majors()}
     return AssistInstitutionsResponse(institutions=[
-        AssistInstitution(id=rid, name=name, year_id=year, full_plan=campus_for(rid) in curated)
+        AssistInstitution(id=rid, name=name, year_id=year, full_plan=rid in curated)
         for rid, name, year in found
     ])

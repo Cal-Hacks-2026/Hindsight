@@ -19,15 +19,6 @@ WEB_ORIGINS = [
 # with no agreements for it yet falls back to its latest published year (AssistService.year_for).
 ASSIST_YEAR_ID = 77
 
-# Universities with a profile campus of their own (Radar sources, curated requirements). Any other
-# ASSIST university is "other": credits and community-college terms only, no Radar feed.
-CAMPUS_BY_ASSIST_ID = {39: "sjsu", 79: "berkeley"}
-
-
-def campus_for(receiving_institution_id: int) -> str:
-    return CAMPUS_BY_ASSIST_ID.get(receiving_institution_id, "other")
-
-
 def supabase_rest_url() -> str | None:
     """PostgREST base for SUPABASE_URL, which should be the project URL; a pasted
     `.../rest/v1` URL is accepted too."""

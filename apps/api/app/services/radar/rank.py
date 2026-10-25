@@ -24,7 +24,7 @@ import anthropic
 from pydantic import BaseModel
 
 from app.models import OpportunityCategory, OpportunitySubcategory, Profile, RankedOpportunity
-from app.services import claude_limits
+from app.services import campuses, claude_limits
 from app.services.claude_limits import RateLimited
 from app.services.radar import classify
 from app.services.radar.normalize import parse_when
@@ -44,16 +44,20 @@ WEIGHTS = {"interests": 0.35, "majors": 0.25, "goals": 0.10, "urgency": 0.20, "t
 TYPE_WEIGHT = {"hackathon": 1.0, "program": 1.0, "position": 1.0, "workshop": 0.8, "club": 0.6, "event": 0.4}
 TRANSFER_BONUS = 0.05
 # Calendar audience tags (Localist) that mean "not for students" unless a student tag is also present.
-STAFF_AUDIENCE = {"faculty", "staff", "sjsu employees", "employees: faculty and staff", "faculty events"}
+# A campus's own staff tags come from its registry entry (opportunities.vocabulary).
+STAFF_AUDIENCE = {"faculty", "staff", "employees: faculty and staff", "faculty events",
+                  *campuses.vocabulary().staff_audience_tags}
 STUDENT_AUDIENCE = {"students", "current students", "undergraduate students", "graduate students",
                     "students and families", "general public"}
 STAFF_ONLY_PENALTY = 0.25
 # Left out entirely: a faculty unit as the org ("Center for Faculty Excellence"), or text saying the
-# item is for faculty ("for faculty and staff", "faculty only") unless students are named alongside.
+# item is for faculty ("for faculty and staff", "for all faculty", "for <campus> faculty", "faculty
+# only") unless students are named alongside. The campus words come from the registry.
 FACULTY_ORG = re.compile(r"\bfaculty\b", re.I)
+_FACULTY_PREFIX = "".join(f"|{re.escape(w)}\\s+" for w in campuses.vocabulary().faculty_prefixes)
 FACULTY_TEXT = re.compile(
     r"\bfaculty[- ]only\b"
-    r"|\b(?:for|open to|intended for|designed for|calling all)\s+(?:all\s+|sjsu\s+)?faculty\b"
+    rf"|\b(?:for|open to|intended for|designed for|calling all)\s+(?:all\s+{_FACULTY_PREFIX})?faculty\b"
     r"(?!(?:\s*(?:,|&|/|\band\b|\bor\b|\bstaff\b))*\s*(?:and\s+)?students\b)",
     re.I,
 )
@@ -293,7 +297,8 @@ reason_cache = _ReasonCache()
 
 
 def _profile_key(profile: Profile) -> str:
-    payload = json.dumps([profile.campus, profile.majors, profile.goals, profile.interests], sort_keys=True)
+    payload = json.dumps([profile.receiving_institution_id, profile.majors, profile.goals, profile.interests],
+                         sort_keys=True)
     return hashlib.sha256(payload.encode()).hexdigest()[:16]
 
 
@@ -306,7 +311,9 @@ def ask_claude(profile: Profile, items: list[Scored]) -> dict[str, str]:
     model = os.getenv("ANTHROPIC_MODEL") or DEFAULT_MODEL
     fallback = {"betas": ["server-side-fallback-2026-07-01"], "fallbacks": "default"} if model in FALLBACK_MODELS else {}
     payload = {
-        "student": {"campus": profile.campus, "majors": profile.majors, "goals": profile.goals,
+        "student": {"university": campuses.short_name(profile.receiving_institution_id,
+                                                      profile.receiving_institution_name or "their university"),
+                    "majors": profile.majors, "goals": profile.goals,
                     "interests": profile.interests},
         "items": [{
             "id": str(s.row["id"]), "title": s.row.get("title"), "type": s.row.get("type"),
@@ -390,6 +397,7 @@ def _item(s: Scored, reason: str, label: classify.Label) -> RankedOpportunity:
         modality=s.row.get("modality"),
         window=s.row.get("window"),
         last_checked=s.row.get("last_checked"),
+        campus_id=s.row.get("campus_id"),
     )
 
 

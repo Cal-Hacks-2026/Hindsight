@@ -1,0 +1,207 @@
+{
+  "version": 1,
+  "verified_on": "2026-10-25",
+  "notes": "Source pages for each university's \"What to Expect\" guide. Official or institutional pages only (the university, its Associated Students, its student newspaper): no forums. Every url was opened and read on verified_on. `sections` says which guide sections may cite the page. The Apify Cheerio Scraper fetches each url; Claude writes each section only from its pages, and every statement must quote the page it cites (apps/api/app/services/university/). The Spartan Daily (sjsunews.com) is not listed: its site blocked automated reads on verified_on.",
+  "sources": [
+    {
+      "id": "sjsu-transfer-orientation",
+      "title": "Spartan Experience for Transfers (Transfer Orientation)",
+      "publisher": "SJSU New Student and Family Programs",
+      "url": "https://www.sjsu.edu/newspartans/transfer-orientation/",
+      "sections": [
+        "transfer_services"
+      ]
+    },
+    {
+      "id": "sjsu-new-spartans",
+      "title": "New Student and Family Programs",
+      "publisher": "SJSU New Student and Family Programs",
+      "url": "https://www.sjsu.edu/newspartans/",
+      "sections": [
+        "transfer_services"
+      ]
+    },
+    {
+      "id": "sjsu-orientation-faq",
+      "title": "Orientation Frequently Asked Questions",
+      "publisher": "SJSU New Student and Family Programs",
+      "url": "https://www.sjsu.edu/newspartans/faq.php",
+      "sections": [
+        "transfer_services"
+      ]
+    },
+    {
+      "id": "sjsu-transfer-steps",
+      "title": "Transfer Steps to Enrollment",
+      "publisher": "SJSU Admissions",
+      "url": "https://www.sjsu.edu/admissions/transfer/been-admitted/transfer-steps-to-enrollment/index.php",
+      "sections": [
+        "transfer_services",
+        "housing",
+        "first_semester"
+      ]
+    },
+    {
+      "id": "sjsu-registrar-fall-2027",
+      "title": "Fall 2027 Registration Calendar",
+      "publisher": "SJSU Office of the Registrar",
+      "url": "https://www.sjsu.edu/registrar/calendar/fall-2027.php",
+      "sections": [
+        "academics",
+        "first_semester"
+      ]
+    },
+    {
+      "id": "sjsu-success-centers",
+      "title": "Student Success Centers",
+      "publisher": "SJSU Undergraduate Advising",
+      "url": "https://www.sjsu.edu/advising/academic-advising/student-success-centers.php",
+      "sections": [
+        "academics",
+        "transfer_services",
+        "first_semester"
+      ]
+    },
+    {
+      "id": "sjsu-coss-transfer-advising",
+      "title": "Transfer Advising, College of Social Sciences Student Success Center",
+      "publisher": "SJSU College of Social Sciences",
+      "url": "https://www.sjsu.edu/socsci-ssc/academic-advising/transfer/index.php",
+      "sections": [
+        "academics",
+        "transfer_services"
+      ]
+    },
+    {
+      "id": "sjsu-cos-new-student-advising",
+      "title": "New Student Advising, College of Science Student Success Center",
+      "publisher": "SJSU College of Science",
+      "url": "https://www.sjsu.edu/science-ssc/advising/new-student/index.php",
+      "sections": [
+        "academics",
+        "first_semester",
+        "transfer_services"
+      ]
+    },
+    {
+      "id": "sjsu-peer-connections",
+      "title": "Peer Connections",
+      "publisher": "SJSU Peer Connections",
+      "url": "https://www.sjsu.edu/peerconnections/",
+      "sections": [
+        "academics"
+      ]
+    },
+    {
+      "id": "sjsu-facts",
+      "title": "By the Numbers",
+      "publisher": "San José State University",
+      "url": "https://www.sjsu.edu/facts-and-accomplishments/facts.php",
+      "sections": [
+        "academics",
+        "student_life"
+      ]
+    },
+    {
+      "id": "sjsu-as-baypass",
+      "title": "SJSU Clipper BayPass",
+      "publisher": "Associated Students, SJSU (Transportation Solutions)",
+      "url": "https://www.sjsu.edu/as/departments/transportation-solutions/baypass/index.php",
+      "sections": [
+        "getting_around"
+      ]
+    },
+    {
+      "id": "sjsu-as-regional-transit",
+      "title": "Regional Transit",
+      "publisher": "Associated Students, SJSU (Transportation Solutions)",
+      "url": "https://www.sjsu.edu/as/departments/transportation-solutions/regional-transit/index.php",
+      "sections": [
+        "getting_around"
+      ]
+    },
+    {
+      "id": "sjsu-parking-commuter",
+      "title": "Student Commuter Permits",
+      "publisher": "SJSU Parking Services",
+      "url": "https://www.sjsu.edu/parking/permits/student-commuter.php",
+      "sections": [
+        "getting_around"
+      ]
+    },
+    {
+      "id": "sjsu-parking-maps",
+      "title": "Parking Maps",
+      "publisher": "SJSU Parking Services",
+      "url": "https://www.sjsu.edu/parking/maps/index.php",
+      "sections": [
+        "getting_around"
+      ]
+    },
+    {
+      "id": "sjsu-housing",
+      "title": "University Housing Services",
+      "publisher": "SJSU University Housing Services",
+      "url": "https://www.sjsu.edu/housing/",
+      "sections": [
+        "housing"
+      ]
+    },
+    {
+      "id": "sjsu-housing-apply",
+      "title": "Apply for Housing",
+      "publisher": "SJSU University Housing Services",
+      "url": "https://www.sjsu.edu/housing/apply-for-housing/index.php",
+      "sections": [
+        "housing"
+      ]
+    },
+    {
+      "id": "sjsu-housing-rates",
+      "title": "Academic Year Housing Rates",
+      "publisher": "SJSU University Housing Services",
+      "url": "https://www.sjsu.edu/housing/apply-for-housing/housing-rates/academic-year-rates.php",
+      "sections": [
+        "housing"
+      ]
+    },
+    {
+      "id": "sjsu-housing-info",
+      "title": "Additional Housing Information",
+      "publisher": "SJSU University Housing Services",
+      "url": "https://www.sjsu.edu/housing/about-us/additional-housing-information.php",
+      "sections": [
+        "housing"
+      ]
+    },
+    {
+      "id": "sjsu-get-involved",
+      "title": "Get Involved at SJSU",
+      "publisher": "SJSU Student Involvement",
+      "url": "https://www.sjsu.edu/getinvolved/",
+      "sections": [
+        "student_life",
+        "first_semester"
+      ]
+    },
+    {
+      "id": "sjsu-student-orgs",
+      "title": "Recognized Student Orgs",
+      "publisher": "SJSU Student Involvement",
+      "url": "https://www.sjsu.edu/getinvolved/student-orgs/index.php",
+      "sections": [
+        "student_life"
+      ]
+    },
+    {
+      "id": "sjsu-associated-students",
+      "title": "Associated Students, SJSU",
+      "publisher": "Associated Students, SJSU",
+      "url": "https://www.sjsu.edu/as/",
+      "sections": [
+        "student_life",
+        "getting_around"
+      ]
+    }
+  ]
+}

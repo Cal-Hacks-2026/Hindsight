@@ -1,7 +1,9 @@
 # Curated major requirements
 
 Upper-division requirements not covered by ASSIST (PROJECT.md §8.2).
-One JSON file per major (e.g. `sjsu-data-science-bs.json`); every course and group carries a `source_url`.
+One JSON file per major, under its university's folder (`data/campuses/<ASSIST id>/requirements/data-science-bs.json`)
+and listed in that university's registry entry (`requirements`, see [README.md](README.md)); every course and group
+carries a `source_url`. A university with any listed file gets the "Full Plan" (after-transfer semesters).
 Prerequisites are stored as edges for the planner (`apps/api/app/services/planner.py` validates the format).
 
 **Source.** The SJSU files come from SJSU's official 2025-2026 catalog PDF; each `source_url` links the
@@ -14,7 +16,7 @@ copied from the catalog. Where it's ambiguous or can't be expressed as edges, th
 
 ## Format
 
-Top level: `major_label` (the exact ASSIST label), `campus`, `catalog_year`, `source_url`, `notes[]`,
+Top level: `major_label` (the exact ASSIST label), `catalog_year`, `source_url`, `notes[]`,
 `needs_review[]`, `placeholder` (true only for invented test data), `courses{}`, `groups[]`.
 
 `courses["CS 163"]`:

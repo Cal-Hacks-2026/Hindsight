@@ -15,7 +15,7 @@ const MAX_BODY = 10_000;
 const RunRequest = z
   .object({
     run_id: z.string().uuid(),
-    campus: z.enum(CAMPUSES),
+    campus: z.string().refine((c) => CAMPUSES.includes(c), { message: 'unknown campus' }),
     trigger: z.enum(['manual', 'profile_created']),
     profile_id: z.string().uuid().nullish(),
   })

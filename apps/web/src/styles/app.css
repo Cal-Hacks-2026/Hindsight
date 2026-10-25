@@ -482,7 +482,7 @@ figcaption {
 .status.missing {
   color: var(--gray);
 }
-.status.sjsu {
+.status.neutral {
   background: var(--paper);
 }
 .credit-filters {

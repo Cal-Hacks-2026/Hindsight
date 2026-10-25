@@ -27,7 +27,7 @@ from app.services.university.sources import Section
 log = logging.getLogger(__name__)
 
 PROMPT_VERSION = "2"
-MAX_PAGE_CHARS = 12000  # per page; SJSU's pages run 0.5–12k characters of text
+MAX_PAGE_CHARS = 12000  # per page; official pages so far run 0.5–12k characters of text
 MAX_ITEMS = 6
 
 SYSTEM = """You write one section of a "What to Expect" guide for students transferring from a community college to {university}.

@@ -7,7 +7,6 @@ from typing import Literal
 from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, Query, Request, Response, UploadFile
 from fastapi.concurrency import run_in_threadpool
 
-from app.config import campus_for
 from app.models import (
     CounselorRequest,
     CounselorResponse,
@@ -24,13 +23,13 @@ from app.models import (
     RankedOpportunity,
     UpdateCoursesRequest,
 )
-from app.services import agent_client, claude_limits, counselor, planner, profile_limits, profile_store, transcript
+from app.services import agent_client, campuses, claude_limits, counselor, planner, profile_limits, profile_store, transcript
 from app.services import ge as ge_service
 from app.services.assist import AssistError, AssistNotFound, get_service
 from app.services.assist import limits as assist_limits
 from app.services.db import StoreError
 from app.services.ge import plan as ge_plan
-from app.services.radar import classify, rank, sources as radar_sources, store as radar_store
+from app.services.radar import classify, feeds, rank, store as radar_store
 from app.services.radar import programs as radar_programs
 from app.services.radar.normalize import parse_when
 
@@ -60,12 +59,14 @@ def _get_profile(profile_id: str) -> Profile:
 @router.post("", response_model=ProfileResponse, response_model_exclude_none=True,
              dependencies=[Depends(profile_limits.per_ip)])
 def create_profile(body: CreateProfileRequest, background: BackgroundTasks) -> ProfileResponse:
-    # The campus follows the university picked, whatever the client sent, so a UCLA student
-    # never gets SJSU's Radar feed or requirements.
-    profile = profile_store.create_profile(body.model_copy(update={"campus": campus_for(body.receiving_institution_id)}))
-    if profile.campus in radar_sources.load().campuses:
-        # Trigger: a new profile gets its own Droid run (rank + alerts) once the response is sent.
-        background.add_task(agent_client.start_run, str(uuid.uuid4()), profile.campus, "profile_created", profile.id)
+    # The legacy campus column follows the university picked, whatever the client sent; schools
+    # are always found by ASSIST id, so a profile never reads another campus's data.
+    profile = profile_store.create_profile(
+        body.model_copy(update={"campus": campuses.profile_feed(body.receiving_institution_id)}))
+    if read := feeds.for_profile(profile):
+        # Trigger: a new profile gets its own Droid run (rank + alerts) once the response is sent. One
+        # run is enough: it ranks the profile across every feed it reads.
+        background.add_task(agent_client.start_run, str(uuid.uuid4()), read[0].key, "profile_created", profile.id)
     return ProfileResponse(profile=_named(profile))
 
 
@@ -132,7 +133,8 @@ def plan(profile_id: str, majors: str | None = Query(None, description="Comma-se
          ) -> PlanResponse:
     profile = _get_profile(profile_id)
     try:
-        chosen, uncurated, full = planner.plan_majors(majors, profile.majors, profile.campus, planner.load_majors())
+        chosen, uncurated, full = planner.plan_majors(majors, profile.majors, profile.receiving_institution_id,
+                                                      planner.load_majors())
     except planner.PlannerError as e:
         raise HTTPException(status_code=e.status, detail=str(e)) from e
     # Same rule as the counselor: done = passed (or in progress) on the transcript, or satisfied
@@ -190,10 +192,10 @@ def opportunities(profile_id: str, background: BackgroundTasks, request: Request
     if not filters.active():  # only the unfiltered feed asks Claude for reasons
         claude_limits.per_ip(request)
     profile = _get_profile(profile_id)
-    if profile.campus not in radar_sources.load().campuses:
-        # No sources for this campus: an empty feed, never another campus's listings.
+    if not feeds.for_profile(profile):
+        # Neither school has sources: an empty feed, never another campus's listings.
         return OpportunitiesResponse(items=[])
-    rows = radar_store.candidates(profile.campus) + radar_programs.as_rows(profile.campus)
+    rows = feeds.candidates(profile)
     items, categories = rank.feed(profile, rows, filters)
     if not filters.active():  # only the default feed is what Droid alerts on
         background.add_task(_record_ranked, profile_id, [i for i in items if not radar_programs.is_program(i.id)])

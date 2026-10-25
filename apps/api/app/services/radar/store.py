@@ -122,7 +122,7 @@ def save_labels(rows: list[dict[str, Any]], transport: httpx.BaseTransport | Non
 
 
 def _drop_other_campus_sites(campus: Campus, rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """A hackathon found on another campus's event site (e.g. events.berkeley.edu) isn't open to this campus."""
+    """A hackathon found on another campus's event site (a campus calendar's own listings) isn't open to this campus."""
     foreign = sources.other_campus_hosts(campus)
     return [
         r for r in rows

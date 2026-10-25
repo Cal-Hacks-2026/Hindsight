@@ -37,11 +37,11 @@ from pydantic import BaseModel
 
 from app.models import ChatMessage, Citation, Course, MatchResult, Profile
 from app.models import GeResponse, ScheduledClass, ScheduleTerm
-from app.services import claude_limits, ge, planner
+from app.services import campuses, claude_limits, ge, planner
 from app.services.assist import AssistError, AssistNotFound, get_service
 from app.services.db import StoreError
 from app.services.ge import plan as ge_plan
-from app.services.radar import rank, sources as radar_sources, store as radar_store
+from app.services.radar import feeds, rank
 from app.services.schedule import store as schedule_store, week as schedule_week
 from app.services.schedule.normalize import minutes
 from app.services.university import store as university_store
@@ -127,19 +127,23 @@ def match_facts(result: MatchResult, sources: Sources) -> dict[str, Any]:
     return {"major_label": result.major_label, "summary": result.summary.model_dump(), "requirements": reqs}
 
 
+def _catalog_name(major: planner.Major) -> str:
+    return campuses.short_name(major.university_id, "University")
+
+
 def _catalog_citation(major: planner.Major, code: str | None = None) -> Citation:
     # Several courses share a catalog page (url), so ref names the course: sources are keyed on (source, url, ref).
     tag = planner.PLACEHOLDER_PREFIX if major.placeholder else ""
     if code is None:
-        return Citation(source="catalog", label=f"{tag}{major.campus.upper()} catalog · {major.major_label} "
+        return Citation(source="catalog", label=f"{tag}{_catalog_name(major)} catalog · {major.major_label} "
                         f"({major.catalog_year})", url=major.source_url)
     course = major.courses[code]
-    return Citation(source="catalog", label=f"{tag}{major.campus.upper()} catalog · {code} {course.title}",
+    return Citation(source="catalog", label=f"{tag}{_catalog_name(major)} catalog · {code} {course.title}",
                     url=course.source_url, ref=f"{code} · {major.major_label} ({major.catalog_year})")
 
 
 def _group_citation(major: planner.Major, group: planner.RequirementGroup) -> Citation:
-    return Citation(source="catalog", label=f"{major.campus.upper()} catalog · {major.major_label} · {group.title}",
+    return Citation(source="catalog", label=f"{_catalog_name(major)} catalog · {major.major_label} · {group.title}",
                     url=group.source_url, ref=f"{group.title} · {major.major_label} ({major.catalog_year})")
 
 
@@ -258,7 +262,8 @@ class Student:
         """
         try:
             majors, uncurated, full = planner.plan_majors(",".join(labels) if labels else None, self.profile.majors,
-                                                          self.profile.campus, planner.load_majors())
+                                                          self.profile.receiving_institution_id,
+                                                          planner.load_majors())
             progress = self.ge()
             roadmap = planner.roadmap_for(self.profile, self.courses, majors, uncurated, self.planning_match,
                                           today=self.today, transfer_term=transfer_term,
@@ -360,7 +365,7 @@ class Student:
             out["university_semesters_not_planned"] = planner.no_full_plan_message(self.university)
         elif uncurated:
             out["not_planned_majors"] = uncurated
-            out["not_planned_why"] = planner.uncurated_message(self.profile.campus, uncurated)
+            out["not_planned_why"] = planner.uncurated_message(self.profile.receiving_institution_id, uncurated)
         if in_progress := self.in_progress():
             out["in_progress_counted_as_done"] = in_progress
         if target_term is not None:
@@ -393,11 +398,11 @@ def build_context(student: Student) -> dict[str, Any]:
                 student.today, get_service().term_system(p.sending_institution_id))),
             "university": "{} {}".format(*planner.next_term(student.today)),
         },
-        "profile": {"name": p.name, "campus": p.campus, "majors": p.majors, "goals": p.goals,
+        "profile": {"name": p.name, "majors": p.majors, "goals": p.goals,
                     "interests": p.interests,
                     "community_college": p.sending_institution_name or "their community college",
                     "university": student.university,
-                    "full_degree_plan": planner.full_plan(p.campus, planner.load_majors())},
+                    "full_degree_plan": planner.full_plan(p.receiving_institution_id, planner.load_majors())},
         # The ASSIST academic year the agreements come from, e.g. "2025-26" when 2026-27 isn't published.
         "assist_agreement_year": _year_label(student.year),
         "confirmed_courses": [{
@@ -405,7 +410,7 @@ def build_context(student: Student) -> dict[str, Any]:
             "term": c.term,
         } for c in student.courses],
         "curated_majors_for_planning": sorted(m.major_label for m in planner.load_majors()
-                                              if m.campus == p.campus),
+                                              if m.university_id == p.receiving_institution_id),
         "match_results": matches,
         "plan": student.plan(None),
         "ge_progress": _ge_progress(student),
@@ -572,11 +577,11 @@ def _pacific(value: str | None) -> str | None:
 
 def _opportunities(student: Student) -> list[dict[str, Any]] | dict[str, str]:
     """Deterministic ranking only; the feed's Claude-written reasons aren't needed here."""
-    if student.profile.campus not in radar_sources.load().campuses:
+    if not feeds.for_profile(student.profile):
         return {"error": f"Hindsight doesn't watch {student.university}'s campus yet, so there are no "
                          "opportunities to show"}
     try:
-        rows = radar_store.candidates(student.profile.campus)
+        rows = feeds.candidates(student.profile, with_programs=False)
     except StoreError as e:
         log.warning("counselor: opportunities unavailable: %s", e)
         return {"error": "Opportunities are unavailable right now"}
@@ -587,6 +592,7 @@ def _opportunities(student: Student) -> list[dict[str, Any]] | dict[str, str]:
             url=s.row["url"])),
         "title": s.row["title"], "type": s.row.get("type"), "org": s.row.get("org"),
         "starts_at": _pacific(s.row.get("starts_at")), "deadline": _pacific(s.row.get("deadline")),
+        **({"campus": where} if (where := feeds.where(student.profile, s.row.get("campus_id"))) else {}),
         "score": s.score,
         "matched_profile_terms": s.matched,
         "description": (s.row.get("description") or "")[:MAX_DESCRIPTION_CHARS],
@@ -693,8 +699,10 @@ they can act on them. You answer from the data in <student_data> and from your t
 
 Which schools:
 - The student's community college and university are profile.community_college and profile.university.
-  Use those names. Never assume the university is SJSU or any other campus, and never describe another
+  Use those names. Never assume the university is any particular campus, and never describe another
   campus's requirements, catalog, or opportunities.
+- A top_opportunities item's campus says whose listing it is, e.g. the student's target university. A
+  listing at the target university doesn't mean the student is there now.
 - When profile.full_degree_plan is false, the app doesn't have that university's degree requirements:
   the plan has community-college terms only (university_semesters_not_planned says why). Say so, don't
   describe the university's upper-division requirements from general knowledge, and point the student

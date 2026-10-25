@@ -22,7 +22,7 @@ OCT_2026 = date(2026, 10, 23)
 def major(courses: dict, groups: list, label="Test, B.S.", placeholder=False) -> Major:
     url = "https://example.edu/catalog"
     return Major.model_validate({
-        "placeholder": placeholder, "major_label": label, "campus": "sjsu", "catalog_year": "2026-27",
+        "placeholder": placeholder, "major_label": label, "university_id": 39, "catalog_year": "2026-27",
         "source_url": url,
         "courses": {c: {"source_url": url, **v} for c, v in courses.items()},
         "groups": [{"source_url": url, **g} for g in groups],
@@ -111,31 +111,31 @@ def test_resolve_majors_handles_commas_in_labels():
     ds = major(CHAIN, [], label="Data Science, B.S.")
     econ = major(CHAIN, [], label="Economics, B.A.")
     pop = major(CHAIN, [], label="Population Data Science, B.S.")
-    chosen, uncurated = resolve_majors("Data Science, B.S.,Economics, B.A.", [], "sjsu", [ds, econ, pop])
+    chosen, uncurated = resolve_majors("Data Science, B.S.,Economics, B.A.", [], 39, [ds, econ, pop])
     assert [m.major_label for m in chosen] == ["Data Science, B.S.", "Economics, B.A."] and uncurated == []
-    assert resolve_majors(None, ["Economics, B.A."], "sjsu", [ds, econ]) == ([econ], [])
+    assert resolve_majors(None, ["Economics, B.A."], 39, [ds, econ]) == ([econ], [])
     with pytest.raises(UnknownMajor):
-        resolve_majors("Data Science", [], "sjsu", [ds])
+        resolve_majors("Data Science", [], 39, [ds])
     with pytest.raises(UnknownMajor):
-        resolve_majors(None, ["Data Science, B.S."], "berkeley", [ds])
+        resolve_majors(None, ["Data Science, B.S."], 79, [ds])
 
 
 def test_resolve_majors_returns_uncurated_labels_beside_the_curated_ones():
     ds = major(CHAIN, [], label="Data Science, B.S.")
     raw = "Computer Science, B.S.,Data Science, B.S.,Business Administration, Concentration in Finance, B.S."
-    chosen, uncurated = resolve_majors(raw, [], "sjsu", [ds])
+    chosen, uncurated = resolve_majors(raw, [], 39, [ds])
     assert chosen == [ds]
     assert uncurated == ["Computer Science, B.S.", "Business Administration, Concentration in Finance, B.S."]
     online = "Anthropology, B.A. (SJSU Online),Data Science, B.S."
-    assert resolve_majors(online, [], "sjsu", [ds]) == ([ds], ["Anthropology, B.A. (SJSU Online)"])
-    assert resolve_majors(None, ["Computer Science, B.S.", "Data Science, B.S."], "sjsu", [ds]) == (
+    assert resolve_majors(online, [], 39, [ds]) == ([ds], ["Anthropology, B.A. (SJSU Online)"])
+    assert resolve_majors(None, ["Computer Science, B.S.", "Data Science, B.S."], 39, [ds]) == (
         [ds], ["Computer Science, B.S."])
 
 
 def test_no_curated_major_is_a_plain_language_404():
     ds = major(CHAIN, [], label="Data Science, B.S.")
     with pytest.raises(UnknownMajor) as e:
-        resolve_majors("Computer Science, B.S.,Biology, B.A.", [], "sjsu", [ds])
+        resolve_majors("Computer Science, B.S.,Biology, B.A.", [], 39, [ds])
     message = str(e.value)
     assert message.startswith("We don't have SJSU's Computer Science, B.S. and Biology, B.A. requirements yet")
     assert "lower-division only (from ASSIST)" in message

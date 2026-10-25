@@ -8,7 +8,7 @@ import { API_URL } from "./config";
 
 export type ScheduledClass = {
   term: string;
-  /** As the college prints it: "MATH 1B", or De Anza's "MATH D001B". */
+  /** As the college prints it: "MATH 1B", or with a campus letter, "MATH D001B". */
   course: string;
   title?: string;
   crn?: string;

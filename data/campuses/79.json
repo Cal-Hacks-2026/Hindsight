@@ -1,0 +1,10 @@
+{
+  "assist_id": 79,
+  "name": "University of California, Berkeley",
+  "short_name": "UC Berkeley",
+  "term_system": "semester",
+  "opportunities": {
+    "feed": "berkeley",
+    "sources": "79/opportunity-sources.json"
+  }
+}

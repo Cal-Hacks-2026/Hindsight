@@ -100,7 +100,11 @@ def confirmed_courses(profile_id: str, transport: httpx.BaseTransport | None = N
     return [Course(**row) for row in res.json()]
 
 
-def list_profiles(campus: str, limit: int = 200, transport: httpx.BaseTransport | None = None) -> list[Profile]:
-    """Newest first; the agent ranks and alerts for each of these on its runs."""
-    res = _profiles(transport, "GET", {"campus": f"eq.{campus}", "order": "created_at.desc", "limit": str(limit)})
+def list_profiles_at(institution_id: int, limit: int = 200,
+                     transport: httpx.BaseTransport | None = None) -> list[Profile]:
+    """Profiles linked to a school by ASSIST id (their university or their college), newest first;
+    the agent ranks and alerts for each of these on its runs."""
+    res = _profiles(transport, "GET", {
+        "or": f"(receiving_institution_id.eq.{int(institution_id)},sending_institution_id.eq.{int(institution_id)})",
+        "order": "created_at.desc", "limit": str(limit)})
     return [Profile(**row) for row in res.json()]

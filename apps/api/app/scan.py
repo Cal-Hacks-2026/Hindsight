@@ -1,7 +1,9 @@
 """Run a Campus Radar scan from the command line (PROJECT.md §8.3).
 
-    uv run python -m app.scan sjsu berkeley       # scan on Apify, wait, upsert into Supabase
-    uv run python -m app.scan sjsu --via-webhook  # start the run; Apify POSTs /webhooks/apify when done
+    uv run python -m app.scan <feed> [<feed> ...]   # scan on Apify, wait, upsert into Supabase
+    uv run python -m app.scan <feed> --via-webhook  # start the run; Apify POSTs /webhooks/apify when done
+
+A feed is a campus's `opportunities.feed` in the campus registry (data/campuses/<id>.json).
 
 Needs APIFY_TOKEN and SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY in the repo-root .env.
 --via-webhook also needs PUBLIC_API_URL (reachable by Apify) and APIFY_WEBHOOK_SECRET.
@@ -13,12 +15,13 @@ import os
 import sys
 
 import app.config  # noqa: F401  (loads .env)
+from app.services import campuses as registry
 from app.services.radar import scan, store
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="python -m app.scan", description="Scan campus sources on Apify.")
-    parser.add_argument("campuses", nargs="+", choices=["sjsu", "berkeley"])
+    parser.add_argument("campuses", nargs="+", choices=registry.feeds(), metavar="feed")
     parser.add_argument("--via-webhook", action="store_true",
                         help="start the run and let Apify call /webhooks/apify instead of waiting")
     args = parser.parse_args(argv)

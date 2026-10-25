@@ -119,7 +119,7 @@ def normalize(raw_items: list[dict], now: datetime, lookup=sources_mod.by_id,
     for raw in raw_items:
         source = lookup(raw.get("sourceId") or "")
         campus = raw.get("campus")
-        if source is None or campus not in ("sjsu", "berkeley"):
+        if source is None or campus not in sources_mod.load().campuses:
             result.skipped["unknown_source"] += 1
             continue
         result.fetched[source.id] += 1

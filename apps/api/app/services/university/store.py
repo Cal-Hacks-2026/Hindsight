@@ -1,6 +1,7 @@
 """Where guides and the pages they were written from are kept.
 
-- data/university/guides/<id>.json: the guide as last built and reviewed in a PR, with each
+- the file the university's registry entry names (university_guide.guide): the guide as last
+  built and reviewed in a PR, with each
   item's supporting quote and each section's input hash. Always available, even with no database.
 - Supabase `university_guide_cache` (apps/api/supabase/migrations/): the latest built guide
   (`guide:<id>`) and every page it was written from (`page:<id>:<source id>`), so a rebuild
@@ -22,21 +23,24 @@ import httpx
 
 from app.config import supabase_rest_url
 from app.models.contracts import GuideItem, GuideSection, GuideSource, UniversityGuide
+from app.services import campuses
 from app.services.university import sources
 from app.services.university.fetch import Page
 
 log = logging.getLogger(__name__)
 
-GUIDES_DIR = Path(
-    os.getenv("UNIVERSITY_GUIDES_DIR")
-    or Path(__file__).resolve().parents[5] / "data" / "university" / "guides"
-)
+# Tests set this to keep guides in a folder of their own (<id>.json); otherwise each guide is the file
+# its registry entry names (university_guide.guide).
+GUIDES_DIR: Path | None = Path(os.environ["UNIVERSITY_GUIDES_DIR"]) if os.getenv("UNIVERSITY_GUIDES_DIR") else None
 TABLE = "/university_guide_cache"
 MEMORY_TTL = 600.0  # seconds a served guide (or its absence) is reused before re-reading
 
 
-def guide_file(university_id: int) -> Path:
-    return GUIDES_DIR / f"{university_id}.json"
+def guide_file(university_id: int) -> Path | None:
+    if GUIDES_DIR is not None:
+        return GUIDES_DIR / f"{university_id}.json"
+    entry = campuses.get(university_id)
+    return entry.path(entry.university_guide.guide) if entry and entry.university_guide else None
 
 
 def _db(transport: httpx.BaseTransport | None = None) -> httpx.Client | None:
@@ -48,7 +52,7 @@ def _db(transport: httpx.BaseTransport | None = None) -> httpx.Client | None:
 
 
 def _get_rows(key_filter: str, transport: httpx.BaseTransport | None = None) -> list[dict[str, Any]]:
-    """Rows whose key matches a PostgREST filter, e.g. `eq.guide:39` or `like.page:39:*`."""
+    """Rows whose key matches a PostgREST filter, e.g. `eq.guide:<id>` or `like.page:<id>:*`."""
     db = _db(transport)
     if db is None:
         return []
@@ -96,8 +100,11 @@ def cached_pages(university_id: int, transport: httpx.BaseTransport | None = Non
 def save_guide(stored: dict[str, Any], transport: httpx.BaseTransport | None = None) -> bool:
     """Write the built guide to its file and to the cache."""
     uid = stored["university_id"]
-    GUIDES_DIR.mkdir(parents=True, exist_ok=True)
-    guide_file(uid).write_text(json.dumps(stored, indent=2, ensure_ascii=False) + "\n")
+    path = guide_file(uid)
+    if path is None:
+        raise ValueError(f"university {uid} has no university_guide in the campus registry")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(stored, indent=2, ensure_ascii=False) + "\n")
     with _lock:
         _memory.pop(uid, None)
     return _put_rows([{"key": f"guide:{uid}", "university_id": uid, "kind": "guide", "payload": stored,
@@ -106,7 +113,7 @@ def save_guide(stored: dict[str, Any], transport: httpx.BaseTransport | None = N
 
 def _from_file(university_id: int) -> dict[str, Any] | None:
     path = guide_file(university_id)
-    if not path.exists():
+    if path is None or not path.exists():
         return None
     try:
         return json.loads(path.read_text())

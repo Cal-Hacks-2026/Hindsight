@@ -168,7 +168,7 @@ def test_uc_style_labels_split_without_commas():
     from app.services import planner
 
     raw = "Economics/B.A.,Statistics and Data Science/B.S."
-    assert planner.plan_majors(raw, [], "other", planner.load_majors()) == (
+    assert planner.plan_majors(raw, [], 117, planner.load_majors()) == (
         [], ["Economics/B.A.", "Statistics and Data Science/B.S."], False)
 
 
@@ -195,7 +195,7 @@ def test_counselor_knows_the_university_and_claims_no_sjsu_facts():
         "We don't have University of California, Berkeley's full degree requirements yet, so upper-division "
         "courses aren't planned. Check with University of California, Berkeley's advisors.")
     assert "SJSU" not in str(context) and "sjsu" not in str(context)
-    assert "Never assume the university is SJSU" in counselor.SYSTEM
+    assert "Never assume the university is any particular campus" in counselor.SYSTEM
 
 
 def test_counselor_says_an_unwatched_campus_has_no_opportunities():

@@ -1,4 +1,4 @@
-"""CampusGroups RSS (sammyapp.sjsu.edu/rss_events) → Parsed items."""
+"""CampusGroups RSS (a campus app's /rss_events) → Parsed items."""
 
 from defusedxml import DefusedXmlException
 from defusedxml.ElementTree import ParseError, fromstring
@@ -23,7 +23,7 @@ def extract(raw, source):
         if get("eventDelete") not in ("", "0"):
             continue
         tags = [get("eventType"), get("groupType")] + [t.strip() for t in get("eventTopics").split(",")]
-        # "Student Union Ballrooms A/B/C, 1 Washington Square, San Jose, …": the first part names the room.
+        # "Student Union Ballrooms A/B/C, 1 Main Street, <City>, …": the first part names the room.
         place = clean_text(get("eventLocation").split(",")[0])
         if place.lower().startswith(NO_LOCATION):
             place = ""

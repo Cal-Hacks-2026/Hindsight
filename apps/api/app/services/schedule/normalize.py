@@ -179,7 +179,7 @@ def units(raw: str) -> float | None:
 def course_key(code: str) -> str:
     """Comparable form of a course code: 'MATH D001B', 'math-1b' and 'MATH 1B' → 'MATH1B'.
 
-    Colleges print local forms (De Anza adds a campus letter and zero-pads: D001B). The
+    Colleges print local forms (some add a campus letter and zero-pad: D001B). The
     letter is dropped only before a zero-padded number, so CCN codes like C1000 stay intact.
     """
     m = re.match(r"^\s*([A-Za-z&]+)[\s\-_.]*([A-Za-z0-9\-. ]+?)\s*$", code)

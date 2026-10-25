@@ -1,14 +1,16 @@
 """The committed institution snapshot the web app falls back to when ASSIST's live lists fail
-(apps/web/src/lib/institutions.ts, built by scripts/snapshot_institutions.py)."""
+(data/assist/institutions-snapshot.json, read by apps/web/src/lib/institutions.ts and built by
+scripts/snapshot_institutions.py)."""
 
 import datetime
 import json
 from pathlib import Path
 
-from app.config import ASSIST_YEAR_ID, CAMPUS_BY_ASSIST_ID
+from app.config import ASSIST_YEAR_ID
 from app.models import AssistInstitution
+from app.services import campuses
 
-SNAPSHOT = Path(__file__).resolve().parents[3] / "apps/web/src/data/institutions-snapshot.json"
+SNAPSHOT = Path(__file__).resolve().parents[3] / "data/assist/institutions-snapshot.json"
 
 
 def load() -> dict:
@@ -40,4 +42,4 @@ def test_every_college_has_universities_that_resolve():
 
 def test_only_curated_universities_are_full_plan():
     full = {int(uid) for uid, u in load()["universities"].items() if u.get("full_plan")}
-    assert full and full <= set(CAMPUS_BY_ASSIST_ID)
+    assert full and full <= {c.assist_id for c in campuses.all_campuses() if c.requirements}

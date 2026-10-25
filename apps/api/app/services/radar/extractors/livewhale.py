@@ -1,4 +1,4 @@
-"""LiveWhale JSON feed (events.berkeley.edu/live/json/...) → Parsed items."""
+"""LiveWhale JSON feed (<campus calendar>/live/json/...) → Parsed items."""
 
 from app.services.radar.extract import Parsed, clean_text, parse_when
 

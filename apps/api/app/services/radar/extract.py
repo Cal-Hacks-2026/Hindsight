@@ -1,6 +1,6 @@
 """Per-kind extractors (extractors/<kind>.py) and the helpers they share (DECISIONS.md D-003, D-006).
 
-Each source kind in data/sources.json has one extractor file with
+Each source kind in the Radar sources files has one extractor file with
 `extract(raw, source) -> list[Parsed]`. Droid may patch those files (and only those),
 so they are treated as untrusted code:
 - `run_isolated` runs them in a separate Python process (extract_worker.py) with an

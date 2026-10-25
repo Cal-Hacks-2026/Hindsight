@@ -34,7 +34,7 @@ def plan() -> list[Semester]:
     return [
         Semester(term="Spring 2027", courses=[
             SemesterCourse(code="MATH 39", title="Linear Algebra I", units=3,
-                           reason="No De Anza articulation; prereq for DS upper division",
+                           reason="No community-college articulation; prereq for DS upper division",
                            prereqs=["MATH 31"]),
             SemesterCourse(code="CS 46B", title="Introduction to Data Structures", units=4,
                            reason="Completes the programming sequence", prereqs=["CS 46A"]),

@@ -1,13 +1,13 @@
 """Build or refresh a university's guide.
 
-    cd apps/api && uv run python -m app.services.university.build 39
+    cd apps/api && uv run python -m app.services.university.build <assist id>
     ... --cached-pages   # reuse the pages saved by the last build instead of an Apify run
     ... --dry-run        # fetch and report; no Claude calls, nothing written
 
 One Apify run reads every source page. A section is rewritten by Claude (one call) only
 when its pages or the prompt changed since the guide file was written; otherwise the
-section is reused as is. The result goes to data/university/guides/<id>.json and to the
-Supabase cache. Review the file's diff before committing it.
+section is reused as is. The result goes to the guide file the university's registry entry
+names (data/campuses/<id>.json → university_guide.guide) and to the Supabase cache. Review the file's diff before committing it.
 """
 
 import argparse
@@ -26,7 +26,8 @@ def build(university_id: int, pages: list[fetch.Page], previous: dict[str, Any] 
           now: datetime | None = None) -> dict[str, Any]:
     uni = sources.university(university_id)
     if uni is None:
-        raise SystemExit(f"No sources for university {university_id} in {sources.SOURCES_FILE}")
+        raise SystemExit(f"No guide sources for university {university_id} in the campus registry "
+                         "(data/campuses/<id>.json → university_guide)")
     now = now or datetime.now(timezone.utc)
     reused = {s["id"]: s for s in (previous or {}).get("sections", [])}
     by_id = {p.source_id: p for p in pages}

@@ -1,4 +1,4 @@
-"""Localist event API (events.sjsu.edu/api/2/events) → Parsed items."""
+"""Localist event API (<campus calendar>/api/2/events) → Parsed items."""
 
 from app.services.radar.extract import Parsed, clean_text, names, parse_when
 

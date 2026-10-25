@@ -10,7 +10,8 @@ import type {
 import { Masthead, Section } from "../components/Paper";
 import { safeUrl } from "../components/Listing";
 import { ApiError, api } from "../lib/api";
-import { shortUniversity, universityName } from "../lib/format";
+import { guideNames, watched } from "../lib/campuses";
+import { listing, shortUniversity, universityName } from "../lib/format";
 import { loadSession } from "../lib/session";
 import "../styles/university.css";
 
@@ -59,6 +60,7 @@ function formatDate(iso: string): string {
 export function University() {
   const { profile } = loadSession();
   const { state, retry } = useGuide(profile?.receiving_institution_id);
+  const guided = guideNames();
   const guide =
     state.status === "ready" && state.body.available
       ? state.body.guide
@@ -114,16 +116,20 @@ export function University() {
       ) : !guide ? (
         <Section
           label="University"
-          title={`We don't have a guide for ${name ? shortUniversity(name) : "your university"} yet.`}
+          title={`We don't have a guide for ${name ? shortUniversity(name, profile.receiving_institution_id) : "your university"} yet.`}
           last
         >
           <p className="lede-sub">
-            Guides are written only from the university's own pages. SJSU's is
-            the first.
+            Guides are written only from the university's own pages.
+            {guided.length === 1
+              ? ` ${guided[0]}'s is the first.`
+              : guided.length > 1
+                ? ` Guides so far: ${listing(guided)}.`
+                : ""}
           </p>
         </Section>
       ) : (
-        <Guide guide={guide} opportunities={profile.campus !== "other"} />
+        <Guide guide={guide} opportunities={watched(profile)} />
       )}
     </>
   );

@@ -4,7 +4,8 @@ Before transfer: every open ASSIST requirement the community college can cover g
 option (fewest courses still to take), and those courses go in community-college terms
 (quarters or semesters) in sequence order, under the unit cap.
 
-After transfer: reads curated majors from data/requirements/*.json, drops what the student
+After transfer: reads the curated majors each campus's registry entry lists (data/campuses/<id>.json
+→ requirements), drops what the student
 has already satisfied or will finish before transfer, then schedules the rest term by term
 from the transfer term: a course goes in only once all its prerequisites are done in an
 earlier term, it's offered that term, and the term stays under the unit cap. Courses that
@@ -15,7 +16,6 @@ Deterministic: Claude doesn't take part in planning.
 
 import json
 import logging
-import os
 import re
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field, replace
@@ -26,16 +26,16 @@ from typing import Literal
 from pydantic import BaseModel
 
 from app.models import Course, MatchResult, Profile, Requirement, Semester, SemesterCourse
+from app.services import campuses
 from app.services.assist import AssistError, get_service
 from app.services.assist.evaluator import LETTER_GRADES, grade_verdict, option_receivers, sending_courses
 
 log = logging.getLogger(__name__)
 
-REQUIREMENTS_DIR = Path(
-    os.getenv("REQUIREMENTS_DIR") or Path(__file__).resolve().parents[4] / "data" / "requirements"
-)
 DEFAULT_UNIT_CAP = 15.0
-PLAN_SEASONS = ("Spring", "Fall")  # SJSU regular terms; summer/winter aren't planned
+# University terms after transfer: the regular semester terms; summer/winter aren't planned. Every
+# university with curated requirements runs on semesters (its registry entry's term_system).
+PLAN_SEASONS = ("Spring", "Fall")
 MAX_TERMS = 16
 PLACEHOLDER_PREFIX = "PLACEHOLDER · "
 
@@ -50,7 +50,7 @@ class UnknownMajor(PlannerError):
     status = 404
 
 
-# ---- Curated requirements file format (data/requirements/README.md) ----
+# ---- Curated requirements file format (data/campuses/REQUIREMENTS.md) ----
 
 
 class CatalogCourse(BaseModel):
@@ -84,7 +84,7 @@ class RequirementGroup(BaseModel):
 class Major(BaseModel):
     placeholder: bool = False
     major_label: str
-    campus: str
+    university_id: int = 0  # ASSIST id of the university whose registry entry lists the file
     catalog_year: str
     source_url: str
     notes: list[str] = []
@@ -125,19 +125,22 @@ def _check(major: Major, path: Path) -> None:
         visit(code, [])
 
 
-def load_majors(directory: Path = REQUIREMENTS_DIR) -> list[Major]:
-    """Read every curated major. Re-read per request so curated edits show up without a restart."""
-    majors = []
-    for path in sorted(directory.glob("*.json")):
-        major = Major.model_validate(json.loads(path.read_text()))
-        _check(major, path)
-        majors.append(major)
-    return majors
+def _read_major(path: Path, university_id: int) -> Major:
+    major = Major.model_validate({**json.loads(path.read_text()), "university_id": university_id})
+    _check(major, path)
+    return major
 
 
-CAMPUS_NAMES = {"sjsu": "SJSU", "berkeley": "UC Berkeley"}
+def load_majors(directory: Path | None = None, university_id: int = 0) -> list[Major]:
+    """Every curated major: the files each registry entry lists, or every file in `directory` (one
+    university's, for tests). Re-read per request so curated edits show up without a restart."""
+    if directory is not None:
+        return [_read_major(path, university_id) for path in sorted(directory.glob("*.json"))]
+    return [_read_major(c.path(rel), c.assist_id) for c in campuses.all_campuses() for rel in c.requirements]
+
+
 UNIVERSITY_FALLBACK = "your university"
-# How an ASSIST label ends: a last comma-separated piece "B.S.", "B.F.A.", "B.A. (SJSU Online)",
+# How an ASSIST label ends: a last comma-separated piece "B.S.", "B.F.A.", "B.A. (<Campus> Online)",
 # or UC style with no comma, "Economics/B.A.".
 DEGREE_PIECE = re.compile(r"(?:^|/)B\.[A-Z.]*\s*(\(.*\))?$")
 
@@ -149,8 +152,9 @@ def join_labels(labels: list[str]) -> str:
     return "; ".join(labels[:-1]) + "; and " + labels[-1]
 
 
-def uncurated_message(campus: str, labels: list[str]) -> str:
-    return (f"We don't have {CAMPUS_NAMES.get(campus, campus.upper())}'s {join_labels(labels)} requirements yet, "
+def uncurated_message(university_id: int, labels: list[str]) -> str:
+    university = campuses.short_name(university_id, UNIVERSITY_FALLBACK)
+    return (f"We don't have {university}'s {join_labels(labels)} requirements yet, "
             "so lower-division only (from ASSIST).")
 
 
@@ -161,9 +165,9 @@ def no_full_plan_message(university: str | None) -> str:
             f"Check with {u}'s advisors.")
 
 
-def full_plan(campus: str, majors: list[Major]) -> bool:
-    """Whether we have curated requirements for the campus, i.e. can plan after transfer."""
-    return any(m.campus == campus for m in majors)
+def full_plan(university_id: int, majors: list[Major]) -> bool:
+    """Whether we have curated requirements for the university, i.e. can plan after transfer."""
+    return any(m.university_id == university_id for m in majors)
 
 
 def _split_labels(raw: str, known: set[str]) -> list[str]:
@@ -181,13 +185,13 @@ def _split_labels(raw: str, known: set[str]) -> list[str]:
     return labels
 
 
-def resolve_majors(raw: str | None, default: list[str], campus: str,
+def resolve_majors(raw: str | None, default: list[str], university_id: int,
                    majors: list[Major]) -> tuple[list[Major], list[str]]:
-    """Pick majors by label for the profile's campus: (curated majors, labels with no curated requirements).
+    """Pick majors by label for the profile's university: (curated majors, labels with no curated requirements).
 
     Raises UnknownMajor only when none of the labels is curated.
     """
-    by_label = {m.major_label.casefold(): m for m in majors if m.campus == campus}
+    by_label = {m.major_label.casefold(): m for m in majors if m.university_id == university_id}
     labels = default if raw is None else _split_labels(raw, set(by_label))
     labels = list(dict.fromkeys(label for label in labels if label.strip()))
     uncurated = [label for label in labels if label.casefold() not in by_label]
@@ -195,19 +199,19 @@ def resolve_majors(raw: str | None, default: list[str], campus: str,
         available = join_labels(sorted(m.major_label for m in by_label.values()))
         if not labels:
             raise UnknownMajor("Choose a major to plan." + (f" Plans are available for {available}." if available else ""))
-        raise UnknownMajor(uncurated_message(campus, uncurated)
+        raise UnknownMajor(uncurated_message(university_id, uncurated)
                            + (f" Plans are available for {available}." if available else ""))
     curated = {by_label[label.casefold()].major_label: by_label[label.casefold()]
                for label in labels if label.casefold() in by_label}
     return list(curated.values()), uncurated
 
 
-def plan_majors(raw: str | None, default: list[str], campus: str,
+def plan_majors(raw: str | None, default: list[str], university_id: int,
                 majors: list[Major]) -> tuple[list[Major], list[str], bool]:
-    """resolve_majors, plus the full_plan flag. For a campus with no curated requirements at all
+    """resolve_majors, plus the full_plan flag. For a university with no curated requirements at all
     every label is uncurated, and the roadmap is community-college terms only (no error)."""
-    if full_plan(campus, majors):
-        return *resolve_majors(raw, default, campus, majors), True
+    if full_plan(university_id, majors):
+        return *resolve_majors(raw, default, university_id, majors), True
     labels = default if raw is None else _split_labels(raw, set())
     labels = list(dict.fromkeys(label.strip() for label in labels if label.strip()))
     if not labels:
@@ -270,7 +274,7 @@ def satisfied_from_courses(courses: Iterable[Course], majors: Iterable[Major] = 
     """Courses taken directly at the university appear on the transcript under the same code.
     W, F, NP and grades below the requirement's minimum don't count. Without curated majors
     (a university we have no requirements for) nothing counts this way: a community-college
-    course can share a code with a university course it isn't (De Anza ECON 1, Berkeley ECON 1)."""
+    course can share a code with a university course it isn't (a college's ECON 1 and a university's ECON 1)."""
     majors = list(majors)
     if not majors:
         return set()
@@ -480,8 +484,8 @@ _CC_NUMBER = re.compile(r"^C?(\d+)([A-Z]*)$")
 class SendingCatalog:
     """What the roadmap needs from one major's current ASSIST agreement."""
 
-    college: str  # sending institution, e.g. "De Anza College"
-    campus: str  # receiving institution, e.g. "San Jose State University"
+    college: str  # sending institution, as the agreement names it
+    campus: str  # receiving institution, as the agreement names it
     courses: dict[str, tuple[str, float]]  # sending code → (title, units)
     receivers: dict[str, list[str]]  # option text → receiving codes it earns
 
