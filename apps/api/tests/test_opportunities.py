@@ -190,21 +190,33 @@ def test_reviewed_program_reasons_match_their_pages():
         assert "AI" not in p.reason.split() and " you" not in f" {p.reason.lower()}", p.id
 
 
-def test_reviewed_reason_beats_the_cache_and_claude(monkeypatch):
+def test_program_reasons_never_come_from_claude_or_the_cache(monkeypatch):
     def never(profile, items):
-        raise AssertionError("asked Claude for a reviewed reason")
+        raise AssertionError("asked Claude for a program reason")
     monkeypatch.setattr(rank, "ask_claude", never)
-    row = next(r for r in programs.as_rows("sjsu") if r["id"] == "program:sjsu-urop")
-    s = rank.score(row, rank.ProfileTerms.of(PROFILE), datetime.now(timezone.utc))
-    rank.reason_cache.put(rank._cache_key(rank._profile_key(PROFILE), row), "Built for new transfer students.")
-    assert rank.reasons(PROFILE, [s])[row["id"]] == row["reviewed_reason"]
-    assert rank.reasons(PROFILE, [s], ask=False)[row["id"]] == row["reviewed_reason"]
+    rows = programs.as_rows("sjsu")
+    now = datetime.now(timezone.utc)
+    scored = [rank.score(r, rank.ProfileTerms.of(PROFILE), now) for r in rows]
+    urop = next(r for r in rows if r["id"] == "program:sjsu-urop")
+    rank.reason_cache.put(rank._cache_key(rank._profile_key(PROFILE), urop), "Built for new transfer students.")
+    for ask in (True, False):
+        got = rank.reasons(PROFILE, scored, ask=ask)
+        assert got == {r["id"]: r["reviewed_reason"] for r in rows}
+
+
+def test_program_without_a_reason_is_rejected(tmp_path):
+    (tmp_path / "sjsu.json").write_text(json.dumps({"campus": "sjsu", "last_checked": "2026-10-25", "programs": [{
+        "id": "x", "title": "X", "org": "Y", "category": "research", "subcategory": "symposiums",
+        "url": "https://www.sjsu.edu/x", "description": "d", "window": "w", "last_checked": "2026-10-25"}]}))
+    with pytest.raises(ValueError, match="reason"):
+        programs.load("sjsu", tmp_path)
 
 
 def test_program_with_unknown_category_is_rejected(tmp_path):
     (tmp_path / "sjsu.json").write_text(json.dumps({"campus": "sjsu", "last_checked": "2026-10-25", "programs": [{
         "id": "x", "title": "X", "org": "Y", "category": "research", "subcategory": "hackathons",
-        "url": "https://www.sjsu.edu/x", "description": "d", "window": "w", "last_checked": "2026-10-25"}]}))
+        "url": "https://www.sjsu.edu/x", "description": "d", "window": "w", "last_checked": "2026-10-25",
+        "reason": "r"}]}))
     with pytest.raises(ValueError, match="unknown category"):
         programs.load("sjsu", tmp_path)
 
@@ -252,7 +264,8 @@ def feed(radar_fake, monkeypatch, tmp_path):
         "category": "research", "subcategory": "summer-research", "url": "https://www.sjsu.edu/research/srf",
         "description": "Funds students doing data science research with a faculty mentor.",
         "window": "Applications due each February", "window_months": [2], "evidence": "due February",
-        "tags": ["research"], "last_checked": "2026-10-25"}]}))
+        "tags": ["research"], "last_checked": "2026-10-25",
+        "reason": "Funds student data science research with a faculty mentor."}]}))
     monkeypatch.setattr(programs, "PROGRAMS_DIR", tmp_path)
     monkeypatch.setattr(rank, "ask_claude", lambda p, items: {})
     return radar_fake
