@@ -143,6 +143,14 @@ class AssistClient:
             f"No ASSIST major {label!r} for {sending_id} → {receiving_id} in year {year_id}"
         )
 
+    def transferability_courses(self, institution_id: int, year_id: int, list_type: str) -> dict[str, Any]:
+        """A college's transferability list for a year (listType "CALGETC", "IGETC", …):
+        `courseInformationList[]`, each course with its `transferAreas`. Empty when unpublished."""
+        return self._get_json(
+            "/api/transferability/courses",
+            params={"institutionId": institution_id, "academicYearId": year_id, "listType": list_type},
+        )
+
     def agreement(self, key: str) -> dict[str, Any]:
         """Raw `result` object of a full agreement (templateAssets etc. still JSON strings)."""
         data = self._get_json("/api/articulation/Agreements", params={"Key": key})

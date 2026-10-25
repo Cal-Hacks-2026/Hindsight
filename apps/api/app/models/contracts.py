@@ -344,3 +344,65 @@ class ScheduledPlanCourse(BaseModel):
 
 class ScheduledPlanResponse(BaseModel):
     courses: list[ScheduledPlanCourse]  # planned courses that are on the saved schedule
+
+
+# ---- GE progress (feature: GE): GET /profiles/{id}/ge ----
+
+GePattern = Literal["calgetc", "igetc"]
+
+
+class GeCourse(BaseModel):
+    code: str  # as on the transcript, e.g. "EWRT 1A"
+    title: str
+    units: float
+    grade: str
+    term: str
+    # pass_no_pass, igetc_course (an IGETC course from before Fall 2025 used for Cal-GETC),
+    # calgetc_course (a Cal-GETC course used for IGETC), below_c (on the list but under a C)
+    flags: list[str]
+    citation: Citation  # the ASSIST list for the year the course was taken
+
+
+class GeOption(BaseModel):
+    code: str
+    title: str
+    units: float
+
+
+class GeArea(BaseModel):
+    code: str  # "1A", "2", "4", …
+    title: str
+    status: Literal["done", "in_progress", "missing"]
+    courses_required: int
+    still_needed: int  # courses still to take (in-progress ones count as taken)
+    units: float  # of the courses that count, in the college's units
+    units_required: float
+    courses: list[GeCourse]  # the student's courses that count here
+    options: list[GeOption] | None = None  # approved at the student's college, for areas not done
+    not_counted: list[GeCourse] | None = None  # on the list, but the grade doesn't count
+    note: str | None = None
+    citation: Citation
+    # False for an IGETC area the student's university system doesn't require (1C is CSU only,
+    # 6 is UC only); left out of the summary.
+    required: bool = True
+
+
+class GeSummary(BaseModel):
+    done: int
+    in_progress: int
+    missing: int
+
+
+class GeResponse(BaseModel):
+    pattern: GePattern
+    pattern_name: str  # "Cal-GETC" or "IGETC"
+    default_pattern: GePattern  # from when the student started; ?pattern= overrides it
+    rule: str  # why this pattern, in a sentence or two
+    rule_citation: Citation
+    started_term: str | None = None  # first community-college term on the transcript
+    institution: str | None = None
+    term_system: Literal["quarter", "semester"]
+    options_year: str  # ASSIST year the options come from, e.g. "2026-2027"
+    areas: list[GeArea]
+    summary: GeSummary
+    citations: list[Citation]  # ASSIST lists and standards used

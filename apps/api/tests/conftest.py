@@ -42,6 +42,18 @@ def assist_fake() -> FakeAssist:
     set_service(None)
 
 
+@pytest.fixture(autouse=True)
+def ge_store(assist_fake):
+    """GE lists come from the fake ASSIST and stay in memory (no Supabase)."""
+    from app.services import ge
+    from app.services.assist import get_service
+
+    store = ge.GeListStore(get_service().client)
+    ge.set_store(store)
+    yield store
+    ge.set_store(None)
+
+
 class FakeRadarStore:
     """Stands in for Supabase `opportunities`; rows look like PostgREST's."""
 
