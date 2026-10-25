@@ -18,7 +18,7 @@ import logging
 import os
 import re
 from collections.abc import Callable, Iterable
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import date
 from pathlib import Path
 from typing import Literal
@@ -510,6 +510,7 @@ class Roadmap:
     college: str | None = None
     campus: str | None = None
     term_system: TermSystem = "semester"
+    ge_not_before_transfer: list[str] = field(default_factory=list)  # GE slots past a requested transfer term
 
 
 def term_key(term: str) -> int | None:
@@ -776,6 +777,76 @@ def schedule_cc(picks: list[CCPick], units: dict[str, float], titles: dict[str, 
     return terms
 
 
+# ---- Before transfer: GE areas (feature: GE) ----
+
+
+@dataclass(frozen=True)
+class GeSlot:
+    """One GE course still to take: any course on the area's approved list (services/ge)."""
+
+    area: str  # "Cal-GETC 3A"
+    title: str  # "Arts"
+    units: float
+    options: list[str]  # approved course codes at the college
+    reason: str
+    # Subjects already counted in the area, when it needs two subjects (Area 4): a planned
+    # course in the only subject so far doesn't fill another slot.
+    subjects: tuple[str, ...] | None = None
+
+
+def _code_norm(code: str) -> str:
+    return re.sub(r"[\s\-.]", "", code).upper()
+
+
+def fill_ge(cc: list[Semester], slots: Iterable[GeSlot], start: tuple[str, int], system: TermSystem,
+            unit_cap: float = DEFAULT_CC_UNIT_CAP, institution: str | None = None,
+            limit: int | None = None) -> tuple[list[Semester], list[GeSlot]]:
+    """GE after the major courses: a planned major course on an area's list fills that area
+    (one area per course); the other areas go in the room left in each college term, then in
+    more terms, all before `limit` (a term_key) when given. Returns the terms and the slots
+    that didn't fit."""
+    terms = [s.model_copy(deep=True) for s in cc]
+    open_slots: list[GeSlot] = []
+    subjects: dict[str, set[str]] = {}  # area → subjects counted there, for two-subject areas
+    for slot in slots:
+        options = {_code_norm(o) for o in slot.options}
+        seen = subjects.setdefault(slot.area, set(slot.subjects or ()))
+
+        def fits(c: SemesterCourse) -> bool:
+            subject = c.code.rpartition(" ")[0]
+            return slot.subjects is None or len(seen) >= 2 or subject not in seen
+
+        course = next((c for s in terms for c in s.courses
+                       if c.ge_area is None and _code_norm(c.code) in options and fits(c)), None)
+        if course is not None:
+            course.ge_area = slot.area
+            seen.add(course.code.rpartition(" ")[0])
+        elif slot.subjects is not None and len(seen) == 1:  # it has to bring the second subject
+            other = [o for o in slot.options if o.rpartition(" ")[0] not in seen]
+            open_slots.append(replace(slot, options=other or slot.options))
+        else:
+            open_slots.append(slot)
+    by_term = {s.term: s for s in terms}
+    out: list[Semester] = []
+    for season, year in _cc_terms(start, system):
+        name = f"{season} {year}"
+        if limit is not None and term_key(name) >= limit:
+            break
+        if name not in by_term and not open_slots:  # the college terms are consecutive from `start`
+            break
+        term = by_term.get(name) or Semester(term=name, courses=[], phase="before_transfer",
+                                             institution=institution, term_system=system)
+        load = sum(c.units for c in term.courses)
+        while open_slots and (load + open_slots[0].units <= unit_cap or not term.courses):
+            slot = open_slots.pop(0)
+            term.courses.append(SemesterCourse(code=slot.area, title=slot.title, units=slot.units,
+                                               reason=slot.reason, prereqs=[], ge_area=slot.area,
+                                               ge_options=slot.options))
+            load += slot.units
+        out.append(term)
+    return out, open_slots
+
+
 def parse_transfer_term(raw: str, today: date) -> tuple[Season, int]:
     """A requested transfer term: a Fall or Spring from the next registrable term on."""
     m = _TERM.match(raw.strip().title())
@@ -810,6 +881,7 @@ def build_roadmap(
     start_term: str | None = None,
     cc_unit_cap: float = DEFAULT_CC_UNIT_CAP,
     unit_cap: float = DEFAULT_UNIT_CAP,
+    ge_slots: Iterable[GeSlot] = (),
 ) -> Roadmap:
     """Community-college terms for what the college can cover, then university terms from the
     transfer term for the rest. With a requested transfer term earlier than the college terms
@@ -850,7 +922,14 @@ def build_roadmap(
     while unready := [p for p in kept if not ready(p, [q for q in kept if q is not p])]:
         kept = [p for p in kept if p not in unready]
     cc = schedule(kept)
-    earliest = earliest_transfer(cc, start)
+    ge_slots = list(ge_slots)
+    if ge_slots:  # GE comes after the major courses and can push the earliest transfer later
+        with_ge, _ = fill_ge(cc, ge_slots, start, system, cc_unit_cap, college)
+        earliest = earliest_transfer(with_ge, start)
+        if transfer_term is None:
+            cc = with_ge
+    else:
+        earliest = earliest_transfer(cc, start)
     transfer = earliest if transfer_term is None else parse_transfer_term(transfer_term, today)
     limit = term_key("{} {}".format(*transfer))
     if cc and term_key(cc[-1].term) >= limit:
@@ -863,6 +942,9 @@ def build_roadmap(
             if term_key(trial[-1].term) < limit:
                 fitting, cc = fitting + [p], trial
         kept = fitting
+    ge_left: list[GeSlot] = []
+    if ge_slots and transfer_term is not None:
+        cc, ge_left = fill_ge(cc, ge_slots, start, system, cc_unit_cap, college, limit)
     in_cc = {c.code for s in cc for c in s.courses}
     not_before = list(dict.fromkeys(c for p in picks if p not in kept for c in p.courses if c not in in_cc))
     covered = {code for p in kept for code in p.covers}
@@ -877,6 +959,7 @@ def build_roadmap(
         default_start_term="{} {}".format(*default),
         start_term_choices=start_choices(today, system),
         not_before_transfer=not_before,
+        ge_not_before_transfer=list(dict.fromkeys(slot.area for slot in ge_left)),
         picks=kept,
         college=college,
         campus=campus,
@@ -921,7 +1004,8 @@ def _known_labels(profile: Profile, labels: list[str]) -> list[str]:
 
 def roadmap_for(profile: Profile, courses: list[Course], majors: list[Major], uncurated: list[str],
                 planning_match: Callable[[str], MatchResult | None], today: date | None = None,
-                transfer_term: str | None = None, start_term: str | None = None) -> Roadmap:
+                transfer_term: str | None = None, start_term: str | None = None,
+                ge_slots: Iterable[GeSlot] = ()) -> Roadmap:
     """The roadmap /plan and the counselor both show. `planning_match` gives a major's ASSIST
     match with in-progress courses as passed (None when there's no agreement or ASSIST is down).
     Majors without curated requirements still get their community-college courses."""
@@ -931,4 +1015,4 @@ def roadmap_for(profile: Profile, courses: list[Course], majors: list[Major], un
     done = satisfied(courses, matches.values(), majors)
     system = get_service().term_system(profile.sending_institution_id)
     return build_roadmap(majors, done, list(matches.values()), catalogs, courses, system,
-                         today=today, transfer_term=transfer_term, start_term=start_term)
+                         today=today, transfer_term=transfer_term, start_term=start_term, ge_slots=ge_slots)

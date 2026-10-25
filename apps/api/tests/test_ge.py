@@ -4,19 +4,24 @@ Personas from tests/fixtures/personas/ (make_fixtures.py). The 2026–27 lists a
 years keep only the courses on the De Anza persona transcripts (see fixtures/ge/README.md).
 """
 
+import json
+from dataclasses import replace
+
 import httpx
 import pytest
 from fastapi.testclient import TestClient
 
+from app.config import ASSIST_YEAR_ID
 from app.main import app
-from app.models import GeResponse
-from app.services import ge
-from app.services.assist import AssistError
+from app.models import GeResponse, Profile
+from app.services import ge, planner
+from app.services.assist import AssistError, get_service
 from app.services.ge import lists, rules
+from app.services.ge import plan as ge_plan
 from app.services.ge.lists import GeListStore
 
 from .test_contract import PROFILE
-from .test_roadmap import P1, P3, P7, transcript
+from .test_roadmap import DS, ECON, OCT_2026, P1, P3, P7, roadmap, transcript
 
 client = TestClient(app)
 DE_ANZA, SJSU, BERKELEY = 113, 39, 79
@@ -233,8 +238,6 @@ def test_supabase_cache_round_trip(assist_fake):
 
     def postgrest(request: httpx.Request) -> httpx.Response:
         if request.method == "POST":
-            import json
-
             row = json.loads(request.content)
             rows[row["key"]] = row
             return httpx.Response(201)
@@ -253,3 +256,100 @@ def test_supabase_cache_round_trip(assist_fake):
     # Empty years aren't stored.
     first.get("CALGETC", DE_ANZA, 74)
     assert "CALGETC/113/74" not in rows
+
+
+# ---- the plan (/plan?ge=true) ----
+
+def ge_roadmap(terms, transfer_term=None):
+    """Planned the way /plan?ge=true does it (test_roadmap.roadmap, plus GE slots)."""
+    courses = transcript(terms)
+    slots = ge_plan.slots(ge.progress(courses, DE_ANZA, ge.get_store(), None, SJSU))
+    profile = Profile(id="p", created_at="", **PROFILE)
+    majors, uncurated = planner.resolve_majors(f"{DS},{ECON}", [], "sjsu", planner.load_majors())
+    planning = planner.assume_in_progress_passed(courses)
+    match = lambda label: get_service().match(DE_ANZA, SJSU, ASSIST_YEAR_ID, label, planning)  # noqa: E731
+    return planner.roadmap_for(profile, courses, majors, uncurated, match, today=OCT_2026,
+                               transfer_term=transfer_term, ge_slots=slots), slots
+
+
+def before(r):
+    return [s for s in r.semesters if s.phase == "before_transfer"]
+
+
+def test_ge_slots_follow_missing_areas():
+    slots = ge_plan.slots(run([]))
+    areas = [s.area for s in slots]
+    # 5C rides on 5A; Area 4 needs two courses.
+    assert areas == ["Cal-GETC 1A", "Cal-GETC 1B", "Cal-GETC 1C", "Cal-GETC 2", "Cal-GETC 3A", "Cal-GETC 3B",
+                     "Cal-GETC 4", "Cal-GETC 4", "Cal-GETC 5A", "Cal-GETC 5B", "Cal-GETC 6"]
+    assert "with a lab (5C)" in slots[8].reason and slots[0].units == 5  # De Anza's usual 5 units
+    # P1 (IGETC, SJSU): the UC-only language area isn't planned.
+    assert "IGETC 6" not in [s.area for s in ge_plan.slots(run(P1))]
+
+
+def test_area_4_slot_brings_a_second_subject():
+    r = run([("Fall 2026", [("ECON", "C2001", 4, "A")])])
+    (slot,) = [s for s in ge_plan.slots(r) if s.area == "Cal-GETC 4"]
+    assert slot.subjects == ("ECON",) and not any(o.startswith("ECON ") for o in slot.options)
+
+
+def test_plan_with_ge_no_courses():
+    plain = roadmap([])
+    r, _ = ge_roadmap([])
+    cc = before(r)
+    ge_courses = [c for s in cc for c in s.courses if c.ge_area]
+    # Planned major courses that are on the lists fill those areas; one area per course.
+    reused = {c.code: c.ge_area for c in ge_courses if not c.ge_options}
+    assert reused["MATH 1A"] == "Cal-GETC 2"
+    area_4 = [code.split()[0] for code, a in reused.items() if a == "Cal-GETC 4"]
+    assert len(area_4) == len(set(area_4))  # two subjects, never ECON twice
+    open_slots = [c for c in ge_courses if c.ge_options]
+    assert {c.code for c in open_slots} >= {"Cal-GETC 1A", "Cal-GETC 1C", "Cal-GETC 3A", "Cal-GETC 3B",
+                                             "Cal-GETC 5A", "Cal-GETC 5B", "Cal-GETC 6"}
+    assert all(sum(c.units for c in s.courses) <= planner.DEFAULT_CC_UNIT_CAP for s in cc)
+    # Every major course from the plain plan is still there.
+    assert {c.code for s in before(plain) for c in s.courses} <= {c.code for s in cc for c in s.courses}
+    assert planner.term_key(r.earliest_transfer_term) >= planner.term_key(plain.earliest_transfer_term)
+    assert r.transfer_term == r.earliest_transfer_term and not r.ge_not_before_transfer
+
+
+def test_plan_with_ge_and_an_early_transfer_term():
+    r, _ = ge_roadmap([], transfer_term="Fall 2028")
+    assert all(planner.term_key(s.term) < planner.term_key("Fall 2028") for s in before(r))
+    assert r.ge_not_before_transfer and all(a.startswith("Cal-GETC ") for a in r.ge_not_before_transfer)
+    assert not any(c.startswith("Cal-GETC") for c in r.not_before_transfer)
+
+
+def test_fill_ge_respects_the_cap_and_adds_terms():
+    slot = planner.GeSlot(area="Cal-GETC 3A", title="Arts", units=5, options=["ARTS 2A"], reason="r")
+    cc = [planner.Semester(term="Winter 2027", phase="before_transfer", term_system="quarter", courses=[
+        planner.SemesterCourse(code="MATH 1A", title="t", units=12, reason="r", prereqs=[])])]
+    terms, left = planner.fill_ge(cc, [slot, slot], ("Winter", 2027), "quarter")
+    assert [s.term for s in terms] == ["Winter 2027", "Spring 2027"] and not left
+    assert [c.code for c in terms[1].courses] == ["Cal-GETC 3A", "Cal-GETC 3A"]
+    terms, left = planner.fill_ge(cc, [slot], ("Winter", 2027), "quarter", limit=planner.term_key("Spring 2027"))
+    assert len(terms) == 1 and left == [slot]
+    # A planned major course on the list fills the area instead.
+    terms, left = planner.fill_ge(cc, [replace(slot, options=["MATH 1A"])], ("Winter", 2027), "quarter")
+    assert terms[0].courses[0].ge_area == "Cal-GETC 3A" and len(terms) == 1 and cc[0].courses[0].ge_area is None
+
+
+def test_plan_route_ge_flag(profile_fake):
+    pid = make_profile(profile_fake, P3)
+    off = client.get(f"/profiles/{pid}/plan").json()
+    assert "ge_pattern" not in off and not any("ge_area" in c for s in off["semesters"] for c in s["courses"])
+    on = client.get(f"/profiles/{pid}/plan?ge=true").json()
+    assert on["ge_pattern"] == "calgetc"
+    assert any(c.get("ge_options") for s in on["semesters"] for c in s["courses"])
+    assert client.get(f"/profiles/{pid}/plan?ge=true&ge_pattern=igetc").json()["ge_pattern"] == "igetc"
+
+
+def test_plan_route_without_ge_lists(profile_fake, monkeypatch):
+    pid = make_profile(profile_fake, P3)
+
+    def down(*a, **kw):
+        raise AssistError("timeout")
+
+    monkeypatch.setattr(ge.get_store().client, "transferability_courses", down)
+    res = client.get(f"/profiles/{pid}/plan?ge=true")
+    assert res.status_code == 200 and "ge_pattern" not in res.json()

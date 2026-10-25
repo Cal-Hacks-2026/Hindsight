@@ -77,6 +77,12 @@ export type SemesterCourse = {
   units: number;
   reason: string;
   prereqs: string[];
+  // ---- GE progress (feature: GE), only with /plan?ge=true ----
+  // The GE area this course fills, e.g. "Cal-GETC 3A". A GE slot (pick any approved course)
+  // also has `ge_options`, the approved courses at the college; a major course that also
+  // counts for an area has `ge_area` only.
+  ge_area?: string;
+  ge_options?: string[];
 };
 
 export type Semester = {
@@ -148,6 +154,11 @@ export type PlanResponse = {
   not_before_transfer?: string[];
   // false when we don't have the university's degree requirements: no after-transfer terms.
   full_plan?: boolean;
+  // ---- GE progress (feature: GE), only with ?ge=true ----
+  // The GE pattern planned before transfer, and the GE areas ("Cal-GETC 3A") that don't fit
+  // before a requested transfer term.
+  ge_pattern?: GePattern;
+  ge_not_before_transfer?: string[];
 };
 export type OpportunitiesResponse = { items: RankedOpportunity[] };
 export type CounselorRequest = { message: string; history: ChatMessage[] };
@@ -205,6 +216,7 @@ export type UniversityGuideResponse = {
   available: boolean; // false: no guide for this university yet
   university_name?: string;
   guide?: UniversityGuide;
+};
 
 // ---- GE progress (feature: GE): GET /profiles/{id}/ge ----
 

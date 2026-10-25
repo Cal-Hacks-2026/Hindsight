@@ -13,6 +13,7 @@ Campus = Literal["sjsu", "berkeley"]  # campuses with Radar sources
 # A profile's campus comes from receiving_institution_id (config.campus_for); "other" is any
 # ASSIST university without Radar sources or curated requirements.
 ProfileCampus = Literal["sjsu", "berkeley", "other"]
+GePattern = Literal["calgetc", "igetc"]  # GE progress (feature: GE)
 
 # ---- SKELETON: where the student is now, asked before the pathway ----
 ProfileStage = Literal["high_school", "community_college", "transferred", "returning"]
@@ -93,6 +94,12 @@ class SemesterCourse(BaseModel):
     units: float
     reason: str
     prereqs: list[str]
+    # ---- GE progress (feature: GE), only with /plan?ge=true ----
+    # The GE area this course fills, e.g. "Cal-GETC 3A". A GE slot (pick any approved course)
+    # also has `ge_options`, the approved courses at the college; a major course that also
+    # counts for an area has `ge_area` only.
+    ge_area: str | None = None
+    ge_options: list[str] | None = None
 
 
 class Semester(BaseModel):
@@ -186,6 +193,11 @@ class PlanResponse(BaseModel):
     not_before_transfer: list[str] | None = None
     # False when we don't have the university's degree requirements: no after-transfer terms.
     full_plan: bool | None = None
+    # ---- GE progress (feature: GE), only with ?ge=true ----
+    # The GE pattern planned before transfer, and the GE areas ("Cal-GETC 3A") that don't fit
+    # before a requested transfer term.
+    ge_pattern: GePattern | None = None
+    ge_not_before_transfer: list[str] | None = None
 
 
 class OpportunitiesResponse(BaseModel):
@@ -347,8 +359,6 @@ class ScheduledPlanResponse(BaseModel):
 
 
 # ---- GE progress (feature: GE): GET /profiles/{id}/ge ----
-
-GePattern = Literal["calgetc", "igetc"]
 
 
 class GeCourse(BaseModel):

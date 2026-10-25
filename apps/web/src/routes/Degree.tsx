@@ -13,6 +13,7 @@ import {
   StatusMark,
   type StatusTone,
 } from "../components/Paper";
+import { GeProgress } from "../components/GeProgress";
 import { Icon } from "../components/Icons";
 import {
   NextTermTable,
@@ -410,6 +411,7 @@ function Report({
             campus={campus}
           />
           {missed.length > 0 && <Missed rows={missed} courses={courses} />}
+          <GeProgress profileId={profile.id} courses={courses} />
         </>
       ) : (
         <>
@@ -585,8 +587,9 @@ function Abstract({
         </>
       )}
       <p className="plan-note">
-        Major requirements only. General education and other graduation
-        requirements aren’t included.
+        {plans?.response.ge_pattern
+          ? `Major requirements and ${plans.response.ge_pattern === "igetc" ? "IGETC" : "Cal-GETC"} general education. Other graduation requirements aren’t included.`
+          : "Major requirements only. General education and other graduation requirements aren’t included."}
       </p>
       <Link className="inline-link" to="/credits">
         Review my credits <Icon name="arrow" size={20} />
