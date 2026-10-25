@@ -8,10 +8,13 @@ from app.services.assist import AssistError, AssistNotFound, get_service, limits
 router = APIRouter(prefix="/assist", tags=["assist"])
 
 
-@router.get("/majors", response_model=AssistMajorsResponse, dependencies=[Depends(limits.per_ip)])
+@router.get("/majors", response_model=AssistMajorsResponse, response_model_exclude_none=True,
+            dependencies=[Depends(limits.per_ip)])
 def majors(sending: int, receiving: int, year: int) -> AssistMajorsResponse:
     try:
-        return AssistMajorsResponse(majors=get_service().majors(sending, receiving, year))
+        found, saved_at = get_service().majors_and_saved_at(sending, receiving, year)
+        # saved_on only when ASSIST failed and the pair's kept list was used (MAJORS-FALLBACK).
+        return AssistMajorsResponse(majors=found, saved_on=saved_at[:10] if saved_at else None)
     except AssistNotFound as e:
         raise HTTPException(status_code=404, detail=str(e)) from e
     except AssistError as e:
