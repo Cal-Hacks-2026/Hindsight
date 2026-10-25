@@ -5,6 +5,9 @@ import { APP_NAME } from "../lib/config";
 import { CAMPUS_SHORT, currentTerm, majorsLine } from "../lib/format";
 import { loadSession } from "../lib/session";
 
+const HEALTH_RETRIES = 4;
+const HEALTH_RETRY_MS = 8000;
+
 const NAV = [
   { to: "/degree", label: "Degree" },
   { to: "/radar", label: "Opportunities" },
@@ -24,14 +27,29 @@ export function Layout() {
   const { profile } = loadSession();
   const [degraded, setDegraded] = useState<string | null>(null);
 
+  // The API host sleeps when idle and takes a while to wake, so retry before calling it unreachable.
   useEffect(() => {
-    api
-      .health()
-      .then((h) => {
-        if (h.storage === false) setDegraded("Profiles can't be saved right now, so setup won't work yet.");
-        else if (h.claude === false) setDegraded("The counselor and transcript reading are offline right now.");
-      })
-      .catch(() => setDegraded("The server isn't reachable right now."));
+    let live = true;
+    let timer: ReturnType<typeof setTimeout>;
+    const check = (attempt: number) =>
+      api.health().then(
+        (h) => {
+          if (!live) return;
+          if (h.storage === false) setDegraded("Profiles can't be saved right now, so setup won't work yet.");
+          else if (h.claude === false) setDegraded("The counselor and transcript reading are offline right now.");
+          else setDegraded(null);
+        },
+        () => {
+          if (!live) return;
+          if (attempt < HEALTH_RETRIES) timer = setTimeout(() => check(attempt + 1), HEALTH_RETRY_MS);
+          else setDegraded("The server isn't reachable right now.");
+        },
+      );
+    check(0);
+    return () => {
+      live = false;
+      clearTimeout(timer);
+    };
   }, []);
 
   return (
