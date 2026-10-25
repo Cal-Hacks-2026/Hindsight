@@ -459,6 +459,16 @@ def test_plan_schedules_the_missing_ge_areas_like_the_plan_page():
     assert "General Education (Cal-GETC) isn't in the plan" not in counselor.SYSTEM
 
 
+def test_plan_counts_saved_classes_as_in_progress_like_the_plan_page(schedules):
+    schedules["p1"] = [klass("ENGL C1000", ["Tue", "Thu"], "09:30", "11:20", units=5)]
+    s = student()
+    plan = s.plan([DS], None)
+    areas = [c["ge_area"] for t in plan["before_transfer"]["terms"] for c in t["courses"] if "ge_area" in c]
+    assert "IGETC 1A" not in areas  # ENGL C1000 is on the Fall 2026 schedule
+    assert plan["in_progress_counted_as_done"] == ["ENGL C1000"]
+    assert counselor.build_context(student())["ge_progress"]["areas"][0]["status"] == "missing"  # reported as is
+
+
 def test_ge_unavailable_is_reported_and_the_plan_still_runs(monkeypatch):
     def down(*a, **kw):
         raise AssistError("timeout")

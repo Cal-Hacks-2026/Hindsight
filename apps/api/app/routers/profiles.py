@@ -1,6 +1,7 @@
 import json
 import logging
 import uuid
+from dataclasses import dataclass
 from datetime import timedelta
 from typing import Literal
 
@@ -10,6 +11,7 @@ from fastapi.concurrency import run_in_threadpool
 from app.models import (
     CounselorRequest,
     CounselorResponse,
+    Course,
     CoursesResponse,
     CreateProfileRequest,
     GeResponse,
@@ -32,6 +34,7 @@ from app.services.ge import plan as ge_plan
 from app.services.radar import classify, feeds, rank, store as radar_store
 from app.services.radar import programs as radar_programs
 from app.services.radar.normalize import parse_when
+from app.services.schedule import store as schedule_store, week as schedule_week
 
 log = logging.getLogger(__name__)
 
@@ -121,6 +124,16 @@ def match(profile_id: str, body: MatchRequest) -> MatchResult:
         raise HTTPException(status_code=502, detail=f"ASSIST unavailable: {e}") from e
 
 
+@dataclass
+class Planned:
+    """A /plan result with what went into it: the ASSIST matches (in-progress courses as passed),
+    GE progress, and the saved classes counted as in progress."""
+    response: PlanResponse
+    matches: list[MatchResult]
+    ge: GeResponse | None
+    scheduled: list[Course]
+
+
 @router.get("/{profile_id}/plan", response_model=PlanResponse,
             response_model_exclude_none=True, dependencies=[Depends(assist_limits.per_ip)])
 def plan(profile_id: str, majors: str | None = Query(None, description="Comma-separated major labels"),
@@ -131,6 +144,12 @@ def plan(profile_id: str, majors: str | None = Query(None, description="Comma-se
          ge: bool = Query(False, description="Plan missing GE areas in the community-college terms"),
          ge_pattern: Literal["calgetc", "igetc"] | None = Query(None, description="GE pattern override")
          ) -> PlanResponse:
+    return planned(profile_id, majors, transfer_term, start_term, ge, ge_pattern).response
+
+
+def planned(profile_id: str, majors: str | None, transfer_term: str | None, start_term: str | None,
+            ge: bool, ge_pattern: str | None) -> Planned:
+    """GET /plan, with its inputs; GET /schedule/planned reads the same plan."""
     profile = _get_profile(profile_id)
     try:
         chosen, uncurated, full = planner.plan_majors(majors, profile.majors, profile.receiving_institution_id,
@@ -138,15 +157,20 @@ def plan(profile_id: str, majors: str | None = Query(None, description="Comma-se
     except planner.PlannerError as e:
         raise HTTPException(status_code=e.status, detail=str(e)) from e
     # Same rule as the counselor: done = passed (or in progress) on the transcript, or satisfied
-    # per ASSIST for a chosen major, matching in-progress courses as if passed.
-    courses = profile_store.confirmed_courses(profile_id)
+    # per ASSIST for a chosen major, matching in-progress courses as if passed. Classes on the
+    # saved schedule are in progress too: the student is registered for them.
+    transcript = profile_store.confirmed_courses(profile_id)
+    scheduled = schedule_week.as_in_progress(_saved_schedule(profile_id), transcript)
+    courses = transcript + scheduled
     planning = planner.assume_in_progress_passed(courses)
     service = get_service()
     sending, receiving = profile.sending_institution_id, profile.receiving_institution_id
+    matches: dict[str, MatchResult] = {}
 
     def planning_match(label: str) -> MatchResult | None:
         try:
-            return service.match(sending, receiving, service.year_for(sending, receiving), label, planning)
+            matches[label] = service.match(sending, receiving, service.year_for(sending, receiving), label, planning)
+            return matches[label]
         except AssistNotFound:
             return None  # no agreement for this major: only the transcript counts
         except AssistError as e:
@@ -161,14 +185,24 @@ def plan(profile_id: str, majors: str | None = Query(None, description="Comma-se
     except planner.PlannerError as e:
         raise HTTPException(status_code=e.status, detail=str(e)) from e
     # Without curated requirements every major is "uncurated"; full_plan=False says that once.
-    return PlanResponse(semesters=roadmap.semesters, uncurated_majors=(uncurated if full else None) or None,
-                        full_plan=full,
-                        transfer_term=roadmap.transfer_term, earliest_transfer_term=roadmap.earliest_transfer_term,
-                        start_term=roadmap.start_term, default_start_term=roadmap.default_start_term,
-                        start_term_choices=roadmap.start_term_choices,
-                        not_before_transfer=roadmap.not_before_transfer or None,
-                        ge_pattern=ge_progress.pattern if ge_progress else None,
-                        ge_not_before_transfer=roadmap.ge_not_before_transfer or None)
+    response = PlanResponse(semesters=roadmap.semesters, uncurated_majors=(uncurated if full else None) or None,
+                            full_plan=full,
+                            transfer_term=roadmap.transfer_term, earliest_transfer_term=roadmap.earliest_transfer_term,
+                            start_term=roadmap.start_term, default_start_term=roadmap.default_start_term,
+                            start_term_choices=roadmap.start_term_choices,
+                            not_before_transfer=roadmap.not_before_transfer or None,
+                            ge_pattern=ge_progress.pattern if ge_progress else None,
+                            ge_not_before_transfer=roadmap.ge_not_before_transfer or None)
+    return Planned(response, list(matches.values()), ge_progress, scheduled)
+
+
+def _saved_schedule(profile_id: str) -> list:
+    """The schedule is extra on the plan: if it can't be read, plan from the transcript alone."""
+    try:
+        return schedule_store.schedule(profile_id)
+    except StoreError as e:
+        log.warning("plan: class schedule unavailable for %s: %s", profile_id, e)
+        return []
 
 
 def _ge_progress(profile: Profile, courses: list, pattern: str | None) -> GeResponse | None:

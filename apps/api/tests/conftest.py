@@ -54,6 +54,14 @@ def ge_store(assist_fake):
     ge.set_store(None)
 
 
+@pytest.fixture(autouse=True)
+def no_saved_schedule(monkeypatch):
+    """/plan reads the saved class schedule; with no fake in place, nobody has one (no Supabase)."""
+    from app.services.schedule import store
+
+    monkeypatch.setattr(store, "schedule", lambda profile_id, transport=None: [])
+
+
 class FakeRadarStore:
     """Stands in for Supabase `opportunities`; rows look like PostgREST's."""
 

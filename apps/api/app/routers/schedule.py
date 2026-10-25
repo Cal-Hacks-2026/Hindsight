@@ -81,12 +81,15 @@ def planned(profile_id: str, majors: str | None = Query(None, description="Same 
             ge: bool = Query(False, description="Same as GET /plan"),
             ge_pattern: Literal["calgetc", "igetc"] | None = Query(None, description="Same as GET /plan")
             ) -> ScheduledPlanResponse:
-    """Which courses on the student's plan (same query as GET /plan) are now on their schedule."""
+    """Which saved classes the student's plan (same query as GET /plan) uses: the ones it counts
+    as in progress toward a requirement or GE area, then any planned course that's on the
+    schedule for another term."""
     profiles._get_profile(profile_id)
     rows = store.schedule(profile_id)
     if not rows:  # no plan (or ASSIST) needed
         return ScheduledPlanResponse(courses=[])
-    # Every argument is passed: called directly, plan()'s defaults are Query objects, not values.
-    plan = profiles.plan(profile_id, majors=majors, transfer_term=transfer_term, start_term=start_term,
-                         ge=ge, ge_pattern=ge_pattern)
-    return ScheduledPlanResponse(courses=week.scheduled_plan_courses(plan.semesters, rows))
+    # Every argument is passed: plan()'s own defaults are Query objects, not values.
+    plan = profiles.planned(profile_id, majors=majors, transfer_term=transfer_term, start_term=start_term,
+                            ge=ge, ge_pattern=ge_pattern)
+    return ScheduledPlanResponse(courses=week.counted_classes(plan.scheduled, plan.matches, plan.ge, rows)
+                                 + week.scheduled_plan_courses(plan.response.semesters, rows))

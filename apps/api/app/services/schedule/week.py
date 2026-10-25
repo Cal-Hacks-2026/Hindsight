@@ -1,20 +1,24 @@
-"""What a saved schedule means for a week: free blocks, units per term, and which planned
-courses are now scheduled. Pure functions over confirmed rows."""
+"""What a saved schedule means for a week: free blocks, units per term, the classes the planner
+counts as in progress, and which of them the plan uses. Pure functions over confirmed rows."""
 
 import re
 from datetime import date, timedelta
 
 from app.models import (
+    Course,
     FreeBlock,
     FreeBlocksResponse,
     FreeDay,
+    GeResponse,
+    MatchResult,
     ScheduledClass,
     ScheduledPlanCourse,
     Semester,
     ScheduleTerm,
 )
 from app.services import planner
-from app.services.schedule.normalize import WEEKDAYS, course_key, fmt, minutes
+from app.services.schedule.normalize import WEEKDAYS, course_key, fmt, minutes, split_code
+from app.services.transcript import academic_year_id, normalize_term
 
 DAY_START = 7 * 60  # 7 AM
 DAY_END = 22 * 60  # 10 PM
@@ -115,6 +119,49 @@ def free_blocks(rows: list[ScheduledClass], week: date) -> FreeBlocksResponse:
             FreeBlock(start=fmt(s), end=fmt(e), minutes=e - s) for s, e in blocks
         ]))
     return FreeBlocksResponse(week=monday.isoformat(), day_start=fmt(DAY_START), day_end=fmt(DAY_END), days=days)
+
+
+# Grades that earn no credit: a class taken again after one of these is a real retake.
+_NO_CREDIT = {"W", "F", "FW", "WF", "NP", "NC", "I", "U"}
+
+
+def as_in_progress(rows: list[ScheduledClass], courses: list[Course]) -> list[Course]:
+    """Saved classes as in-progress (IP) courses, for planning only: the student is registered,
+    so the plan shouldn't schedule them again. A class already on the transcript (passed, in
+    progress, or listed for the same term) is left out; a lecture and its lab count once."""
+    taken = {(course_key(f"{c.prefix} {c.number}"), c.term) for c in courses}
+    counted = {course_key(f"{c.prefix} {c.number}") for c in courses
+               if c.grade.strip().upper() not in _NO_CREDIT}
+    out: dict[tuple[str, str], Course] = {}
+    for row in rows:
+        prefix, number = split_code(row.course)
+        term = normalize_term(row.term) or row.term.strip()
+        key = course_key(row.course)
+        if not prefix or key in counted or (key, term) in taken or (key, term) in out:
+            continue
+        out[(key, term)] = Course(prefix=prefix, number=number, title=row.title, units=row.units or 0,
+                                  grade=planner.IN_PROGRESS, term=term,
+                                  academic_year_id=academic_year_id(term), confirmed=True)
+    return list(out.values())
+
+
+def counted_classes(scheduled: list[Course], matches: list[MatchResult], ge: GeResponse | None,
+                    rows: list[ScheduledClass]) -> list[ScheduledPlanCourse]:
+    """Saved classes the plan counts as in progress: toward a major requirement (the planning
+    match, with in-progress courses as passed) or a GE area. Planned in the term they're in."""
+    used = {course_key(code) for m in matches for r in m.requirements
+            if r.status in ("satisfied", "partial", "in_progress") for code in r.satisfied_by}
+    if ge is not None:
+        used |= {course_key(c.code) for a in ge.areas for c in a.courses}
+    out = []
+    for course in scheduled:
+        key = course_key(f"{course.prefix} {course.number}")
+        row = next((r for r in rows if course_key(r.course) == key
+                    and (normalize_term(r.term) or r.term.strip()) == course.term), None)
+        if key in used and row is not None:
+            out.append(ScheduledPlanCourse(code=row.course, planned_term=row.term, scheduled_term=row.term,
+                                           crn=row.crn))
+    return out
 
 
 def scheduled_plan_courses(semesters: list[Semester], rows: list[ScheduledClass]) -> list[ScheduledPlanCourse]:

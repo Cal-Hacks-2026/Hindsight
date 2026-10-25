@@ -11,9 +11,10 @@ from fastapi.testclient import TestClient
 
 from app.config import ASSIST_YEAR_ID
 from app.main import app
-from app.models import Course, PlanResponse, Profile
+from app.models import Course, PlanResponse, Profile, ScheduledClass
 from app.services import planner
 from app.services.assist import AssistError, get_service
+from app.services.schedule import week as schedule_week
 from app.services.transcript import academic_year_id
 
 from .test_contract import PROFILE, make_profile
@@ -224,7 +225,22 @@ def test_default_start_is_next_fall_with_no_courses_else_the_next_term():
     assert phase(returning, "before_transfer")[0].term == "Winter 2027"
     # Before September, the next Fall is this year's.
     assert planner.default_start(date(2026, 5, 1), "quarter", []) == ("Fall", 2026)
-    assert planner.default_start(date(2026, 5, 1), "semester", transcript(P3)) == ("Fall", 2026)
+    assert planner.default_start(date(2026, 5, 1), "semester", transcript(P1)) == ("Fall", 2026)
+    # Already taking classes that term (P3's Fall 2026 is in progress): the plan starts after it.
+    assert planner.default_start(date(2026, 5, 1), "semester", transcript(P3)) == ("Spring", 2027)
+
+
+def test_saved_schedule_classes_are_in_progress_for_the_plan():
+    # P1 registered for CIS 22C (CS 46B) on a Winter 2027 schedule: not planned again, and the
+    # college terms start after Winter.
+    rows = [ScheduledClass(term="Winter 2027", course="CIS D022C", title="Data Structures", units=4.5,
+                           mode="in_person", days=["Tue", "Thu"], start_time="13:30", end_time="15:20",
+                           confirmed=True)]
+    courses = transcript(P1)
+    r = roadmap(courses + schedule_week.as_in_progress(rows, courses))
+    before = phase(r, "before_transfer")
+    assert "CIS 22C" not in codes(r.semesters) and set(codes(before)) == {"ECON C2001", "CIS 40"}
+    assert r.default_start_term == before[0].term == "Spring 2027"
 
 
 def test_a_student_already_at_college_starts_next_term_not_next_fall():
@@ -236,6 +252,21 @@ def test_a_student_already_at_college_starts_next_term_not_next_fall():
     # A high-school senior still starts in Fall.
     assert roadmap([], stage="high_school").default_start_term == "Fall 2027"
     assert planner.default_start(OCT_2026, "semester", [], "high_school") == ("Fall", 2027)
+
+
+def test_saved_schedule_wins_over_the_start_term_default():
+    # Saved classes outrank both defaults: with a Winter 2027 schedule and no transcript, a student
+    # at college (next term: Winter) and a high-school senior (next Fall) both start after Winter.
+    rows = [ScheduledClass(term="Winter 2027", course="CIS D022C", title="Data Structures", units=4.5,
+                           mode="in_person", days=["Tue", "Thu"], start_time="13:30", end_time="15:20",
+                           confirmed=True)]
+    scheduled = schedule_week.as_in_progress(rows, [])
+    for stage in ("community_college", "high_school", None):
+        r = roadmap(scheduled, stage=stage)
+        assert r.default_start_term == phase(r, "before_transfer")[0].term == "Spring 2027", stage
+    # No courses and no saved schedule: the defaults stand.
+    assert roadmap([], stage="community_college").default_start_term == "Winter 2027"
+    assert roadmap([], stage="high_school").default_start_term == "Fall 2027"
 
 
 def test_requested_start_term():
