@@ -555,6 +555,28 @@ def _sending_keys(agreement: Agreement) -> set[tuple[str, str]]:
     return keys
 
 
+def sending_courses(agreement: Agreement) -> dict[str, SendingCourse]:
+    """Every sending course the agreement names, by code: titles and units for planning."""
+    out: dict[str, SendingCourse] = {}
+    for cell in _cells(agreement):
+        if cell.articulation:
+            for g in cell.articulation.groups:
+                for sc in g.courses:
+                    out.setdefault(sc.code, sc)
+    return out
+
+
+def option_receivers(agreement: Agreement) -> dict[str, list[str]]:
+    """Each option, as `articulation_options` writes it → the receiving course codes it earns.
+    Lets a planner tell which course of a "choose from" list one option covers."""
+    out: dict[str, list[str]] = {}
+    for cell in _cells(agreement):
+        for option in articulation_options(cell.articulation):
+            codes = out.setdefault(option, [])
+            codes += [f"{c.prefix} {c.number}" for c in cell.courses if f"{c.prefix} {c.number}" not in codes]
+    return out
+
+
 class _Evaluator:
     def __init__(self, agreement: Agreement, courses: list[Course], prior: Sequence[Agreement] = ()):
         self.agreement = agreement

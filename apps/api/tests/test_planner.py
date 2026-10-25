@@ -8,12 +8,12 @@ from fastapi.testclient import TestClient
 
 from app.config import ASSIST_YEAR_ID
 from app.main import app
-from app.models import Citation, Course, MatchResult, MatchSummary, PlanResponse, Requirement
+from app.models import Citation, Course, MatchResult, MatchSummary, PlanResponse, Profile, Requirement
 from app.services import mocks, planner
 from app.services.assist import AssistError, get_service
 from app.services.planner import Major, PlannerError, UnknownMajor, build_plan, resolve_majors
 
-from .test_contract import make_profile
+from .test_contract import PROFILE, make_profile
 
 client = TestClient(app)
 OCT_2026 = date(2026, 10, 23)
@@ -292,11 +292,25 @@ def test_sjsu_files_are_curated_with_sources():
 
 
 def demo_plan(labels, today=OCT_2026):
-    """The counselor demo student, planned the way /plan and the counselor both do it."""
+    """The counselor demo student's university semesters, planned the way /plan and the counselor both do it."""
     majors = [m for m in planner.load_majors() if m.major_label in labels]
     courses = [c.model_copy(update={"confirmed": True}) for c in mocks.transcript_courses()]
     matches = [get_service().match(113, 39, ASSIST_YEAR_ID, label, courses) for label in labels]
     return build_plan(majors, planner.satisfied(courses, matches, majors), today=today), majors
+
+
+def demo_roadmap(labels, uncurated=(), today=None):
+    majors = [m for m in planner.load_majors() if m.major_label in labels]
+    courses = [c.model_copy(update={"confirmed": True}) for c in mocks.transcript_courses()]
+    profile = Profile(id="p", created_at="", **PROFILE)
+
+    def match(label):
+        try:
+            return get_service().match(113, 39, ASSIST_YEAR_ID, label, courses)
+        except AssistError:
+            return None  # e.g. no agreement in the fixtures
+
+    return planner.roadmap_for(profile, courses, majors, list(uncurated), match, today=today or date.today())
 
 
 @pytest.mark.parametrize("labels", [[DS], [DS, ECON]])
@@ -340,7 +354,7 @@ def test_plan_route_counts_assist_satisfied_courses_like_the_counselor():
     scheduled = {c.code for s in semesters for c in s.courses}
     # The transcript says MATH 1A/1B and STAT C1000; ASSIST maps them to these, so they're done.
     assert scheduled.isdisjoint({"MATH 30", "MATH 31", "STAT 95"})
-    assert semesters == demo_plan([DS, ECON], today=date.today())[0]
+    assert semesters == demo_roadmap([DS, ECON]).semesters
 
 
 def test_plan_route_falls_back_to_the_transcript_when_assist_is_down(monkeypatch):
@@ -362,7 +376,8 @@ def test_plan_route_plans_the_curated_majors_and_lists_the_rest():
     assert res.status_code == 200
     body = PlanResponse.model_validate(res.json())
     assert body.uncurated_majors == ["Computer Science, B.S."]
-    assert body.semesters == demo_plan([DS], today=date.today())[0]
+    # Computer Science still gets its community-college courses; only its university semesters are missing.
+    assert body.semesters == demo_roadmap([DS], ["Computer Science, B.S."]).semesters
     # Nothing left out: the field is omitted, like every optional contract field.
     assert "uncurated_majors" not in client.get(f"/profiles/{pid}/plan", params={"majors": DS}).json()
 
@@ -392,10 +407,12 @@ def scheduled_codes(pid: str) -> set[str]:
 
 
 def test_plan_route_treats_in_progress_as_done_and_withdrawn_as_not():
-    assert "MATH 31" not in scheduled_codes(student_with({}))
-    assert "MATH 31" not in scheduled_codes(student_with({"MATH 1B": "IP"}))  # P7: not rescheduled
-    assert "MATH 31" in scheduled_codes(student_with({"MATH 1B": "W"}))
-    assert "MATH 31" in scheduled_codes(student_with({"MATH 1B": "D"}))  # below the C- minimum
+    assert scheduled_codes(student_with({})).isdisjoint({"MATH 1B", "MATH 31"})
+    assert scheduled_codes(student_with({"MATH 1B": "IP"})).isdisjoint({"MATH 1B", "MATH 31"})  # P7: not rescheduled
+    # Withdrawn or below the C- minimum: retaken at De Anza before transfer, not at SJSU.
+    for grade in ("W", "D"):
+        codes = scheduled_codes(student_with({"MATH 1B": grade}))
+        assert "MATH 1B" in codes and "MATH 31" not in codes
 
 
 def test_plan_route_ignores_failed_university_courses():
@@ -404,4 +421,5 @@ def test_plan_route_ignores_failed_university_courses():
     rows = [taken("MATH 39", "IP"), taken("CS 46A", "F"), taken("CS 46B", "NP")]
     assert client.put(f"/profiles/{pid}/courses", json={"courses": [c.model_dump() for c in rows]}).status_code == 200
     codes = scheduled_codes(pid)
-    assert "MATH 39" not in codes and {"CS 46A", "CS 46B"} <= codes
+    # MATH 39 (IP) is done; CS 46A and CS 46B (F, NP) aren't, so De Anza courses are planned for them.
+    assert codes.isdisjoint({"MATH 39", "MATH 2B", "CS 46A", "CS 46B"}) and {"CIS 35A", "CIS 22C"} <= codes

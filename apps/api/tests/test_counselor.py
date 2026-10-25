@@ -215,23 +215,28 @@ def test_plan_uses_assist_matches_and_answers_finish_by():
     plan = s.plan([DS], "Fall 2040")
     assert {"MATH 30", "MATH 31"} <= set(plan["already_done_by_code"])  # via ASSIST, not the transcript code
     scheduled = {c["code"] for sem in plan["semesters"] for c in sem["courses"]}
-    assert "MATH 30" not in scheduled and "MATH 39" in scheduled
-    assert plan["semesters"][0]["term"] == "Spring 2027"  # first registrable term after 2026-10-24
-    assert plan["finishes_by_target"] is True and plan["terms_needed"] == len(plan["semesters"])
+    assert "MATH 30" not in scheduled and "MATH 39" not in scheduled  # MATH 39 is MATH 2B at De Anza
+    before = plan["before_transfer"]
+    assert before["college"] == "De Anza College" and before["term_system"] == "quarter"
+    assert before["terms"][0]["term"] == "Winter 2027"  # first registrable quarter after 2026-10-24
+    cc = {c["code"]: c for t in before["terms"] for c in t["courses"]}
+    [math39] = cc["MATH 2B"]["counts_for"]
+    assert math39["requirement"].startswith("MATH 39") and s.sources.citations[math39["source"]].source == "assist"
+    assert plan["transfer_term"] == plan["semesters"][0]["term"] == "Fall 2027"  # first Fall after De Anza
+    assert plan["finishes_by_target"] is True and plan["terms_needed"] == len(before["terms"]) + len(plan["semesters"])
     assert s.plan([DS], "Spring 2027")["finishes_by_target"] is False
     unparsed = s.plan([DS], "sometime in 2028")
     assert unparsed["finishes_by_target"] is None and "target_error" in unparsed
     # Catalog sources carry the curator's review flags into the advisor question.
     sources = {c["code"]: c["source"] for sem in plan["semesters"] for c in sem["courses"]}
-    assert "2026-2027" in s.sources.uncertain[sources["MATH 39"]]  # no flag of its own: the major's
+    assert "2026-2027" in s.sources.uncertain[sources["CS 131"]]  # no flag of its own: the major's
     assert "allowed-majors" in s.sources.uncertain[sources["MATH 167R"]]
     by_code = {c["code"]: c for sem in plan["semesters"] for c in sem["courses"]}
-    assert "needs_review" not in by_code["MATH 39"] and by_code["MATH 167R"]["needs_review"]
+    assert "needs_review" not in by_code["CS 131"] and by_code["MATH 167R"]["needs_review"]
     assert "2026-2027" in plan["requirements_caveats"][DS][0]
-    assert s.sources.citations[sources["MATH 39"]].url.startswith("https://catalog.sjsu.edu/")
-    # MATH 39 and MATH 42 share a catalog page; they're still separate sources.
-    assert sources["MATH 39"] != sources["MATH 42"]
-    assert s.sources.uncertain[sources["MATH 39"]] != s.sources.uncertain[sources["MATH 42"]]
+    assert s.sources.citations[sources["CS 131"]].url.startswith("https://catalog.sjsu.edu/")
+    # CS 131 and CS 133 share a catalog page; they're still separate sources.
+    assert sources["CS 131"] != sources["CS 133"]
     assert "2026-2027" in s.sources.uncertain[plan["requirements_sources"][0]]
     [domain] = plan["not_scheduled"]
     assert domain["units"] == 9 and domain["source"] in s.sources.uncertain

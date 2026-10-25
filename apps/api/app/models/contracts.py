@@ -86,6 +86,10 @@ class SemesterCourse(BaseModel):
 class Semester(BaseModel):
     term: str
     courses: list[SemesterCourse]
+    # Two-phase roadmap (I-03): community-college terms before transfer, university terms after.
+    phase: Literal["before_transfer", "after_transfer"] | None = None
+    institution: str | None = None  # e.g. "De Anza College"
+    term_system: Literal["quarter", "semester"] | None = None  # how `units` are counted
 
 
 class RankedOpportunity(BaseModel):
@@ -143,8 +147,13 @@ class MatchRequest(BaseModel):
 
 
 class PlanResponse(BaseModel):
-    semesters: list[Semester]
+    semesters: list[Semester]  # before-transfer terms first, then after-transfer terms
     uncurated_majors: list[str] | None = None  # chosen majors left out: no curated requirements yet
+    transfer_term: str | None = None  # when the after-transfer terms start
+    earliest_transfer_term: str | None = None  # the first Fall after the before-transfer terms finish
+    # Community-college courses that don't fit before a requested transfer_term; their
+    # university equivalents are planned after transfer instead.
+    not_before_transfer: list[str] | None = None
 
 
 class OpportunitiesResponse(BaseModel):
