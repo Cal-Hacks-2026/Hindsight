@@ -1,4 +1,4 @@
-// Transfer milestones for Home's This Week, from data/milestones.json: a small, hand-checked list with
+// Transfer milestones for Home's This Week and Coming Up, from data/milestones.json: a small, hand-checked list with
 // the official page each date comes from. Which universities a milestone is for is data (ASSIST ids),
 // never a name here.
 import data from "../../../../data/milestones.json";
@@ -36,13 +36,14 @@ export function universitySystem(name: string | undefined): UniversitySystem | u
   return undefined;
 }
 
-/** "Fall 2027", Pacific "YYYY-MM-DD" today. The soonest-closing milestone still open or ahead, for this student. */
-export function nextMilestone(
+/** "Fall 2027", Pacific "YYYY-MM-DD" today. The milestones still open or ahead for this student,
+ *  soonest-closing first. */
+export function upcomingMilestones(
   university: string | undefined,
   universityId: number,
   transfer: string | undefined,
   today: string,
-): Milestone | undefined {
+): Milestone[] {
   const system = universitySystem(university);
   return MILESTONES.filter(
     (m) =>
@@ -50,5 +51,5 @@ export function nextMilestone(
       (!m.transfer || m.transfer === transfer) &&
       (!m.universities || m.universities.includes(universityId)) &&
       m.closes >= today,
-  ).sort((a, b) => a.closes.localeCompare(b.closes))[0];
+  ).sort((a, b) => a.closes.localeCompare(b.closes));
 }

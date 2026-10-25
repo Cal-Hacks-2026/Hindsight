@@ -66,6 +66,21 @@ def create_profile(body: CreateProfileRequest, transport: httpx.BaseTransport | 
         raise StoreError(f"Supabase returned an unexpected profile: {e}") from e
 
 
+def update_profile(profile_id: str, body: CreateProfileRequest,
+                   transport: httpx.BaseTransport | None = None) -> Profile | None:
+    """Edits the profile in place (same id); None when there's no such profile. A cleared minor is
+    sent as null so the old one doesn't stay."""
+    try:
+        uuid.UUID(profile_id)
+    except ValueError:
+        return None
+    res = _profiles(transport, "PATCH", {"id": f"eq.{profile_id}"},
+                    json={**body.model_dump(exclude_none=True), "minor": body.minor},
+                    headers={"Prefer": "return=representation"})
+    rows = res.json()
+    return Profile(**rows[0]) if rows else None
+
+
 def get_profile(profile_id: str, transport: httpx.BaseTransport | None = None) -> Profile | None:
     try:
         uuid.UUID(profile_id)

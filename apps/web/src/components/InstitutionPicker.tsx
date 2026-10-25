@@ -1,8 +1,8 @@
-// A searchable pick from one of ASSIST's institution lists. Nothing is picked by default: with no
-// choice yet it shows the filter box and the list. Once picked, it reads like the old transfer-path
-// line (label over the chosen name) and "Change" opens the box again. `locked` (with the reason as
-// its text) keeps it closed until an earlier choice is made.
-import { useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+// A searchable pick from one of ASSIST's institution lists, as a combobox: one text field that shows the
+// chosen name, and a list that opens on focus or typing and closes again once something is picked.
+// Nothing is picked by default. `locked` (with the reason as its text) keeps it disabled until an earlier
+// choice is made.
+import { useEffect, useState, type KeyboardEvent, type ReactNode } from "react";
 import type { AssistInstitution } from "@hindsight/contracts";
 import { shortUniversity } from "../lib/format";
 
@@ -40,92 +40,119 @@ export function InstitutionPicker({
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const change = useRef<HTMLButtonElement>(null);
+  const [active, setActive] = useState(0);
   const words = fold(query).split(/[\s,]+/).filter(Boolean);
   const shown = (options ?? []).filter((o) => words.every((w) => haystack(o).includes(w)));
+  const listId = `${id}-list`;
+  const optionId = (o: AssistInstitution) => `${id}-option-${o.id}`;
+  const current = open ? shown[active] : undefined;
+
+  // Keep the highlighted option in view while arrowing through a long list.
+  useEffect(() => {
+    if (current) document.getElementById(optionId(current))?.scrollIntoView({ block: "nearest" });
+  });
+
+  function close() {
+    setOpen(false);
+    setQuery("");
+  }
 
   function pick(o: AssistInstitution) {
     onChange(o);
-    setOpen(false);
-    setQuery("");
-    // The list it was picked from is gone; keep focus on this field rather than the page.
-    requestAnimationFrame(() => change.current?.focus());
+    close();
   }
 
   function key(e: KeyboardEvent<HTMLInputElement>) {
-    if (e.key === "Escape") {
-      setOpen(false);
-      setQuery("");
-    } else if (e.key === "Enter") {
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      if (!open) setOpen(true);
+      else setActive((a) => Math.min(a + 1, shown.length - 1));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActive((a) => Math.max(a - 1, 0));
+    } else if (e.key === "Enter" && open) {
       e.preventDefault(); // not the form's submit
-      if (shown[0]) pick(shown[0]);
+      if (current) pick(current);
+    } else if (e.key === "Escape" && open) {
+      e.preventDefault();
+      close();
     }
   }
 
   const tag = value && badge?.(value);
-  const searching = !locked && (open || (!value && !!options?.length));
+  const placeholder =
+    locked ??
+    (!options
+      ? `Loading ${nouns}…`
+      : options.length === 0
+        ? `No ${nouns} to choose from`
+        : (value?.name ?? "Search by name"));
   return (
     <div className="field picker">
-      <span className="label" id={`${id}-label`}>
-        {label}
+      <span className="picker-head">
+        <label className="label" htmlFor={`${id}-input`}>
+          {label}
+        </label>
+        {tag && <span className="picker-tag">{tag}</span>}
       </span>
-      {locked ? (
-        <input type="search" disabled placeholder={locked} aria-labelledby={`${id}-label`} />
-      ) : searching ? (
-        <>
-          <input
-            type="search"
-            autoFocus={open}
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onKeyDown={key}
-            placeholder={`Search ${options?.length ?? 0} ${nouns} by name`}
-            aria-labelledby={`${id}-label`}
-            aria-controls={`${id}-list`}
-          />
-          <ul className="choices scroll picker-list" id={`${id}-list`} role="listbox" aria-labelledby={`${id}-label`}>
-            {shown.map((o) => {
-              const b = badge?.(o);
-              return (
-                <li key={o.id} role="option" aria-selected={o.id === value?.id}>
-                  <button type="button" className="picker-option" onClick={() => pick(o)}>
-                    <span>{o.name}</span>
-                    {b && <span className="picker-tag">{b}</span>}
-                  </button>
-                </li>
-              );
-            })}
-            {shown.length === 0 && (
-              <li className="muted picker-empty">
-                No {noun} matches “{query}”.
+      <input
+        id={`${id}-input`}
+        type="text"
+        role="combobox"
+        autoComplete="off"
+        aria-expanded={open}
+        aria-controls={listId}
+        aria-autocomplete="list"
+        aria-activedescendant={current ? optionId(current) : undefined}
+        value={open ? query : (value?.name ?? "")}
+        placeholder={placeholder}
+        disabled={!!locked || !options?.length}
+        onFocus={() => {
+          setOpen(true);
+          setActive(0);
+        }}
+        onClick={() => setOpen(true)}
+        onBlur={close}
+        onChange={(e) => {
+          setQuery(e.target.value);
+          setOpen(true);
+          setActive(0);
+        }}
+        onKeyDown={key}
+      />
+      {open && (
+        <ul className="choices scroll picker-list" id={listId} role="listbox" aria-label={label}>
+          {shown.map((o) => {
+            const b = badge?.(o);
+            return (
+              <li
+                key={o.id}
+                id={optionId(o)}
+                role="option"
+                aria-selected={o.id === value?.id}
+                className={o === current ? "active" : undefined}
+              >
+                {/* mousedown would blur the field and close the list before the click lands */}
+                <button
+                  type="button"
+                  tabIndex={-1}
+                  className="picker-option"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onMouseEnter={() => setActive(shown.indexOf(o))}
+                  onClick={() => pick(o)}
+                >
+                  <span>{o.name}</span>
+                  {b && <span className="picker-tag">{b}</span>}
+                </button>
               </li>
-            )}
-          </ul>
-          {value && (
-            <button type="button" className="text picker-cancel" onClick={() => setOpen(false)}>
-              Keep {value.name}
-            </button>
+            );
+          })}
+          {shown.length === 0 && (
+            <li className="muted picker-empty">
+              No {noun} matches “{query}”.
+            </li>
           )}
-        </>
-      ) : (
-        <div className="picker-current">
-          <span className="picker-name" aria-live="polite">
-            {value?.name ?? (options ? `No ${nouns} to choose from` : `Loading ${nouns}…`)}
-          </span>
-          {tag && <span className="picker-tag">{tag}</span>}
-          {value && (
-            <button
-              ref={change}
-              type="button"
-              className="text"
-              onClick={() => setOpen(true)}
-              disabled={!options?.length}
-              aria-label={`Change ${label.toLowerCase()}`}
-            >
-              Change
-            </button>
-          )}
-        </div>
+        </ul>
       )}
       {hint && <span className="field-hint">{hint}</span>}
     </div>

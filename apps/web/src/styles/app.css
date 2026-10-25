@@ -205,13 +205,18 @@ svg {
   background-image: radial-gradient(#d9dbd1 0.8px, transparent 0.8px);
   background-size: 24px 24px;
 }
+/* The page container: left-aligned beside the sidebar with a fixed gutter. Page header and body share
+   its edges; pages don't center a box of their own inside it. */
 main {
+  --gutter: 40px;
   width: 100%;
-  max-width: 1480px;
-  margin: 0 auto;
-  padding: 0 clamp(28px, 4vw, 64px) 64px;
+  max-width: calc(1120px + 2 * var(--gutter));
+  padding: 0 var(--gutter) 64px;
   flex: 1;
   min-width: 0;
+}
+main.page-form {
+  max-width: calc(720px + 2 * var(--gutter));
 }
 main:focus {
   outline: none;
@@ -1073,10 +1078,6 @@ figcaption {
   color: var(--paper);
   border-color: var(--ink);
 }
-.intake {
-  max-width: 1040px;
-  margin: 0 auto;
-}
 .intake .masthead {
   gap: 24px;
 }
@@ -1415,8 +1416,7 @@ table.confirm button {
     margin-left: 0;
   }
   main {
-    padding-left: 32px;
-    padding-right: 32px;
+    --gutter: 32px;
   }
 }
 @media (max-width: 700px) {
@@ -1434,7 +1434,8 @@ table.confirm button {
     --text-body: 20px;
   }
   main {
-    padding: 0 20px 40px;
+    --gutter: 20px;
+    padding-bottom: 40px;
   }
   .sidebar {
     padding: 22px 20px 16px;
@@ -1759,8 +1760,7 @@ table.confirm button {
 }
 @media (max-width: 370px) {
   main {
-    padding-left: 14px;
-    padding-right: 14px;
+    --gutter: 14px;
   }
   .sidebar {
     padding-left: 14px;

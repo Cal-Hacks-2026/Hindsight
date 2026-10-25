@@ -27,6 +27,13 @@ export const collegeName = (p: Pick<Profile, "sending_institution_id" | "sending
 /** "Data Science, B.S." → "Data Science" */
 export const shortMajor = (label: string) => label.replace(/,\s*B\.[AS]\.?$/i, "").trim();
 
+/** Ends a sentence with a period unless it already ends in one: "… for Computer Science B.S." stays
+ *  as is, not "B.S..". */
+export const withPeriod = (text: string) => {
+  const t = text.trimEnd();
+  return /[.!?]$/.test(t) ? t : `${t}.`;
+};
+
 /** Majors joined for running text: "Data Science + Economics". */
 export const majorsLine = (labels: string[]) => labels.map(shortMajor).join(" + ");
 

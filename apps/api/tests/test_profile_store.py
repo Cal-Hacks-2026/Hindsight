@@ -15,6 +15,7 @@ from app.services.profile_store import confirmed_courses as real_confirmed_cours
 from app.services.profile_store import create_profile as real_create_profile
 from app.services.profile_store import get_profile as real_get_profile
 from app.services.profile_store import replace_courses as real_replace_courses
+from app.services.profile_store import update_profile as real_update_profile
 from app.services.radar.store import record_ranked as real_record_ranked
 
 from .test_contract import PROFILE, make_profile
@@ -214,3 +215,36 @@ def test_profile_without_stage_still_validates():
     assert CreateProfileRequest(**PROFILE).stage is None
     with pytest.raises(ValueError):
         CreateProfileRequest(**{**PROFILE, "stage": "graduated"})
+
+
+# ---- Editing a profile keeps its id ----
+
+
+def test_update_profile_patches_the_same_row(supabase_env):
+    edited = {**SKELETON_PROFILE, "minor": None, "goals": "Join a research lab"}
+    row = {**edited, "id": PID, "created_at": "2026-10-25T09:00:00+00:00"}
+    transport, seen = recorder(httpx.Response(200, json=[row]), httpx.Response(200, json=[]))
+    profile = real_update_profile(PID, CreateProfileRequest(**edited), transport=transport)
+    assert profile.id == PID and profile.goals == "Join a research lab" and profile.minor is None
+    req = seen[0]
+    assert req.method == "PATCH" and req.url.params["id"] == f"eq.{PID}"
+    assert req.headers["prefer"] == "return=representation"
+    # A cleared minor is sent as null so the old one doesn't stay.
+    assert json.loads(req.content)["minor"] is None
+    assert real_update_profile(PID, CreateProfileRequest(**edited), transport=transport) is None
+    assert real_update_profile("nope", CreateProfileRequest(**edited), transport=transport) is None
+
+
+def test_put_profile_updates_in_place(profile_fake):
+    pid = make_profile()
+    edited = {**SKELETON_PROFILE, "name": "AUDIT-EDIT", "majors": ["Economics, B.S."], "interests": ["finance"]}
+    res = client.put(f"/profiles/{pid}", json=edited)
+    assert res.status_code == 200
+    profile = res.json()["profile"]
+    assert profile["id"] == pid and profile["name"] == "AUDIT-EDIT" and profile["majors"] == ["Economics, B.S."]
+    assert len(profile_fake.profiles) == 1
+    assert client.get(f"/profiles/{pid}").json()["profile"]["minor"] == "Business"
+
+
+def test_put_profile_unknown_id_is_404():
+    assert client.put(f"/profiles/{PID}", json=PROFILE).status_code == 404

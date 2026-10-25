@@ -73,6 +73,17 @@ def create_profile(body: CreateProfileRequest, background: BackgroundTasks) -> P
     return ProfileResponse(profile=_named(profile))
 
 
+@router.put("/{profile_id}", response_model=ProfileResponse, response_model_exclude_none=True,
+            dependencies=[Depends(profile_limits.per_ip)])
+def update_profile(profile_id: str, body: CreateProfileRequest) -> ProfileResponse:
+    """Profile edits keep the id, so courses, the saved schedule and the ranked feed stay attached."""
+    profile = profile_store.update_profile(
+        profile_id, body.model_copy(update={"campus": campuses.profile_feed(body.receiving_institution_id)}))
+    if profile is None:
+        raise HTTPException(status_code=404, detail="Profile not found")
+    return ProfileResponse(profile=_named(profile))
+
+
 @router.get("/{profile_id}", response_model=ProfileResponse, response_model_exclude_none=True)
 def get_profile(profile_id: str) -> ProfileResponse:
     return ProfileResponse(profile=_get_profile(profile_id))
