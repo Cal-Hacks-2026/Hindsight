@@ -38,6 +38,8 @@ class Program(BaseModel):
     modality: Modality | None = None
     tags: list[str] = Field(default_factory=list)
     last_checked: str
+    # Reviewed against the page, for programs whose written reasons overstated who they're for.
+    reason: str = Field(default="", max_length=160)
 
     @model_validator(mode="after")
     def _check(self) -> "Program":
@@ -78,4 +80,5 @@ def as_rows(campus: str, directory: Path | None = None) -> list[dict[str, Any]]:
         "starts_at": None, "ends_at": None, "deadline": None, "location": None, "modality": p.modality,
         "category": p.category, "subcategory": p.subcategory,
         "window": p.window, "window_months": p.window_months, "last_checked": p.last_checked,
+        "reviewed_reason": p.reason or None,
     } for p in load(campus, directory)]

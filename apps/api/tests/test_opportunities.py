@@ -77,6 +77,10 @@ def test_taxonomy_has_ten_categories_with_subcategories():
     ("Brazilian Jiu-Jitsu Practice", "Brazilian Jiu-Jitsu Club", ["recognized student organization"], "club",
      ("clubs", "orgs")),
     ("Football vs UNLV", "SJSU Athletics", ["sjsu athletics"], "event", ("growth", "wellness-community")),
+    # A visitor sign-in at the Student Union isn't a front-desk job; its real job postings still are jobs.
+    ("Event Center Check in", "Student Union, Inc.", ["clubs", "office hours", "college/department/program"], "event",
+     ("growth", "wellness-community")),
+    ("Student Union Now Hiring: Event Staff", "Student Union, Inc.", [], "event", ("campus-jobs", "student-workers")),
 ])
 def test_rules_place_real_listings(title, org, tags, type, expected):
     assert classify.rule_label({"title": title, "org": org, "tags": tags, "type": type}) == expected
@@ -176,6 +180,25 @@ def test_programs_file_is_valid_and_cited():
         assert p.url.scheme == "https" and (p.url.host or "").endswith("sjsu.edu"), p.id
         assert date.fromisoformat(p.last_checked) and p.window and p.evidence, p.id
         assert "AI" not in p.description.split(), p.id
+
+
+def test_reviewed_program_reasons_match_their_pages():
+    by_id = {p.id: p for p in programs.load("sjsu")}
+    urop = by_id["sjsu-urop"].reason
+    assert all(group in urop for group in ("freshmen", "sophomores", "transfer students"))
+    for p in by_id.values():
+        assert "AI" not in p.reason.split() and " you" not in f" {p.reason.lower()}", p.id
+
+
+def test_reviewed_reason_beats_the_cache_and_claude(monkeypatch):
+    def never(profile, items):
+        raise AssertionError("asked Claude for a reviewed reason")
+    monkeypatch.setattr(rank, "ask_claude", never)
+    row = next(r for r in programs.as_rows("sjsu") if r["id"] == "program:sjsu-urop")
+    s = rank.score(row, rank.ProfileTerms.of(PROFILE), datetime.now(timezone.utc))
+    rank.reason_cache.put(rank._cache_key(rank._profile_key(PROFILE), row), "Built for new transfer students.")
+    assert rank.reasons(PROFILE, [s])[row["id"]] == row["reviewed_reason"]
+    assert rank.reasons(PROFILE, [s], ask=False)[row["id"]] == row["reviewed_reason"]
 
 
 def test_program_with_unknown_category_is_rejected(tmp_path):

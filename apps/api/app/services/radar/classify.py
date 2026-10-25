@@ -224,6 +224,10 @@ RULES: list[Rule] = [
                          "educational/awareness", "academic wellness", "special event", "community service",
                          "social events and gatherings", "fitness/training", "cultural"}),
          title=_re(r"\bgame night\b|\bwellness\b|\bvolunteer|\bcelebrat|\bfootball\b|\bbasketball\b|\bcraft")),
+    # A Student Union listing no rule above placed is a drop-in or visit ("Event Center Check in"),
+    # not a job: its job postings say so in the title and are caught by the Campus Jobs rules.
+    Rule(("growth", "wellness-community"), org=_re(r"\bstudent union\b"),
+         unless_title=_re(r"\bhiring\b|\bjobs?\b|\bpositions?\b|\bemployment\b|\bstaff\b")),
 ]
 
 

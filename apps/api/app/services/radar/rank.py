@@ -337,11 +337,14 @@ def _one_line(text: str) -> str:
 
 
 def reasons(profile: Profile, items: list[Scored], ask: bool = True) -> dict[str, str]:
-    """Cached reasons, Claude for the rest when `ask`, else the computed reason."""
+    """Reviewed and cached reasons, Claude for the rest when `ask`, else the computed reason."""
     pkey = _profile_key(profile)
     out: dict[str, str] = {}
     missing = []
     for s in items:
+        if s.row.get("reviewed_reason"):
+            out[str(s.row["id"])] = s.row["reviewed_reason"]
+            continue
         cached = reason_cache.get(_cache_key(pkey, s.row))
         if cached:
             out[str(s.row["id"])] = cached
