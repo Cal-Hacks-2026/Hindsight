@@ -1,5 +1,5 @@
-import { Fragment, useEffect, useState } from "react";
-import { Link, useLocation } from "react-router";
+import { Fragment, useEffect, useState, type ReactNode } from "react";
+import { Link, useLocation, useSearchParams } from "react-router";
 import type {
   Course,
   MatchResult,
@@ -14,9 +14,14 @@ import {
   StatusMark,
   type StatusTone,
 } from "../components/Paper";
-import { GeProgress } from "../components/GeProgress";
+import {
+  GeAreaCards,
+  GeNotes,
+  useGeProgress,
+} from "../components/GeProgress";
 import { Icon } from "../components/Icons";
 import {
+  PlanMethodNotes,
   PlanTables,
   PlanTablesLoading,
   type PlanContext,
@@ -35,7 +40,7 @@ import {
   shortUniversity,
   universityName,
 } from "../lib/format";
-import { mentionsGraduation, parseGoalTerm, termIndex } from "../lib/goal";
+import { parseGoalTerm, termIndex } from "../lib/goal";
 import {
   beforeTransfer,
   lastTerm,
@@ -48,9 +53,8 @@ import {
 } from "../lib/plans";
 import { loadSession } from "../lib/session";
 import { parseReceiving, type ParsedCourse } from "../lib/shelf";
+import "../styles/ge.css";
 
-// The planner's default cap (apps/api/app/services/planner.py DEFAULT_UNIT_CAP).
-const UNIT_CAP = 15;
 const PLACEHOLDER_PREFIX = "PLACEHOLDER · ";
 
 // Human copy for gotcha flags; unknown flags fall through as-is.
@@ -295,8 +299,9 @@ function Report({
   const { majors, planned, fullPlan, query } = planMajors(profile, matches);
   const uncurated = majors.filter((m) => !planned.includes(m));
   // The student's start and transfer terms, if they picked them; otherwise the planner's defaults.
+  // Credits reads the same plan for "planned Winter 2027".
   const [picks, setPicks] = useState<TermPicks>(() => loadPicks(profile.id));
-  const plans = usePlans(profile.id, view === "plan" ? query : [], picks);
+  const plans = usePlans(profile.id, query, picks);
   function pick(which: keyof TermPicks, term: string | undefined) {
     saveTerm(which, profile.id, term);
     setPicks((p) => ({ ...p, [which]: term }));
@@ -345,7 +350,6 @@ function Report({
     campusLong,
     universityId: profile.receiving_institution_id,
   };
-  const missed = rows.filter((r) => r.req.status === "satisfied" && r.older);
 
   const ready = plans.status === "ready" ? plans.plans : undefined;
   const planContext: PlanContext = {
@@ -375,6 +379,7 @@ function Report({
       ))}
     </SourceList>
   );
+  const loading = planned.length > 0 && plans.status === "loading";
 
   return (
     <>
@@ -385,16 +390,14 @@ function Report({
         {view === "credits" ? "Credits" : "Plan"}
       </Masthead>
       {view === "credits" ? (
-        <>
-          <Credits
-            rows={rows}
-            courses={courses}
-            majors={majors}
-            campus={campus}
-          />
-          {missed.length > 0 && <Missed rows={missed} courses={courses} />}
-          <GeProgress profileId={profile.id} courses={courses} />
-        </>
+        <Credits
+          rows={rows}
+          courses={courses}
+          majors={majors}
+          campus={campus}
+          plans={ready}
+          profileId={profile.id}
+        />
       ) : (
         <>
           {plans.status === "error" && (
@@ -405,19 +408,7 @@ function Report({
           <Section
             id="course-plan"
             label="Plan"
-            title={
-              planned.length > 0 && plans.status === "loading"
-                ? "Building Your Plan"
-                : "Your Course Plan"
-            }
-            notes={
-              <PlanNotes
-                majors={planned}
-                plans={ready}
-                names={names}
-                fullPlan={fullPlan}
-              />
-            }
+            title={loading ? "Building Your Plan" : "Your Course Plan"}
           >
             {ready && (
               <PlanGlance
@@ -428,35 +419,32 @@ function Report({
               />
             )}
             <NotPlanned majors={uncurated} campus={campus} />
-            {planned.length > 0 && plans.status === "loading" && (
-              <PlanTablesLoading />
-            )}
+            {loading && <PlanTablesLoading />}
             <PlanTables
               ctx={planContext}
               student={profile.name}
               picks={picks}
               onPick={pick}
               fullPlan={fullPlan}
-              loading={planned.length > 0 && plans.status === "loading"}
+              loading={loading}
             />
           </Section>
-          {/* Side by side on wide screens: what to check, and the counts behind the plan. */}
-          <div className="plan-side-grid">
-            <Section label="Summary" title="Your Progress">
-              <Abstract
-                rows={rows}
+          <Attention rows={rows} />
+          {/* Without the university's requirements there's no finish term to check a goal against. */}
+          {fullPlan && ready && (
+            <GoalCheck goals={profile.goals} majors={planned} plans={ready} />
+          )}
+          {ready && (
+            <HowSection id="plan-how" title="How This Plan Was Built">
+              <PlanNotes
                 majors={planned}
                 plans={ready}
-                catalogRefs={catalogRefs}
+                names={names}
                 fullPlan={fullPlan}
               />
-            </Section>
-            <Attention rows={rows} />
-            {/* Without the university's requirements there's no finish term to check a goal against. */}
-            {fullPlan && ready && (
-              <GoalCheck goals={profile.goals} majors={planned} plans={ready} />
-            )}
-          </div>
+              <PlanMethodNotes ctx={planContext} fullPlan={fullPlan} />
+            </HowSection>
+          )}
         </>
       )}
       {citations}
@@ -473,8 +461,6 @@ type Names = {
   /** The profile's university (ASSIST id). */
   universityId: number;
 };
-
-// ---- Abstract ----
 
 function Refs({ ns }: { ns: number[] }) {
   const sorted = [...new Set(ns)].sort((a, b) => a - b);
@@ -493,71 +479,39 @@ function Refs({ ns }: { ns: number[] }) {
   );
 }
 
-function Abstract({
-  rows,
-  majors,
-  plans,
-  catalogRefs,
-  fullPlan,
+/** Notes behind one closed row at the bottom of the page ("How This Plan Was Built"). Styled like
+ *  Sources (N), and opened for printing with it. */
+function HowSection({
+  id,
+  title,
+  children,
 }: {
-  rows: Row[];
-  majors: string[];
-  plans?: Plans;
-  catalogRefs: number[];
-  fullPlan: boolean;
+  id: string;
+  title: string;
+  children: ReactNode;
 }) {
-  const done = rows.filter((r) => r.req.status === "satisfied");
-  const partial = rows.filter((r) => r.req.status === "partial");
-  const inProgress = rows.filter((r) => r.req.status === "in_progress");
-  const open = rows.filter(
-    (r) => r.req.status === "missing" || r.req.status === "at_university",
-  );
   return (
-    <>
-      <dl className="progress-stats">
-        <div>
-          <dt>Requirements met</dt>
-          <dd>{done.length}</dd>
-        </div>
-        <div>
-          <dt>In progress</dt>
-          <dd>{inProgress.length}</dd>
-        </div>
-        <div>
-          <dt>Partly complete</dt>
-          <dd>{partial.length}</dd>
-        </div>
-        <div>
-          <dt>Still to take</dt>
-          <dd>{open.length}</dd>
-        </div>
-      </dl>
-      {plans && fullPlan && majors.length > 1 && (
-        <div className="major-comparison">
-          {majors.map((major) => {
-            const term = plans.single[major] && lastTerm(plans.single[major]!);
-            return term ? (
-              <p key={major}>
-                {shortMajor(major)} alone: <strong>{term}</strong>
-                <Refs ns={catalogRefs} />
-              </p>
-            ) : null;
-          })}
-        </div>
-      )}
-      <p className="plan-note">
-        {plans?.response.ge_pattern
-          ? `Major requirements and ${plans.response.ge_pattern === "igetc" ? "IGETC" : "Cal-GETC"} general education. Other graduation requirements aren’t included.`
-          : "Major requirements only. General education and other graduation requirements aren’t included."}
-      </p>
-      <Link className="inline-link" to="/credits">
-        Review My Credits <Icon name="arrow" size={20} />
-      </Link>
-    </>
+    <section
+      className="section sources how-section"
+      id={id}
+      aria-labelledby={`${id}-label`}
+    >
+      <details className="sources-details">
+        <summary className="section-head">
+          <Icon name="book" size={19} />
+          <h2 id={`${id}-label`}>{title}</h2>
+          <Icon name="chevron" size={20} />
+        </summary>
+        <div className="how-notes">{children}</div>
+      </details>
+    </section>
   );
 }
 
-/** The plan in one line: transfer term, estimated finish, terms left at the college. */
+// ---- Plan ----
+
+/** The plan in one line: transfer term, estimated finish, terms left at the college. The only place
+ *  these numbers appear on the Plan. */
 function PlanGlance({
   plans,
   names,
@@ -589,41 +543,44 @@ function PlanGlance({
           <dd>{finish}</dd>
         </div>
       )}
-      <div>
-        <dt>Terms at {names.college} before transfer</dt>
-        <dd>{before}</dd>
-      </div>
+      {before > 0 && (
+        <div>
+          <dt>Terms at {names.college} before transfer</dt>
+          <dd>{before}</dd>
+        </div>
+      )}
     </dl>
   );
 }
+
+const ATTENTION_SHOWN = 3;
 
 function Attention({ rows }: { rows: Row[] }) {
   const review = rows.filter(
     ({ req }) =>
       req.status === "partial" ||
-      req.confidence !== "high" ||
+      // Doubt about a match matters only for a credit that counts.
       (req.status === "satisfied" &&
-        req.flags.some((flag) =>
-          ["course_year_mismatch", "pass_no_pass"].includes(flag),
-        )),
+        (req.confidence !== "high" ||
+          req.flags.some((flag) =>
+            ["course_year_mismatch", "pass_no_pass"].includes(flag),
+          ))),
   );
   if (!review.length) return null;
   return (
     <Section label="Heads up" title="Needs Attention">
-      <ul className="attention-list">
-        {review.slice(0, 3).map((row) => (
+      <ul className="plan-attention">
+        {review.slice(0, ATTENTION_SHOWN).map((row) => (
           <li key={row.key}>
-            <div>
-              <strong>{rowCode(row)}</strong>
-              <p>
-                {row.req.status === "partial"
-                  ? row.req.flags.includes("sequence_rule")
-                    ? "Complete the remaining sequence before this requirement counts."
-                    : "Complete the remaining courses for this requirement."
-                  : "Check this course’s match before relying on it."}
-                <Refs ns={row.refs} />
-              </p>
-            </div>
+            <strong>{rowCode(row)}</strong>
+            <p>
+              {row.req.status === "partial"
+                ? row.req.flags.includes("sequence_rule")
+                  ? "Finish the sequence before it counts."
+                  : "Finish the remaining courses before it counts."
+                : "Check this match before relying on it."}
+              <Refs ns={row.refs} />
+            </p>
             <Link
               className="inline-link"
               to={`/counselor?${new URLSearchParams({ q: `What should I do next for ${row.req.receiving_course}?` })}`}
@@ -642,6 +599,7 @@ function Attention({ rows }: { rows: Row[] }) {
 
 // ---- Goal check ----
 
+/** Goals are free text. Only a target term in them ("by Spring 2028") gets a card. */
 function GoalCheck({
   goals,
   majors,
@@ -651,31 +609,16 @@ function GoalCheck({
   majors: string[];
   plans: Plans;
 }) {
-  const text = goals.trim();
-  if (!text) return null;
-  const goal = parseGoalTerm(text);
+  const goal = parseGoalTerm(goals);
   const finish = lastTerm(plans.combined);
   const finishAt = finish ? termIndex(finish) : undefined;
-
-  if (!goal) {
-    if (!mentionsGraduation(text)) return null;
-    return (
-      <Section label="Your goal" title="Your Goal">
-        <p className="goal">
-          You wrote "{text}", but we couldn't read a target term from it. Add
-          one like "Spring 2028" so we can check it against your plan.{" "}
-          <Link to="/onboarding">Edit Your Goals</Link>
-        </p>
-      </Section>
-    );
-  }
-  if (!finish || finishAt === undefined) return null;
+  if (!goal || !finish || finishAt === undefined) return null;
 
   if (finishAt <= goal.index) {
     return (
       <Section label="Your goal" title="Your Goal">
         <p className="goal ok">
-          Your major plan finishes {finish}, within your {goal.label} target.
+          Your major plan finishes within your {goal.label} target.
         </p>
       </Section>
     );
@@ -691,7 +634,7 @@ function GoalCheck({
   return (
     <Section label="Your goal" title="Your Goal">
       <p className="goal late">
-        Your current major plan finishes {finish}, after your {goal.label} goal.
+        Your current major plan finishes after your {goal.label} goal.
       </p>
       <ul className="goal-levers">
         {levers.map((l) => (
@@ -706,312 +649,8 @@ function GoalCheck({
   );
 }
 
-// ---- 01 Credits ----
-
-function Credits({
-  rows,
-  courses,
-  majors,
-  campus,
-}: {
-  rows: Row[];
-  courses?: Course[];
-  majors: string[];
-  campus: string;
-}) {
-  const [filter, setFilter] = useState<"all" | "met" | "review">("all");
-  const [showMet, setShowMet] = useState(false);
-  const done = rows.filter((row) => row.req.status === "satisfied").length;
-  const shown = rows.filter(
-    ({ req }) =>
-      filter === "all" ||
-      (filter === "met"
-        ? req.status === "satisfied"
-        : req.status !== "satisfied" || req.confidence !== "high"),
-  );
-  // In the full list, requirements met with confidence fold into one row; the rest stay open.
-  const settled = (row: Row) =>
-    row.req.status === "satisfied" && row.req.confidence === "high";
-  const met = filter === "all" ? shown.filter(settled) : [];
-  const open = filter === "all" ? shown.filter((r) => !settled(r)) : shown;
-  const card = (row: Row) => (
-    <RequirementRow
-      key={row.key}
-      row={row}
-      courses={courses}
-      majors={majors}
-      campus={campus}
-    />
-  );
-  return (
-    <Section
-      label="Credits"
-      title="What Counts Toward Your Major"
-      notes={<CreditNotes rows={rows} />}
-    >
-      <div
-        className="progress-track"
-        role="progressbar"
-        aria-label="Requirements satisfied"
-        aria-valuemin={0}
-        aria-valuemax={rows.length || 1}
-        aria-valuenow={done}
-      >
-        <span
-          style={{ width: `${rows.length ? (done / rows.length) * 100 : 0}%` }}
-        />
-      </div>
-      <p className="progress-caption">
-        {done} of {rows.length} requirements met
-      </p>
-      <div className="credit-filters" aria-label="Filter credits">
-        {(
-          [
-            ["all", "All"],
-            ["met", "Met"],
-            ["review", "To Resolve"],
-          ] as const
-        ).map(([value, label]) => (
-          <button
-            type="button"
-            key={value}
-            aria-pressed={filter === value}
-            onClick={() => setFilter(value)}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-      <div className="credit-list" aria-live="polite">
-        {met.length > 0 && (
-          <div className="fold">
-            <button
-              type="button"
-              className="fold-toggle"
-              aria-expanded={showMet}
-              aria-controls="credits-met"
-              onClick={() => setShowMet((o) => !o)}
-            >
-              <StatusMark tone="ok">
-                {met.length} {plural(met.length, "requirement")} met
-              </StatusMark>
-              <span className="fold-meta">
-                {collapse(met.map(rowCode), " · ", 4)}
-              </span>
-              <Icon name="chevron" size={20} />
-            </button>
-            <div id="credits-met" className="credit-list" hidden={!showMet}>
-              {met.map(card)}
-            </div>
-          </div>
-        )}
-        {open.map(card)}
-        {!shown.length && <p className="lede">No requirements in this view.</p>}
-      </div>
-    </Section>
-  );
-}
-
-function Missed({ rows, courses }: { rows: Row[]; courses?: Course[] }) {
-  return (
-    <Section label="Heads up" title="Heads Up" notesFlush>
-      <div className="missed">
-        <h2>Credits Worth a Second Look</h2>
-        <ul>
-          {rows.map((r) => {
-            const via = r.req.satisfied_by
-              .map((code) => {
-                const term = findCourse(courses, code)?.term;
-                return term ? `${code} (${term})` : code;
-              })
-              .join(" + ");
-            return (
-              <li key={r.key}>
-                <strong>{rowCode(r)}</strong> counts through {via} only under
-                the {r.older} agreement. The current one rates it lower or
-                doesn't count it.{" "}
-                <a href={r.req.citation.url} target="_blank" rel="noreferrer">
-                  ASSIST {r.older}
-                </a>
-              </li>
-            );
-          })}
-        </ul>
-      </div>
-    </Section>
-  );
-}
-
-/** For a credit that counts with doubt, the question to take to an advisor. */
-function advisorQuestion(row: Row): string | null {
-  const { req, parsed } = row;
-  if (req.status !== "satisfied" || req.confidence === "high") return null;
-  const via = req.satisfied_by.join(" + ") || "my course";
-  return `Ask your advisor: "Does ${via} satisfy ${parsed.code} for ${row.majors.map(shortMajor).join(" and ")}?"`;
-}
-
-function RequirementRow({
-  row,
-  courses,
-  majors,
-  campus,
-}: {
-  row: Row;
-  courses?: Course[];
-  majors: string[];
-  campus: string;
-}) {
-  const { req, parsed } = row;
-  const status = tone(req);
-  const via = req.satisfied_by.map((code) => {
-    const course = findCourse(courses, code);
-    return `${code}${course?.term ? ` · ${course.term}` : ""}`;
-  });
-  const takeAt = takeAtLead(req);
-  const question = advisorQuestion(row);
-  const college = agreementOf(req.citation.label)?.college ?? "your college";
-  const evaluationQuestion = `There is no published course match for ${req.receiving_course}. What should I submit to request an evaluation?`;
-  return (
-    <article className="credit-card">
-      <header className="credit-heading">
-        <div>
-          <p className="credit-context">{campus} requirement</p>
-          <h3>{parsed.choose ? "Choose an Elective" : parsed.code}</h3>
-          {parsed.title && <p className="credit-title">{parsed.title}</p>}
-        </div>
-        <StatusMark tone={status.tone}>{status.label}</StatusMark>
-      </header>
-      <dl className="credit-details">
-        {via.length > 0 && (
-          <div>
-            <dt>Your coursework</dt>
-            <dd>
-              {via.map((course) => (
-                <span key={course}>{course}</span>
-              ))}
-            </dd>
-          </div>
-        )}
-        <div>
-          <dt>Applies to</dt>
-          <dd>
-            {req.group_title.charAt(0) + req.group_title.slice(1).toLowerCase()}
-            {majors.length > 1 && (
-              <span>{row.majors.map(shortMajor).join(" · ")}</span>
-            )}
-          </dd>
-        </div>
-      </dl>
-      {parsed.alternatives.length > 0 && (
-        <details className="credit-options">
-          <summary>
-            {parsed.choose
-              ? parsed.choose.charAt(0).toUpperCase() + parsed.choose.slice(1)
-              : "Accepted alternatives"}
-          </summary>
-          <p>{parsed.alternatives.join(" · ")}</p>
-        </details>
-      )}
-      {takeAt && (
-        <p className="credit-next">
-          <strong>{takeAt}</strong> {req.options!.map(keepCodes).join(" · ")}
-        </p>
-      )}
-      {req.status === "missing" && !takeAt && (
-        <p className="credit-next">Not matched to your confirmed coursework.</p>
-      )}
-      {req.status === "at_university" && (
-        <p className="credit-next">
-          No published equivalent at {college}. Request an evaluation to check
-          whether prior coursework can apply.
-        </p>
-      )}
-      {question && <p className="credit-next">{question}</p>}
-      <div className="credit-actions">
-        <a href={req.citation.url} target="_blank" rel="noreferrer">
-          {agreementOf(req.citation.label)?.short ?? "View agreement"} ↗
-        </a>
-        <Refs ns={row.refs} />
-        {(question || req.status === "at_university") && (
-          <Link
-            className="inline-link"
-            to={`/counselor?${new URLSearchParams({ q: question ?? evaluationQuestion })}`}
-          >
-            {question ? "Review This Match" : "Ask About an Evaluation"}
-            <Icon name="arrow" size={20} />
-          </Link>
-        )}
-      </div>
-    </article>
-  );
-}
-
-/** "MATH 1A" never breaks across lines. */
-const keepCodes = (text: string) =>
-  text.replace(/\b([A-Z][A-Z0-9]{1,5}) (?=C?\d)/g, "$1\u00a0");
-
-/** "Take at <college>:" for rows still open, with how many of the listed options it takes. */
-function takeAtLead(req: Requirement): string | undefined {
-  if (
-    !req.options?.length ||
-    (req.status !== "missing" && req.status !== "partial")
-  )
-    return undefined;
-  const college = agreementOf(req.citation.label)?.college ?? "your college";
-  if (req.options.length === 1) return `Take at ${college}:`;
-  const how =
-    req.rule === "n_of" && req.n && req.flags.includes("n_units")
-      ? `toward ${req.n} units`
-      : req.rule === "n_of" && req.n && req.n > 1
-        ? `${countWord(req.n)} of`
-        : "one of";
-  return `Take at ${college}, ${how}:`;
-}
-
-function CreditNotes({ rows }: { rows: Row[] }) {
-  const byFlag = new Map<string, string[]>();
-  const grades = new Set<string>();
-  for (const r of rows) {
-    for (const f of r.req.flags) {
-      const grade = /^min_grade_(.+)$/.exec(f)?.[1];
-      if (grade) grades.add(grade);
-      if (QUIET_FLAGS.test(f)) continue;
-      // Term mismatches matter only for courses that count.
-      if (f === "course_year_mismatch" && r.req.status !== "satisfied")
-        continue;
-      const codes = byFlag.get(f) ?? [];
-      if (!codes.includes(rowCode(r))) codes.push(rowCode(r));
-      byFlag.set(f, codes);
-    }
-  }
-  return (
-    <>
-      {[...byFlag].map(([flag, codes]) => {
-        const copy = FLAG_NOTE[flag];
-        const who = listing(codes);
-        return copy ? (
-          <Note key={flag} lead={copy.lead(who)}>
-            {copy.body}
-          </Note>
-        ) : (
-          <Note key={flag} lead={`${who}.`}>
-            ASSIST flag: {flag.replace(/_/g, " ")}.
-          </Note>
-        );
-      })}
-      {grades.size > 0 && (
-        <Note lead="Grades.">
-          Published minimums include{" "}
-          {listing([...grades].map((grade) => `${grade} or better`))}. Check
-          each agreement for the course-specific rule.
-        </Note>
-      )}
-    </>
-  );
-}
-
-// ---- 02 Plan ----
-
+/** Why the transfer term is what it is, and anything the finish term leaves out. The terms
+ *  themselves are in the summary row. */
 function PlanNotes({
   majors,
   plans,
@@ -1019,49 +658,42 @@ function PlanNotes({
   fullPlan,
 }: {
   majors: string[];
-  plans?: Plans;
+  plans: Plans;
   names: Names;
   fullPlan: boolean;
 }) {
-  const combined = plans && lastTerm(plans.combined);
-  const transfer = plans?.response.transfer_term;
-  const singles = plans
-    ? majors.flatMap((m) =>
-        plans.single[m]?.length
-          ? [[m, lastTerm(plans.single[m]!)!] as const]
-          : [],
-      )
-    : [];
+  const transfer = plans.response.transfer_term;
+  const earliest = plans.response.earliest_transfer_term;
+  const singles = majors.flatMap((m) =>
+    plans.single[m]?.length ? [[m, lastTerm(plans.single[m]!)!] as const] : [],
+  );
   const unscheduled = majors.flatMap((m) =>
     (catalogMajor(m, names.universityId)?.unscheduled ?? []).map(
       (g) => `${g.units} units of ${shortMajor(m)} ${g.title}`,
     ),
   );
-  const placeholder = plans?.combined.some((s) =>
+  const placeholder = plans.combined.some((s) =>
     s.courses.some((c) => c.reason.startsWith(PLACEHOLDER_PREFIX)),
   );
+  const it = unscheduled.length === 1 ? "it" : "them";
   return (
     <>
       {transfer && (
         <Note lead="Transfer.">
-          {plans?.response.earliest_transfer_term === transfer
-            ? `${transfer}, the first Fall after your ${names.college} courses. You can pick another term above the plan.`
-            : `${transfer}, as you picked. The earliest that fits every ${names.college} course is ${plans?.response.earliest_transfer_term}.`}
+          {earliest === transfer
+            ? `The first Fall after your ${names.college} courses. Pick another term at the top of the plan.`
+            : `As you picked. The earliest that fits every ${names.college} course is ${earliest}.`}
         </Note>
       )}
-      {combined && fullPlan && (
-        <Note lead="Earliest finish.">
-          {singles.length && majors.length > 1
-            ? `${singles.map(([m, t]) => `${t} with ${shortMajor(m)} alone`).join("; ")}. Together, ${combined}.`
-            : `${combined}, at up to ${UNIT_CAP} units per ${names.campus} term.`}
+      {fullPlan && singles.length > 0 && majors.length > 1 && (
+        <Note lead="One major at a time.">
+          {singles.map(([m, t]) => `${shortMajor(m)} alone finishes ${t}`).join("; ")}.
         </Note>
       )}
       {unscheduled.length > 0 && (
         <Note lead="Not yet scheduled.">
-          {listing(unscheduled)}: the catalog lists no courses for{" "}
-          {unscheduled.length === 1 ? "it" : "them"}, so the planner can't place{" "}
-          {unscheduled.length === 1 ? "it" : "them"} and the finish term doesn't
-          include {unscheduled.length === 1 ? "it" : "them"}.
+          {listing(unscheduled)}: the catalog lists no courses for {it}, so the
+          planner can't place {it} and the finish term doesn't include {it}.
         </Note>
       )}
       {placeholder && (
@@ -1096,5 +728,424 @@ function PlanError({ error }: { error: unknown }) {
       <h3>Couldn't Build a Plan</h3>
       <p>{detail}</p>
     </div>
+  );
+}
+
+// ---- Credits ----
+
+type CreditShow = "major" | "ge";
+type CreditFilter = "todo" | "met" | "all";
+
+const SHOW: [CreditShow, string][] = [
+  ["major", "Major"],
+  ["ge", "General Education"],
+];
+const FILTERS: [CreditFilter, string][] = [
+  ["todo", "To Take"],
+  ["met", "Met"],
+  ["all", "All"],
+];
+
+const norm = (code: string) => code.replace(/\s+/g, " ").trim().toUpperCase();
+
+/** The first planned term that takes a requirement: a college course chosen for it before
+ *  transfer, or its university course after. */
+function plannedTerm(row: Row, plans?: Plans): string | undefined {
+  const { req, parsed } = row;
+  for (const s of plans?.combined ?? []) {
+    const hit = s.courses.some((c) =>
+      s.phase === "before_transfer"
+        ? c.reason.includes(`For ${req.receiving_course} (`)
+        : !parsed.choose && norm(c.code) === norm(parsed.code),
+    );
+    if (hit) return s.term;
+  }
+  return undefined;
+}
+
+/** The first planned term with a course for a GE area ("3A"). */
+function plannedGeTerm(code: string, plans?: Plans): string | undefined {
+  return plans?.combined.find((s) =>
+    s.courses.some((c) => c.ge_area?.split(" ").at(-1) === code),
+  )?.term;
+}
+
+function Credits({
+  rows,
+  courses,
+  majors,
+  campus,
+  plans,
+  profileId,
+}: {
+  rows: Row[];
+  courses?: Course[];
+  majors: string[];
+  campus: string;
+  plans?: Plans;
+  profileId: string;
+}) {
+  const [params, setParams] = useSearchParams();
+  const show: CreditShow = params.get("show") === "ge" ? "ge" : "major";
+  const filter: CreditFilter =
+    (FILTERS.find(([v]) => v === params.get("status"))?.[0]) ?? "todo";
+  function set(next: { show?: CreditShow; status?: CreditFilter }) {
+    const p = new URLSearchParams(params);
+    const s = next.show ?? show;
+    const f = next.status ?? filter;
+    if (s === "major") p.delete("show");
+    else p.set("show", s);
+    if (f === "todo") p.delete("status");
+    else p.set("status", f);
+    setParams(p, { replace: true, preventScrollReset: true });
+  }
+  const { ge, state: geState, choose } = useGeProgress(profileId, courses);
+  // A GE slot on the Plan links to its area here: scroll to it once the areas load.
+  const { hash } = useLocation();
+  useEffect(() => {
+    if (!ge || !hash.startsWith("#ge-area-")) return;
+    document.getElementById(decodeURIComponent(hash.slice(1)))?.scrollIntoView();
+  }, [ge, hash]);
+
+  const met = rows.filter((r) => r.req.status === "satisfied");
+  const missed = met.filter((r) => r.older);
+  const geRequired = ge?.areas.filter((a) => a.required) ?? [];
+  // The GE plan is only for the pattern shown here.
+  const gePlans = plans?.response.ge_pattern === ge?.pattern ? plans : undefined;
+
+  const card = (row: Row) => (
+    <RequirementCard
+      key={row.key}
+      row={row}
+      courses={courses}
+      majors={majors}
+      campus={campus}
+      planned={plannedTerm(row, plans)}
+    />
+  );
+  const open = rows.filter((r) => r.req.status !== "satisfied");
+  return (
+    <>
+      <Section label="Credits" title="What Counts">
+        <p className="credits-summary">
+          <span>
+            Major <strong>{met.length} of {rows.length}</strong>
+          </span>
+          {ge && (
+            <span>
+              GE <strong>{ge.summary.done} of {geRequired.length}</strong>
+            </span>
+          )}
+          {missed.length > 0 && (
+            <span>
+              <strong>{missed.length}</strong>{" "}
+              {plural(missed.length, "credit")} saved by when you took them
+            </span>
+          )}
+        </p>
+        {missed.length > 0 && <Missed rows={missed} />}
+        <div className="opp-controls credits-controls">
+          <div className="credit-filters" role="group" aria-label="Requirements">
+            {SHOW.map(([value, label]) => (
+              <button
+                type="button"
+                key={value}
+                aria-pressed={show === value}
+                onClick={() => set({ show: value })}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          <div className="credit-filters opp-subfilters" role="group" aria-label="Status">
+            {FILTERS.map(([value, label]) => (
+              <button
+                type="button"
+                key={value}
+                aria-pressed={filter === value}
+                onClick={() => set({ status: value })}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div aria-live="polite">
+          {show === "major" ? (
+            <MajorCards rows={rows} open={open} met={met} filter={filter} card={card} />
+          ) : ge ? (
+            <GeAreaCards
+              ge={ge}
+              filter={filter}
+              plannedFor={(code) => plannedGeTerm(code, gePlans)}
+            />
+          ) : geState.status === "error" ? (
+            <p className="credits-empty">
+              General education progress isn't available right now. Try again in
+              a minute.
+            </p>
+          ) : (
+            <div role="status">
+              <span className="sr-only">Checking general education…</span>
+              {[0, 1, 2].map((i) => (
+                <span key={i} className="skeleton-line ge-skeleton" aria-hidden="true" />
+              ))}
+            </div>
+          )}
+        </div>
+      </Section>
+      <HowSection id="credits-how" title="How We Counted This">
+        {ge && <GeNotes ge={ge} onChoose={choose} />}
+        <CreditNotes rows={rows} />
+      </HowSection>
+    </>
+  );
+}
+
+function MajorCards({
+  rows,
+  open,
+  met,
+  filter,
+  card,
+}: {
+  rows: Row[];
+  open: Row[];
+  met: Row[];
+  filter: CreditFilter;
+  card: (row: Row) => ReactNode;
+}) {
+  const [showMet, setShowMet] = useState(false);
+  if (!rows.length) return <p className="credits-empty">No requirements listed.</p>;
+  if (filter === "met")
+    return met.length ? (
+      <ol className="credits-cards">{met.map(card)}</ol>
+    ) : (
+      <p className="credits-empty">Nothing met yet. Your courses show up here once they count.</p>
+    );
+  if (filter === "todo")
+    return open.length ? (
+      <ol className="credits-cards">{open.map(card)}</ol>
+    ) : (
+      <p className="credits-empty">Every major requirement is met.</p>
+    );
+  return (
+    <>
+      {met.length > 0 && (
+        <div className="fold credits-fold">
+          <button
+            type="button"
+            className="fold-toggle"
+            aria-expanded={showMet}
+            aria-controls="credits-met"
+            onClick={() => setShowMet((o) => !o)}
+          >
+            <StatusMark tone="ok">Met</StatusMark>
+            <span className="fold-meta">{collapse(met.map(rowCode), " · ", 4)}</span>
+            <Icon name="chevron" size={20} />
+          </button>
+          <ol id="credits-met" className="credits-cards" hidden={!showMet}>
+            {met.map(card)}
+          </ol>
+        </div>
+      )}
+      {open.length > 0 && <ol className="credits-cards">{open.map(card)}</ol>}
+    </>
+  );
+}
+
+/** "2 credits count because of when you took them: MATH 30, MATH 31 count under the 2023–24
+ *  agreement, the year you took those courses." Each requirement links to its agreement. */
+function Missed({ rows }: { rows: Row[] }) {
+  const years = [...new Set(rows.map((r) => r.older!))];
+  const one = rows.length === 1;
+  return (
+    <div className="credits-banner" role="note">
+      <p>
+        <strong>
+          {rows.length} {plural(rows.length, "credit")}{" "}
+          {one ? "counts because of when you took it" : "count because of when you took them"}:
+        </strong>{" "}
+        {years.map((year, i) => {
+          const group = rows.filter((r) => r.older === year);
+          return (
+            <Fragment key={year}>
+              {i > 0 && (i === years.length - 1 ? " and " : ", ")}
+              {group.map((r, j) => (
+                <Fragment key={r.key}>
+                  {j > 0 && (j === group.length - 1 ? " and " : ", ")}
+                  <a href={r.req.citation.url} target="_blank" rel="noreferrer">
+                    {rowCode(r)}
+                  </a>
+                </Fragment>
+              ))}
+              {i === 0 ? (group.length === 1 ? " counts" : " count") : ""} under the{" "}
+              <span className="nowrap">{year}</span> agreement
+            </Fragment>
+          );
+        })}
+        , the {years.length === 1 ? "year" : "years"} you took{" "}
+        {one ? "that course" : "those courses"}.
+      </p>
+    </div>
+  );
+}
+
+/** For a credit that counts with doubt, the question to take to an advisor. */
+function advisorQuestion(row: Row): string | null {
+  const { req, parsed } = row;
+  if (req.status !== "satisfied" || req.confidence === "high") return null;
+  const via = req.satisfied_by.join(" + ") || "my course";
+  return `Ask your advisor: "Does ${via} satisfy ${parsed.code} for ${row.majors.map(shortMajor).join(" and ")}?"`;
+}
+
+/** ASSIST's "MAJOR ELECTIVES" → "Major Electives" */
+const titleCase = (text: string) =>
+  text
+    .toLowerCase()
+    .replace(/\b(?!(?:and|or|of|for|the|to|in)\b)[a-z]/g, (c) =>
+      c.toUpperCase(),
+    );
+
+/** One requirement, the same lines on every card: title, status and plan, what to take, source. */
+function RequirementCard({
+  row,
+  courses,
+  majors,
+  campus,
+  planned,
+}: {
+  row: Row;
+  courses?: Course[];
+  majors: string[];
+  campus: string;
+  planned?: string;
+}) {
+  const { req, parsed } = row;
+  const status = tone(req);
+  const via = req.satisfied_by
+    .map((code) => {
+      const term = findCourse(courses, code)?.term;
+      return term ? `${code}, ${term}` : code;
+    })
+    .join(" + ");
+  const open = req.status !== "satisfied" && req.status !== "in_progress";
+  const when = [via, open && planned && `planned ${planned}`].filter(Boolean);
+  const takeAt = takeAtLead(req);
+  const question = advisorQuestion(row);
+  const ag = agreementOf(req.citation.label);
+  const college = ag?.college ?? "your college";
+  const evaluationQuestion = `There is no published course match for ${req.receiving_course}. What should I submit to request an evaluation?`;
+  const title = parsed.choose
+    ? titleCase(req.group_title)
+    : [parsed.code, parsed.title].filter(Boolean).join(" · ");
+  return (
+    <li className="credits-card">
+      <h3 className="credits-title">
+        {campus} {title}
+      </h3>
+      <p className="credits-status">
+        <StatusMark tone={status.tone}>{status.label}</StatusMark>
+        {when.length > 0 && <span>{when.join(" · ")}</span>}
+      </p>
+      <p className="credits-what">
+        {takeAt ? (
+          <>
+            <strong>{takeAt}</strong> {req.options!.map(keepCodes).join(" · ")}
+          </>
+        ) : req.status === "at_university" ? (
+          `No published equivalent at ${college}. Request an evaluation to check whether prior coursework can apply.`
+        ) : question ? (
+          question
+        ) : req.status === "missing" ? (
+          "Not matched to your confirmed coursework."
+        ) : row.older ? (
+          `Counts under the ${row.older} agreement, the year you took it.`
+        ) : (
+          `Counts toward ${req.group_title.toLowerCase()}.`
+        )}
+      </p>
+      <p className="credits-foot">
+        <a href={req.citation.url} target="_blank" rel="noreferrer">
+          {ag?.short ?? "ASSIST"} ↗
+        </a>
+        <Refs ns={row.refs} />
+        {majors.length > 1 && (
+          <span>{row.majors.map(shortMajor).join(" · ")}</span>
+        )}
+        {(question || req.status === "at_university") && (
+          <Link
+            to={`/counselor?${new URLSearchParams({ q: question ?? evaluationQuestion })}`}
+          >
+            {question ? "Review This Match" : "Ask About an Evaluation"} →
+          </Link>
+        )}
+      </p>
+    </li>
+  );
+}
+
+/** "MATH 1A" never breaks across lines. */
+const keepCodes = (text: string) =>
+  text.replace(/\b([A-Z][A-Z0-9]{1,5}) (?=C?\d)/g, "$1 ");
+
+/** "Take at <college>:" for rows still open, with how many of the listed options it takes. */
+function takeAtLead(req: Requirement): string | undefined {
+  if (
+    !req.options?.length ||
+    (req.status !== "missing" && req.status !== "partial")
+  )
+    return undefined;
+  const college = agreementOf(req.citation.label)?.college ?? "your college";
+  if (req.options.length === 1) return `Take at ${college}:`;
+  const how =
+    req.rule === "n_of" && req.n && req.flags.includes("n_units")
+      ? `toward ${req.n} units`
+      : req.rule === "n_of" && req.n && req.n > 1
+        ? `${countWord(req.n)} of`
+        : "one of";
+  return `Take at ${college}, ${how}:`;
+}
+
+/** ASSIST's flags and grade minimums, for "How We Counted This". */
+function CreditNotes({ rows }: { rows: Row[] }) {
+  const byFlag = new Map<string, string[]>();
+  const grades = new Set<string>();
+  for (const r of rows) {
+    for (const f of r.req.flags) {
+      const grade = /^min_grade_(.+)$/.exec(f)?.[1];
+      if (grade) grades.add(grade);
+      if (QUIET_FLAGS.test(f)) continue;
+      // Term mismatches matter only for courses that count.
+      if (f === "course_year_mismatch" && r.req.status !== "satisfied")
+        continue;
+      const codes = byFlag.get(f) ?? [];
+      if (!codes.includes(rowCode(r))) codes.push(rowCode(r));
+      byFlag.set(f, codes);
+    }
+  }
+  return (
+    <>
+      {[...byFlag].map(([flag, codes]) => {
+        const copy = FLAG_NOTE[flag];
+        const who = listing(codes);
+        return copy ? (
+          <Note key={flag} lead={copy.lead(who)}>
+            {copy.body}
+          </Note>
+        ) : (
+          <Note key={flag} lead={`${who}.`}>
+            ASSIST flag: {flag.replace(/_/g, " ")}.
+          </Note>
+        );
+      })}
+      {grades.size > 0 && (
+        <Note lead="Major grades.">
+          Published minimums include{" "}
+          {listing([...grades].map((grade) => `${grade} or better`))}. Check
+          each agreement for the course-specific rule.
+        </Note>
+      )}
+    </>
   );
 }

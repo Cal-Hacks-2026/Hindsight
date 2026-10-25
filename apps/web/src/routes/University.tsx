@@ -1,5 +1,7 @@
 // What to expect at the student's university: short sections written only from the
 // university's own pages, every item footnoted to them (GET /universities/{id}/guide).
+// Laid out like the Opportunities cards: one card per section, two facts, then "Show N More".
+// The guide's text is quote-verified, so this file changes only how much shows, never the words.
 import { Fragment, useEffect, useState } from "react";
 import { Link } from "react-router";
 import type {
@@ -79,7 +81,7 @@ export function University() {
         sketch="cap"
         byline={
           guide
-            ? `What to Expect at ${shortUniversity(guide.university_name, guide.university_id)} · Updated ${formatDate(guide.last_updated)}`
+            ? `${shortUniversity(guide.university_name, guide.university_id)} · Updated ${formatDate(guide.last_updated)}`
             : name
         }
       >
@@ -157,16 +159,18 @@ function Guide({
   const footnote = new Map(guide.sources.map((s, i) => [s.id, i + 1]));
   return (
     <>
-      <div className="guide-grid">
-        {guide.sections.map((section) => (
-          <GuideSectionView
-            key={section.id}
-            section={section}
-            footnote={footnote}
-            opportunities={opportunities}
-          />
-        ))}
-      </div>
+      <Section label="University" title="What to Expect" last>
+        <ol className="guide-cards">
+          {guide.sections.map((section) => (
+            <GuideCard
+              key={section.id}
+              section={section}
+              footnote={footnote}
+              opportunities={opportunities}
+            />
+          ))}
+        </ol>
+      </Section>
       <SourceList count={guide.sources.length}>
         {guide.sources.map((source, i) => {
           const url = safeUrl(source.url);
@@ -191,7 +195,8 @@ function Guide({
   );
 }
 
-function GuideSectionView({
+/** One section as a card: its title, the first facts, "Show N More", and where to look in Opportunities. */
+function GuideCard({
   section,
   footnote,
   opportunities,
@@ -207,26 +212,8 @@ function GuideSectionView({
   const more = section.items.length - ITEMS_SHOWN;
   const listId = `guide-${section.id}-items`;
   return (
-    <Section
-      id={`guide-${section.id}`}
-      label={section.title}
-      title={section.title}
-      notes={
-        categories.length > 0 && (
-          <p className="guide-links">
-            <strong>In Opportunities:</strong>{" "}
-            {categories.map((t, i) => (
-              <Fragment key={t}>
-                {i > 0 && " · "}
-                <Link to={`/radar?type=${encodeURIComponent(t)}`}>
-                  {CATEGORY[t]}
-                </Link>
-              </Fragment>
-            ))}
-          </p>
-        )
-      }
-    >
+    <li className="guide-card" id={`guide-${section.id}`}>
+      <h3 className="guide-title">{section.title}</h3>
       <ul className="guide-items" id={listId}>
         {(all ? section.items : section.items.slice(0, ITEMS_SHOWN)).map(
           (item, i) => (
@@ -250,7 +237,20 @@ function GuideSectionView({
           {all ? "Show Fewer" : `Show ${more} More`}
         </button>
       )}
-    </Section>
+      {categories.length > 0 && (
+        <p className="guide-foot">
+          In Opportunities:{" "}
+          {categories.map((t, i) => (
+            <Fragment key={t}>
+              {i > 0 && " · "}
+              <Link to={`/radar?type=${encodeURIComponent(t)}`}>
+                {CATEGORY[t]}
+              </Link>
+            </Fragment>
+          ))}
+        </p>
+      )}
+    </li>
   );
 }
 
