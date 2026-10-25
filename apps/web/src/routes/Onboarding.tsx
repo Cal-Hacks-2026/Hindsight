@@ -196,6 +196,7 @@ function ProfileStep({ onDone }: { onDone: (p: Profile) => void }) {
   // Set when a list came from the saved snapshot because the live one failed.
   const [collegesSavedOn, setCollegesSavedOn] = useState<string>();
   const [universitiesSavedOn, setUniversitiesSavedOn] = useState<string>();
+  const [majorsSavedOn, setMajorsSavedOn] = useState<string>();
   const [university, setUniversity] = useState<AssistInstitution>();
   const [listError, setListError] = useState<string | null>(null);
   const [options, setOptions] = useState<AssistMajor[]>();
@@ -252,12 +253,15 @@ function ProfileStep({ onDone }: { onDone: (p: Profile) => void }) {
     }
     let live = true;
     setOptions(undefined);
+    setMajorsSavedOn(undefined);
     setError(null);
     api.assistMajors(college.id, university.id, university.year_id ?? yearId).then(
       (r) => {
         if (!live) return;
         const sorted = [...r.majors].sort((a, b) => a.label.localeCompare(b.label));
         setOptions(sorted);
+        // Set when ASSIST failed and the API used the list kept from this pair's last live load.
+        setMajorsSavedOn(r.saved_on);
         setMajors((m) => m.filter((label) => sorted.some((o) => o.label === label)));
       },
       (e) => live && setError(`Couldn't load majors: ${errorText(e)}`),
@@ -452,7 +456,15 @@ function ProfileStep({ onDone }: { onDone: (p: Profile) => void }) {
           </div>
         )}
         {year !== undefined && !!options?.length && (
-          <span className="field-hint">From ASSIST's {assistYear(year)} agreements.</span>
+          <span className="field-hint">
+            From ASSIST's {assistYear(year)} agreements.
+            {majorsSavedOn && (
+              <>
+                {" "}
+                <SavedListNote noun="majors" savedOn={majorsSavedOn} />
+              </>
+            )}
+          </span>
         )}
       </fieldset>
       <label className="field">

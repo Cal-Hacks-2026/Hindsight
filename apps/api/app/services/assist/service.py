@@ -163,29 +163,53 @@ class AssistService:
         if cc.get(receiving) is not False:
             raise AssistNotFound(f"{receiving} is not an ASSIST university")
 
-    def _reports(self, sending: int, receiving: int, year: int) -> list[dict[str, Any]]:
+    def _reports_and_saved_at(self, sending: int, receiving: int,
+                              year: int) -> tuple[list[dict[str, Any]], str | None]:
+        """A pair's majors reports and None when live. When ASSIST fails, the list kept the last
+        time the pair loaded (MAJORS-FALLBACK) and when that was (ISO time); with none kept, the
+        error. A pair ASSIST says doesn't exist is never answered from the kept copy."""
         k = (sending, receiving, year)
         with self._lock:
             hit = self._majors.get(k)
             if hit:
                 self._majors.move_to_end(k)
         if hit and time.monotonic() - hit[0] < MAJORS_TTL_SECONDS:
-            return hit[1]
-        self._validate(sending, receiving, year)
-        reports = self.client.majors(sending, receiving, year)
+            return hit[1], None
+        try:
+            self._validate(sending, receiving, year)
+            reports = self.client.majors(sending, receiving, year)
+        except AssistNotFound:
+            raise
+        except AssistError as e:
+            saved = self.cache.get_majors(sending, receiving, year)
+            if saved is None:
+                raise
+            log.warning("ASSIST majors unavailable for %s→%s (%s), using the list from %s: %s",
+                        sending, receiving, year, saved[0], e)
+            return saved[1], saved[0]
         with self._lock:
             self._majors[k] = (time.monotonic(), reports)
             self._majors.move_to_end(k)
             while len(self._majors) > MAX_CACHED_MAJOR_LISTS:
                 self._majors.popitem(last=False)
-        return reports
+        self.cache.put_majors(sending, receiving, year, reports)
+        return reports, None
 
-    def majors(self, sending: int, receiving: int, year: int) -> list[AssistMajor]:
+    def _reports(self, sending: int, receiving: int, year: int) -> list[dict[str, Any]]:
+        return self._reports_and_saved_at(sending, receiving, year)[0]
+
+    def majors_and_saved_at(self, sending: int, receiving: int,
+                            year: int) -> tuple[list[AssistMajor], str | None]:
+        """`majors`, plus when the list was kept if ASSIST failed and a kept copy was used."""
+        reports, saved_at = self._reports_and_saved_at(sending, receiving, year)
         return [
             AssistMajor(label=r["label"], key=r["key"])
-            for r in self._reports(sending, receiving, year)
+            for r in reports
             if r.get("label") and r.get("key")
-        ]
+        ], saved_at
+
+    def majors(self, sending: int, receiving: int, year: int) -> list[AssistMajor]:
+        return self.majors_and_saved_at(sending, receiving, year)[0]
 
     def agreement(self, sending: int, receiving: int, year: int, major_label: str) -> Agreement:
         """Exact label match → cached (or fetched) agreement → parsed."""

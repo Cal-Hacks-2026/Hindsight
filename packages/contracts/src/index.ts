@@ -137,7 +137,9 @@ export type CreateProfileRequest = Omit<Profile, "id" | "created_at" | "sending_
 export type ProfileResponse = { profile: Profile };
 export type CoursesResponse = { courses: Course[] };
 export type UpdateCoursesRequest = { courses: Course[] };
-export type AssistMajorsResponse = { majors: AssistMajor[] };
+// MAJORS-FALLBACK: saved_on ("2026-10-25", UTC) only when ASSIST failed and the pair's list kept
+// from its last live load was used.
+export type AssistMajorsResponse = { majors: AssistMajor[]; saved_on?: string };
 export type AssistInstitutionsResponse = { institutions: AssistInstitution[] };
 export type MatchRequest = { major_label: string };
 /** uncurated_majors: chosen majors left out of the plan because they have no curated requirements yet. */

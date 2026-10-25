@@ -170,6 +170,9 @@ class UpdateCoursesRequest(BaseModel):
 
 class AssistMajorsResponse(BaseModel):
     majors: list[AssistMajor]
+    # MAJORS-FALLBACK: set ("2026-10-25", UTC) only when ASSIST failed and the pair's list kept
+    # from its last live load was used.
+    saved_on: str | None = None
 
 
 class AssistInstitutionsResponse(BaseModel):
