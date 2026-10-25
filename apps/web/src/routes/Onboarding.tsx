@@ -13,7 +13,12 @@ import { Masthead, Note, Section } from "../components/Paper";
 import { api } from "../lib/api";
 import { ASSIST_YEAR_2026_27, assistYear } from "../lib/config";
 import { shortUniversity } from "../lib/format";
-import { campusFor, loadColleges, loadUniversities } from "../lib/institutions";
+import {
+  campusFor,
+  loadColleges,
+  loadUniversities,
+  savedOnLabel,
+} from "../lib/institutions";
 import { saveSession } from "../lib/session";
 
 type Step = "profile" | "upload" | "confirm";
@@ -188,6 +193,9 @@ function ProfileStep({ onDone }: { onDone: (p: Profile) => void }) {
   const [colleges, setColleges] = useState<AssistInstitution[]>();
   const [college, setCollege] = useState<AssistInstitution>();
   const [universities, setUniversities] = useState<AssistInstitution[]>();
+  // Set when a list came from the saved snapshot because the live one failed.
+  const [collegesSavedOn, setCollegesSavedOn] = useState<string>();
+  const [universitiesSavedOn, setUniversitiesSavedOn] = useState<string>();
   const [university, setUniversity] = useState<AssistInstitution>();
   const [listError, setListError] = useState<string | null>(null);
   const [options, setOptions] = useState<AssistMajor[]>();
@@ -198,10 +206,16 @@ function ProfileStep({ onDone }: { onDone: (p: Profile) => void }) {
   // Colleges once. Nothing is picked until the student chooses (assist.org's order: year, college,
   // university, major).
   useEffect(() => {
-    loadColleges().then(setColleges, (e) => {
-      setListError(`Couldn't load ASSIST's college list: ${errorText(e)}. Reload to try again.`);
-      setColleges([]);
-    });
+    loadColleges().then(
+      (l) => {
+        setColleges(l.institutions);
+        setCollegesSavedOn(l.savedOn);
+      },
+      (e) => {
+        setListError(`Couldn't load ASSIST's college list: ${errorText(e)}. Reload to try again.`);
+        setColleges([]);
+      },
+    );
   }, []);
 
   // The universities this college has agreements with; keep the pick if it's still there.
@@ -209,11 +223,13 @@ function ProfileStep({ onDone }: { onDone: (p: Profile) => void }) {
     if (!college) return;
     let live = true;
     setUniversities(undefined);
+    setUniversitiesSavedOn(undefined);
     setListError(null);
     loadUniversities(college.id).then(
-      (list) => {
+      ({ institutions: list, savedOn }) => {
         if (!live) return;
         setUniversities(list);
+        setUniversitiesSavedOn(savedOn);
         setUniversity((u) => list.find((x) => x.id === u?.id));
       },
       (e) => {
@@ -255,6 +271,32 @@ function ProfileStep({ onDone }: { onDone: (p: Profile) => void }) {
   const needle = filter.trim().toLowerCase();
   const shown = (options ?? []).filter((m) => m.label.toLowerCase().includes(needle));
   const year = university?.year_id;
+  const termSystem =
+    college?.term_system &&
+    `${college.term_system === "quarter" ? "Quarter" : "Semester"} system.`;
+  const collegeHint = (termSystem || collegesSavedOn) && (
+    <>
+      {termSystem}
+      {termSystem && collegesSavedOn && " "}
+      {collegesSavedOn && <SavedListNote noun="colleges" savedOn={collegesSavedOn} />}
+    </>
+  );
+  const universityAbout = university ? (
+    <UniversityHint university={university} />
+  ) : (
+    college &&
+    universities?.length !== 0 &&
+    `Universities with ASSIST agreements from ${college.name}.`
+  );
+  const universityHint = (universityAbout || universitiesSavedOn) && (
+    <>
+      {universityAbout}
+      {universityAbout && universitiesSavedOn && " "}
+      {universitiesSavedOn && (
+        <SavedListNote noun="universities" savedOn={universitiesSavedOn} />
+      )}
+    </>
+  );
   const voidsAdt = majors.length > 1 || minor.trim().length > 0;
 
   const toggleMajor = (label: string) =>
@@ -342,10 +384,7 @@ function ProfileStep({ onDone }: { onDone: (p: Profile) => void }) {
         value={college}
         options={colleges}
         onChange={setCollege}
-        hint={
-          college?.term_system &&
-          `${college.term_system === "quarter" ? "Quarter" : "Semester"} system.`
-        }
+        hint={collegeHint}
       />
       <InstitutionPicker
         id="to"
@@ -358,15 +397,7 @@ function ProfileStep({ onDone }: { onDone: (p: Profile) => void }) {
         onChange={setUniversity}
         locked={college ? undefined : "Pick a community college first."}
         badge={(u) => (u.full_plan ? "Full Plan" : undefined)}
-        hint={
-          university ? (
-            <UniversityHint university={university} />
-          ) : (
-            college &&
-            universities?.length !== 0 &&
-            `Universities with ASSIST agreements from ${college.name}.`
-          )
-        }
+        hint={universityHint}
       />
       {listError && <p className="error">{listError}</p>}
       <fieldset className="field" disabled={!university}>
@@ -487,6 +518,15 @@ function ProfileStep({ onDone }: { onDone: (p: Profile) => void }) {
         </button>
       </div>
     </form>
+  );
+}
+
+/** Shown when ASSIST's live list failed and the committed snapshot is in use. */
+function SavedListNote({ noun, savedOn }: { noun: string; savedOn: string }) {
+  return (
+    <span className="saved-list-note">
+      Using a saved list of {noun} (ASSIST, {savedOnLabel(savedOn)}).
+    </span>
   );
 }
 
