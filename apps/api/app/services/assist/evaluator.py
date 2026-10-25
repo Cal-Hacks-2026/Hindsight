@@ -377,9 +377,10 @@ def articulation_options(art: Articulation | None) -> list[str]:
 
 
 def _either(options: list[str], nested: bool) -> str:
-    """Several alternatives as one string: "A or B", parenthesized when joined to more."""
+    """Several alternatives as one string: "A or B", parenthesized when joined to more. One option
+    can be an "or" already (honors: "MATH 1A or MATH 1AH"), so it's parenthesized too."""
     text = " or ".join(options)
-    return f"({text})" if nested and len(options) > 1 else text
+    return f"({text})" if nested and (len(options) > 1 or " or " in text) else text
 
 
 def _eval_sending(art: Articulation | None, ctx: Ctx) -> Eval | None:

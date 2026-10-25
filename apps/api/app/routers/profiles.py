@@ -5,7 +5,7 @@ import uuid
 from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, Query, Response, UploadFile
 from fastapi.concurrency import run_in_threadpool
 
-from app.config import ASSIST_YEAR_ID
+from app.config import campus_for
 from app.models import (
     CounselorRequest,
     CounselorResponse,
@@ -24,7 +24,7 @@ from app.services import agent_client, claude_limits, counselor, planner, profil
 from app.services.assist import AssistError, AssistNotFound, get_service
 from app.services.assist import limits as assist_limits
 from app.services.db import StoreError
-from app.services.radar import rank, store as radar_store
+from app.services.radar import rank, sources as radar_sources, store as radar_store
 
 log = logging.getLogger(__name__)
 
@@ -33,22 +33,35 @@ router = APIRouter(prefix="/profiles", tags=["profiles"])
 TRANSCRIPT_NOTES_HEADER = "X-Transcript-Notes"
 
 
+def _named(profile: Profile) -> Profile:
+    """With ASSIST's names for the two institutions (cached), when ASSIST can give them."""
+    service = get_service()
+    return profile.model_copy(update={
+        "sending_institution_name": service.institution_name(profile.sending_institution_id),
+        "receiving_institution_name": service.institution_name(profile.receiving_institution_id),
+    })
+
+
 def _get_profile(profile_id: str) -> Profile:
     profile = profile_store.get_profile(profile_id)
     if profile is None:
         raise HTTPException(status_code=404, detail="Profile not found")
-    return profile
+    return _named(profile)
 
 
-@router.post("", response_model=ProfileResponse, dependencies=[Depends(profile_limits.per_ip)])
+@router.post("", response_model=ProfileResponse, response_model_exclude_none=True,
+             dependencies=[Depends(profile_limits.per_ip)])
 def create_profile(body: CreateProfileRequest, background: BackgroundTasks) -> ProfileResponse:
-    profile = profile_store.create_profile(body)
-    # Trigger: a new profile gets its own Droid run (rank + alerts) once the response is sent.
-    background.add_task(agent_client.start_run, str(uuid.uuid4()), profile.campus, "profile_created", profile.id)
-    return ProfileResponse(profile=profile)
+    # The campus follows the university picked, whatever the client sent, so a UCLA student
+    # never gets SJSU's Radar feed or requirements.
+    profile = profile_store.create_profile(body.model_copy(update={"campus": campus_for(body.receiving_institution_id)}))
+    if profile.campus in radar_sources.load().campuses:
+        # Trigger: a new profile gets its own Droid run (rank + alerts) once the response is sent.
+        background.add_task(agent_client.start_run, str(uuid.uuid4()), profile.campus, "profile_created", profile.id)
+    return ProfileResponse(profile=_named(profile))
 
 
-@router.get("/{profile_id}", response_model=ProfileResponse)
+@router.get("/{profile_id}", response_model=ProfileResponse, response_model_exclude_none=True)
 def get_profile(profile_id: str) -> ProfileResponse:
     return ProfileResponse(profile=_get_profile(profile_id))
 
@@ -89,14 +102,10 @@ def confirm_courses(profile_id: str, body: UpdateCoursesRequest) -> CoursesRespo
 def match(profile_id: str, body: MatchRequest) -> MatchResult:
     profile = _get_profile(profile_id)
     courses = profile_store.confirmed_courses(profile_id)
+    service = get_service()
+    sending, receiving = profile.sending_institution_id, profile.receiving_institution_id
     try:
-        return get_service().match(
-            profile.sending_institution_id,
-            profile.receiving_institution_id,
-            ASSIST_YEAR_ID,
-            body.major_label,
-            courses,
-        )
+        return service.match(sending, receiving, service.year_for(sending, receiving), body.major_label, courses)
     except AssistNotFound as e:
         raise HTTPException(status_code=404, detail=str(e)) from e
     except AssistError as e:
@@ -113,18 +122,19 @@ def plan(profile_id: str, majors: str | None = Query(None, description="Comma-se
          ) -> PlanResponse:
     profile = _get_profile(profile_id)
     try:
-        chosen, uncurated = planner.resolve_majors(majors, profile.majors, profile.campus, planner.load_majors())
+        chosen, uncurated, full = planner.plan_majors(majors, profile.majors, profile.campus, planner.load_majors())
     except planner.PlannerError as e:
         raise HTTPException(status_code=e.status, detail=str(e)) from e
     # Same rule as the counselor: done = passed (or in progress) on the transcript, or satisfied
     # per ASSIST for a chosen major, matching in-progress courses as if passed.
     courses = profile_store.confirmed_courses(profile_id)
     planning = planner.assume_in_progress_passed(courses)
+    service = get_service()
+    sending, receiving = profile.sending_institution_id, profile.receiving_institution_id
 
     def planning_match(label: str) -> MatchResult | None:
         try:
-            return get_service().match(profile.sending_institution_id, profile.receiving_institution_id,
-                                       ASSIST_YEAR_ID, label, planning)
+            return service.match(sending, receiving, service.year_for(sending, receiving), label, planning)
         except AssistNotFound:
             return None  # no agreement for this major: only the transcript counts
         except AssistError as e:
@@ -136,7 +146,9 @@ def plan(profile_id: str, majors: str | None = Query(None, description="Comma-se
                                       transfer_term=transfer_term, start_term=start_term)
     except planner.PlannerError as e:
         raise HTTPException(status_code=e.status, detail=str(e)) from e
-    return PlanResponse(semesters=roadmap.semesters, uncurated_majors=uncurated or None,
+    # Without curated requirements every major is "uncurated"; full_plan=False says that once.
+    return PlanResponse(semesters=roadmap.semesters, uncurated_majors=(uncurated if full else None) or None,
+                        full_plan=full,
                         transfer_term=roadmap.transfer_term, earliest_transfer_term=roadmap.earliest_transfer_term,
                         start_term=roadmap.start_term, default_start_term=roadmap.default_start_term,
                         start_term_choices=roadmap.start_term_choices,
@@ -147,6 +159,9 @@ def plan(profile_id: str, majors: str | None = Query(None, description="Comma-se
             response_model_exclude_none=True, dependencies=[Depends(claude_limits.per_ip)])
 def opportunities(profile_id: str, background: BackgroundTasks) -> OpportunitiesResponse:
     profile = _get_profile(profile_id)
+    if profile.campus not in radar_sources.load().campuses:
+        # No sources for this campus: an empty feed, never another campus's listings.
+        return OpportunitiesResponse(items=[])
     items = rank.ranked_opportunities(profile, radar_store.candidates(profile.campus))
     background.add_task(_record_ranked, profile_id, items)
     alerted = _notified_ids(profile_id)

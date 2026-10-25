@@ -25,7 +25,6 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-from app.config import ASSIST_YEAR_ID
 from app.models import Course, MatchResult, Profile, Requirement, Semester, SemesterCourse
 from app.services.assist import AssistError, get_service
 from app.services.assist.evaluator import LETTER_GRADES, grade_verdict, option_receivers, sending_courses
@@ -137,8 +136,10 @@ def load_majors(directory: Path = REQUIREMENTS_DIR) -> list[Major]:
 
 
 CAMPUS_NAMES = {"sjsu": "SJSU", "berkeley": "UC Berkeley"}
-# The last comma-separated piece of an ASSIST label: "B.S.", "B.F.A.", "B.A. (SJSU Online)".
-DEGREE_PIECE = re.compile(r"^B\.[A-Z.]*\s*(\(.*\))?$")
+UNIVERSITY_FALLBACK = "your university"
+# How an ASSIST label ends: a last comma-separated piece "B.S.", "B.F.A.", "B.A. (SJSU Online)",
+# or UC style with no comma, "Economics/B.A.".
+DEGREE_PIECE = re.compile(r"(?:^|/)B\.[A-Z.]*\s*(\(.*\))?$")
 
 
 def join_labels(labels: list[str]) -> str:
@@ -153,6 +154,18 @@ def uncurated_message(campus: str, labels: list[str]) -> str:
             "so lower-division only (from ASSIST).")
 
 
+def no_full_plan_message(university: str | None) -> str:
+    """For a university with no curated requirements: what the plan leaves out, and who to ask."""
+    u = university or UNIVERSITY_FALLBACK
+    return (f"We don't have {u}'s full degree requirements yet, so upper-division courses aren't planned. "
+            f"Check with {u}'s advisors.")
+
+
+def full_plan(campus: str, majors: list[Major]) -> bool:
+    """Whether we have curated requirements for the campus, i.e. can plan after transfer."""
+    return any(m.campus == campus for m in majors)
+
+
 def _split_labels(raw: str, known: set[str]) -> list[str]:
     """`raw` is the comma-separated ?majors= value. Labels contain commas themselves
     ("Data Science, B.S."), so pieces are re-joined until they form a known label or end
@@ -160,7 +173,7 @@ def _split_labels(raw: str, known: set[str]) -> list[str]:
     labels, pending = [], ""
     for piece in raw.split(","):
         pending = f"{pending},{piece}" if pending else piece
-        if pending.strip().casefold() in known or DEGREE_PIECE.match(piece.strip()):
+        if pending.strip().casefold() in known or DEGREE_PIECE.search(piece.strip()):
             labels.append(pending.strip())
             pending = ""
     if pending.strip():
@@ -189,9 +202,23 @@ def resolve_majors(raw: str | None, default: list[str], campus: str,
     return list(curated.values()), uncurated
 
 
+def plan_majors(raw: str | None, default: list[str], campus: str,
+                majors: list[Major]) -> tuple[list[Major], list[str], bool]:
+    """resolve_majors, plus the full_plan flag. For a campus with no curated requirements at all
+    every label is uncurated, and the roadmap is community-college terms only (no error)."""
+    if full_plan(campus, majors):
+        return *resolve_majors(raw, default, campus, majors), True
+    labels = default if raw is None else _split_labels(raw, set())
+    labels = list(dict.fromkeys(label.strip() for label in labels if label.strip()))
+    if not labels:
+        raise UnknownMajor("Choose a major to plan.")
+    return [], labels, False
+
+
 # ---- What's already done ----
 
-COURSE_CODE = re.compile(r"\b([A-Z]{2,5})\s+(\d+[A-Z]{0,2})\b")
+# "MATH 30", "CS 46A", and UC style "COMPSCI 61B", "DATA C8".
+COURSE_CODE = re.compile(r"\b([A-Z]{2,8})\s+(C?\d+[A-Z]{0,2})\b")
 
 
 def satisfied_from_match(result: MatchResult) -> set[str]:
@@ -241,7 +268,12 @@ def _passed(course: Course, min_grade: str | None) -> bool:
 
 def satisfied_from_courses(courses: Iterable[Course], majors: Iterable[Major] = ()) -> set[str]:
     """Courses taken directly at the university appear on the transcript under the same code.
-    W, F, NP and grades below the requirement's minimum don't count."""
+    W, F, NP and grades below the requirement's minimum don't count. Without curated majors
+    (a university we have no requirements for) nothing counts this way: a community-college
+    course can share a code with a university course it isn't (De Anza ECON 1, Berkeley ECON 1)."""
+    majors = list(majors)
+    if not majors:
+        return set()
     mins = minimum_grades(majors)
     codes = set()
     for c in courses:
@@ -785,7 +817,7 @@ def build_roadmap(
     College terms start at `start_term`, or `default_start`."""
     today = today or date.today()
     # A requirement already met by its university course code (taken there) needs nothing here.
-    picks = [p for p in pick_cc_courses(matches, catalogs, courses) if not set(p.covers) <= satisfied]
+    picks = [p for p in pick_cc_courses(matches, catalogs, courses) if not p.covers or not set(p.covers) <= satisfied]
     units: dict[str, float] = {}
     titles: dict[str, str] = {}
     for cat in catalogs.values():
@@ -854,9 +886,10 @@ def build_roadmap(
 
 def sending_catalog(profile: Profile, label: str) -> SendingCatalog | None:
     """The current agreement's sending courses and option map; None when ASSIST can't give it."""
+    service = get_service()
+    sending, receiving = profile.sending_institution_id, profile.receiving_institution_id
     try:
-        ag = get_service().agreement(profile.sending_institution_id, profile.receiving_institution_id,
-                                     ASSIST_YEAR_ID, label)
+        ag = service.agreement(sending, receiving, service.year_for(sending, receiving), label)
     except AssistError as e:
         log.info("roadmap: no agreement for %r: %s", label, e)
         return None
@@ -876,9 +909,10 @@ def _known_labels(profile: Profile, labels: list[str]) -> list[str]:
     this college pair, and only a few, so one request can't fan out into many ASSIST calls."""
     if not labels:
         return []
+    service = get_service()
+    sending, receiving = profile.sending_institution_id, profile.receiving_institution_id
     try:
-        known = {m.label for m in get_service().majors(profile.sending_institution_id,
-                                                       profile.receiving_institution_id, ASSIST_YEAR_ID)}
+        known = {m.label for m in service.majors(sending, receiving, service.year_for(sending, receiving))}
     except AssistError as e:
         log.info("roadmap: ASSIST majors unavailable: %s", e)
         return []

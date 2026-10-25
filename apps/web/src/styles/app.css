@@ -933,6 +933,66 @@ figcaption {
   background: var(--soft);
   text-align: left;
 }
+/* Onboarding's From / To pickers: closed, a label over the chosen name; open, a search box and list. */
+.route-pickers {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 30px;
+}
+.picker-current {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 16px;
+  font-size: 22px;
+  font-weight: 500;
+}
+.picker-name {
+  min-width: 0;
+}
+.picker-tag {
+  font-size: var(--text-small);
+  font-weight: 600;
+  border: 1px solid var(--hair);
+  border-radius: 6px;
+  padding: 2px 8px;
+  background: var(--soft);
+  white-space: nowrap;
+}
+.picker-list {
+  list-style: none;
+  margin: 0;
+}
+.section button.picker-option {
+  display: flex;
+  width: 100%;
+  min-height: 56px;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  font-size: 20px;
+  font-weight: 400;
+  text-align: left;
+}
+.section button.picker-option:hover:not(:disabled),
+.picker-list > li[aria-selected="true"] .picker-option {
+  background: var(--soft);
+}
+.picker-list > li[aria-selected="true"] .picker-option {
+  font-weight: 600;
+}
+.picker-empty {
+  padding: 12px;
+  font-size: 20px;
+}
+.section button.picker-cancel {
+  align-self: flex-start;
+  justify-content: flex-start;
+  text-align: left;
+}
 .steps {
   display: flex;
   list-style: none;
@@ -1324,6 +1384,16 @@ table.confirm button {
   }
 }
 @media (max-width: 700px) {
+  .route-pickers {
+    grid-template-columns: 1fr;
+  }
+  .picker-current {
+    font-size: 20px;
+  }
+  .section button.picker-option {
+    font-size: 18px;
+    padding: 12px 8px;
+  }
   :root {
     --text-body: 20px;
   }

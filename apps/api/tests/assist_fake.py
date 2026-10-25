@@ -30,9 +30,12 @@ AGREEMENT_FILES = {
 
 INSTITUTIONS = [
     {"id": 39, "names": [{"name": "San Jose State University"}], "isCommunityCollege": False},
+    {"id": 51, "names": [{"name": "Foothill College"}], "isCommunityCollege": True, "termType": 1},
     {"id": 58, "names": [{"name": "Berkeley City College"}], "isCommunityCollege": True},
     {"id": 79, "names": [{"name": "University of California, Berkeley"}], "isCommunityCollege": False},
     {"id": 113, "names": [{"name": "De Anza College"}], "isCommunityCollege": True},
+    {"id": 117, "names": [{"name": "UCLA", "hideInList": True}, {"name": "University of California, Los Angeles"}],
+     "isCommunityCollege": False},
 ]
 
 
@@ -81,6 +84,10 @@ class FakeAssist:
             return httpx.Response(200, json=[
                 {"institutionParentId": 39, "sendingYearIds": [], "receivingYearIds": [75, 76, 77]},
                 {"institutionParentId": 79, "sendingYearIds": [], "receivingYearIds": [74, 76]},
+                # UCLA: nothing published for 2026–27 yet (I-17); listed twice, as ASSIST does.
+                {"institutionParentId": 117, "sendingYearIds": [], "receivingYearIds": [74, 75]},
+                {"institutionParentId": 117, "sendingYearIds": [], "receivingYearIds": [76]},
+                {"institutionParentId": 58, "sendingYearIds": [76, 77], "receivingYearIds": []},  # CC → CC
             ])
         if path == "/api/agreements":
             pair = (q.get("sendingInstitutionId"), q.get("receivingInstitutionId"), q.get("academicYearId"))

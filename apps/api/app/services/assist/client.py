@@ -107,12 +107,19 @@ class AssistClient:
                 return inst["id"]
         raise AssistNotFound(f"No ASSIST institution named {name!r}")
 
+    def partners(self, sending_id: int) -> list[dict[str, Any]]:
+        """Institutions with agreements from `sending_id`: {institutionParentId, sendingYearIds,
+        receivingYearIds}. An institution can appear more than once."""
+        data = self._get_json(f"/api/institutions/{sending_id}/agreements")
+        return [p for p in data if isinstance(p, dict)] if isinstance(data, list) else []
+
     def partner_year_ids(self, sending_id: int, receiving_id: int) -> list[int]:
         """Academic year ids with published agreements between the two schools."""
-        for p in self._get_json(f"/api/institutions/{sending_id}/agreements"):
+        years: set[int] = set()
+        for p in self.partners(sending_id):
             if p.get("institutionParentId") == receiving_id:
-                return sorted(set(p.get("sendingYearIds", []) + p.get("receivingYearIds", [])))
-        return []
+                years.update(p.get("sendingYearIds", []) + p.get("receivingYearIds", []))
+        return sorted(years)
 
     def majors(self, sending_id: int, receiving_id: int, year_id: int) -> list[dict[str, Any]]:
         """`reports[]` ({label, key, ...}) for major agreements, in ASSIST's order."""
