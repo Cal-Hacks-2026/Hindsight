@@ -2,13 +2,12 @@
    question. Everything here reuses the tokens and sizes in tokens.css and app.css. */
 
 /* ---- Top bar: Ask Hindsight, top right of every page ---- */
+/* Floats right at the top of <main>: the page header (a flex box) narrows beside it, so the
+   button adds no height to the page. */
 .topbar {
+  float: right;
   display: flex;
-  justify-content: flex-end;
-  width: 100%;
-  max-width: 1480px;
-  margin: 0 auto;
-  padding: 24px clamp(28px, 4vw, 64px) 0;
+  margin: 18px 0 0 24px;
 }
 .ask-open {
   display: inline-flex;
@@ -117,7 +116,7 @@
   padding-bottom: 48px;
 }
 .landing .masthead {
-  padding-top: 72px;
+  padding-top: 56px;
 }
 .landing .byline {
   max-width: 34ch;
@@ -163,7 +162,7 @@
     padding: 12px;
   }
   .landing .masthead {
-    padding-top: 40px;
+    padding-top: 32px;
   }
 }
 @media (max-width: 600px) {

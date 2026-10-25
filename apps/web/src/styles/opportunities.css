@@ -74,6 +74,92 @@
   text-decoration: underline;
 }
 
+/* "This Week" sits beside Fits Your Week, a chip like the categories. */
+.opp-controls .opp-time {
+  margin: 0;
+}
+
+/* Compact cards: title, when and where, one reason line, the source. */
+.opp-cards {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+.opp-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding: 20px 22px;
+  border: 1px solid var(--hair);
+  border-radius: 8px;
+}
+.opp-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 650;
+  letter-spacing: -0.4px;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+.opp-title a {
+  text-decoration: none;
+}
+.opp-title a:hover {
+  text-decoration: underline;
+}
+.opp-when,
+.opp-where,
+.opp-reason,
+.opp-foot {
+  margin: 0;
+  font-size: var(--text-small);
+  line-height: 1.45;
+}
+.opp-when {
+  font-weight: 600;
+}
+.opp-left {
+  font-weight: 500;
+  color: var(--gray);
+}
+.opp-left.urgent {
+  color: var(--ink);
+  font-weight: 650;
+}
+.opp-where,
+.opp-foot {
+  color: var(--gray);
+}
+.opp-reason {
+  color: var(--gray);
+  font-weight: 400;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+  line-clamp: 1;
+  overflow: hidden;
+}
+.opp-foot {
+  margin-top: auto;
+  padding-top: 6px;
+  overflow-wrap: anywhere;
+}
+.opp-foot a {
+  color: var(--ink);
+  white-space: nowrap;
+}
+.opp-card .entry-fit {
+  align-self: flex-start;
+  margin: 2px 0;
+}
+.opp-card .new-label {
+  font-size: 16px;
+}
+
 .entry-fit {
   display: inline-block;
   margin: 0 0 14px;
@@ -116,12 +202,20 @@
   .opp-subfilters {
     padding-left: 12px;
   }
-  .entry-where {
-    font-size: 18px;
+  .opp-controls .opp-time {
+    margin-right: 0;
+    padding-right: 0;
+    overflow: visible;
   }
-  /* The listing takes the whole line beside its numeral (48px + 16px gap); Source wraps below it. */
-  .entries .entry-body {
-    flex-basis: calc(100% - 64px);
+  .opp-cards {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+  .opp-card {
+    padding: 16px;
+  }
+  .opp-title {
+    font-size: 20px;
   }
 }
 

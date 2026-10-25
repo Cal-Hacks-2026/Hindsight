@@ -31,17 +31,22 @@ type Exchange = {
       };
 };
 
+// One question each about the plan, GE, the class schedule and the University guide.
 const FIRST_CHIPS = [
   "What should I take next term?",
-  "What do I still need for my major?",
-  "Which of my courses count at my university?",
+  "Which GE areas do I still need?",
+  "When am I free on Thursday?",
+  "What's orientation like?",
 ];
 // No summer-term chip: the planner schedules Fall and Spring only (AUDIT I-12).
 const NEXT_CHIPS = [
-  "What changes if I switch majors?",
+  "What do I still need for my major?",
+  "Which GE areas do I still need?",
+  "When am I free on Thursday?",
+  "What's orientation like?",
   "Which requirements should I check with my advisor?",
-  "Which courses should I take next term?",
 ];
+const CHIPS_SHOWN = 4;
 
 export function Counselor() {
   const { profile } = loadSession();
@@ -109,7 +114,7 @@ export function Counselor() {
   const asked = new Set(exchanges.map((e) => e.question));
   const chips = (exchanges.length ? NEXT_CHIPS : FIRST_CHIPS)
     .filter((c) => !asked.has(c))
-    .slice(0, 3);
+    .slice(0, CHIPS_SHOWN);
 
   return (
     <div className="cs">
@@ -237,7 +242,7 @@ function ExchangeView({
             <p className="cs-muted">{errorDetail(state.error)}</p>
             {onRetry && (
               <button type="button" className="cs-btn" onClick={onRetry}>
-                Try again
+                Try Again
               </button>
             )}
           </div>
@@ -318,29 +323,38 @@ function Answer({
       </div>
 
       <aside className="cs-margin cs-sources" aria-label="Sources">
-        <div className="cs-label cs-sources-head">Sources</div>
         {citations.length === 0 ? (
-          <p className="cs-note">
-            This answer comes from your own profile and transcript.
-          </p>
+          <>
+            <div className="cs-label cs-sources-head">Sources</div>
+            <p className="cs-note">
+              This answer comes from your own profile and transcript.
+            </p>
+          </>
         ) : (
-          <ol>
-            {citations.map((c, i) => (
-              <li key={i} id={`${id}-cite-${i + 1}`}>
-                <strong>{i + 1}</strong>
-                <span>
-                  {c.url ? (
-                    <a href={c.url} target="_blank" rel="noreferrer">
-                      {c.label}
-                    </a>
-                  ) : (
-                    c.label
-                  )}
-                  {c.ref && <span className="cs-ref"> · {c.ref}</span>}
-                </span>
-              </li>
-            ))}
-          </ol>
+          // Closed under "Sources (N)"; a citation in the answer opens it (Layout).
+          <details className="sources-details">
+            <summary className="cs-label cs-sources-head">
+              Sources ({citations.length})
+              <Icon name="chevron" size={16} />
+            </summary>
+            <ol>
+              {citations.map((c, i) => (
+                <li key={i} id={`${id}-cite-${i + 1}`}>
+                  <strong>{i + 1}</strong>
+                  <span>
+                    {c.url ? (
+                      <a href={c.url} target="_blank" rel="noreferrer">
+                        {c.label}
+                      </a>
+                    ) : (
+                      c.label
+                    )}
+                    {c.ref && <span className="cs-ref"> · {c.ref}</span>}
+                  </span>
+                </li>
+              ))}
+            </ol>
+          </details>
         )}
         {citations.some((c) => c.source === "catalog") && (
           <p className="cs-note">
@@ -385,10 +399,10 @@ function AdvisorBlock({
       <p className="cs-advisor-q">“{cite(question)}”</p>
       <div className="cs-actions">
         <a className="cs-btn cs-btn-solid" href={mailto}>
-          Email my advisor
+          Email My Advisor
         </a>
         <button type="button" className="cs-btn" onClick={() => void copy()}>
-          {copied ? "Copied" : "Copy question"}
+          {copied ? "Copied" : "Copy Question"}
         </button>
       </div>
     </div>

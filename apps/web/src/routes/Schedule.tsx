@@ -13,6 +13,8 @@ import type {
 import { api, ApiError } from "../lib/api";
 import { loadSession } from "../lib/session";
 import { plural } from "../lib/format";
+import { loadGePattern } from "../lib/ge";
+import { loadPicks, planMajors } from "../lib/plans";
 import { Icon } from "../components/Icons";
 import { Masthead, Section, StatusMark } from "../components/Paper";
 import "../styles/schedule.css";
@@ -164,7 +166,7 @@ export function Schedule() {
           <p className="lede">Set up your profile to add your class schedule.</p>
           <p className="actions schedule-gap">
             <Link className="button primary" to="/onboarding">
-              Set up your profile
+              Set Up Your Profile
             </Link>
           </p>
         </Section>
@@ -319,7 +321,7 @@ function UploadStep({
           </button>
           {onCancel && (
             <button className="text" type="button" onClick={onCancel} disabled={busy}>
-              Keep my saved schedule
+              Keep My Saved Schedule
             </button>
           )}
         </div>
@@ -561,7 +563,7 @@ function ConfirmStep({
         {error && <p className="error">{error}</p>}
         <div className="actions">
           <button type="button" onClick={add}>
-            + Add class
+            + Add Class
           </button>
           <button
             className="primary"
@@ -569,7 +571,7 @@ function ConfirmStep({
             onClick={() => void save()}
             disabled={busy || rows.length === 0}
           >
-            {busy ? "Saving…" : "Confirm & save schedule"}
+            {busy ? "Saving…" : "Confirm & Save Schedule"}
           </button>
           <button className="text" type="button" onClick={onCancel} disabled={busy}>
             Cancel
@@ -601,10 +603,13 @@ function SavedSchedule({
   const [week, setWeek] = useState(() => defaultWeek(rows, term, today));
   const [planned, setPlanned] = useState<ScheduledPlanCourse[]>([]);
 
-  // Which saved classes are on the plan; the marks are extra, so a failure just leaves them off.
+  // Which saved classes the plan uses, asked exactly as the Plan page asks for its plan (majors,
+  // picked terms, GE pattern) so the two pages agree. The marks are extra: a failure leaves them off.
   useEffect(() => {
+    const { query } = planMajors(profile, loadSession().matches);
+    if (!query.length) return;
     let live = true;
-    api.scheduledPlan(profile.id).then(
+    api.scheduledPlan(profile.id, query, loadPicks(profile.id), { pattern: loadGePattern(profile.id) }).then(
       (res) => live && setPlanned(res.courses),
       () => undefined,
     );
@@ -667,10 +672,10 @@ function SavedSchedule({
       <Section label="Transcript" title="Update Your Schedule" last>
         <div className="actions">
           <button type="button" onClick={onEdit}>
-            Edit classes
+            Edit Classes
           </button>
           <button type="button" onClick={onUpload}>
-            Upload a new schedule
+            Upload a New Schedule
           </button>
         </div>
         <p className="schedule-source">
@@ -943,7 +948,9 @@ function ListView({
                       <span className="schedule-title">{c.title}</span>
                       {plan && (
                         <StatusMark tone="ok">
-                          On your plan{plan.planned_term !== c.term ? ` for ${plan.planned_term}` : ""}
+                          {plan.planned_term === c.term
+                            ? "In progress on your plan"
+                            : `On your plan for ${plan.planned_term}`}
                         </StatusMark>
                       )}
                     </td>

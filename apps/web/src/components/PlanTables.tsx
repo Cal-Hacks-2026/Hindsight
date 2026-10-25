@@ -1,5 +1,8 @@
-// The plan as term tables, like a student's own class audit: planned terms (before transfer, then
-// after), then completed terms from the transcript. Also the printable ed plan ("Download Ed Plan").
+// The plan as term tables, like a student's own class audit: terms in progress (the transcript's
+// IP courses and the saved class schedule), planned terms (before transfer, then after), then
+// completed terms from the transcript. The next two planned terms open; every other term is a
+// one-line row that opens on click. Also the printable ed plan ("Download Ed Plan"), which prints
+// every term open.
 import {
   Fragment,
   useEffect,
@@ -14,6 +17,7 @@ import type {
   Semester,
   SemesterCourse,
 } from "@hindsight/contracts";
+import { Icon } from "./Icons";
 import { catalogMajor, yearSpan } from "../lib/catalog";
 import { formatLongDate, listing, plural, shortMajor } from "../lib/format";
 import { termIndex } from "../lib/goal";
@@ -26,6 +30,7 @@ import {
   type TermPicks,
 } from "../lib/plans";
 import {
+  courseKey,
   scheduledFor,
   timeRange,
   useSchedule,
@@ -37,8 +42,8 @@ import "../styles/plan.css";
 // The planner's default caps (apps/api/app/services/planner.py DEFAULT_UNIT_CAP, DEFAULT_CC_UNIT_CAP).
 const UNIT_CAP = 15;
 const CC_UNIT_CAP = 15;
-/** Completed terms shown before "Show N earlier terms". */
-const RECENT_TERMS = 2;
+/** Planned terms open by default; the rest are one-line rows. */
+const OPEN_TERMS = 2;
 const PLACEHOLDER_PREFIX = "PLACEHOLDER · ";
 
 /** A requirement from the student's match, with its numbered sources. `code`: "MATH 30", or "Elective". */
@@ -139,13 +144,18 @@ function SubjectTag({
 
 type Count = { key: string; text: ReactNode; refs: number[]; note?: string };
 
-function CountsList({ counts, grade }: { counts: Count[]; grade?: string }) {
+function CountsList({
+  counts,
+  grade,
+  empty = "Not matched to a major requirement",
+}: {
+  counts: Count[];
+  grade?: string;
+  empty?: string;
+}) {
   if (grade && NO_CREDIT.test(grade.trim().toUpperCase()))
     return <span className="plan-muted">No credit with this grade</span>;
-  if (!counts.length)
-    return (
-      <span className="plan-muted">Not matched to a major requirement</span>
-    );
+  if (!counts.length) return <span className="plan-muted">{empty}</span>;
   return (
     <ul className="plan-counts">
       {counts.map((c) => (
@@ -225,6 +235,20 @@ function completedCounts(hits: PlanRow[], ctx: PlanContext): Count[] {
           ? "match needs review"
           : undefined,
   );
+}
+
+/** A class on the saved schedule, not yet on the transcript: the planner counts it as in progress.
+ *  It counts toward the requirements whose ASSIST options name it. */
+function scheduledCounts(code: string, ctx: PlanContext): Count[] {
+  const key = courseKey(code);
+  const hits = ctx.rows.filter((r) =>
+    (r.req.options ?? []).some((option) =>
+      [...option.matchAll(/\b([A-Z]{2,5})\s+([A-Z]?\d+[A-Z]*)\b/g)].some(
+        (m) => courseKey(`${m[1]} ${m[2]}`) === key,
+      ),
+    ),
+  );
+  return requirementCounts(hits, ctx, () => "in progress");
 }
 
 const GE_CHOICES_SHOWN = 4;
@@ -354,6 +378,8 @@ type TableRow = {
   grade?: string;
   agreement?: string;
   slot?: ScheduledClass;
+  /** What "Counts Toward" says when the course counts toward nothing listed. */
+  empty?: string;
 };
 
 const GRADE: Record<string, string> = { IP: "In progress" };
@@ -367,7 +393,8 @@ function TermTable({
   rows,
   unitLabel,
   tint,
-  className,
+  open,
+  onToggle,
 }: {
   id: string;
   term: string;
@@ -377,27 +404,45 @@ function TermTable({
   rows: TableRow[];
   unitLabel: string;
   tint: (code: string) => number;
-  className?: string;
+  open: boolean;
+  onToggle: () => void;
 }) {
   const total = rows.reduce((n, r) => n + r.units, 0);
   const headingId = `${id}-heading`;
-  const columns = kind === "planned" ? 4 : 5;
+  // Sections come from the saved schedule; with none for this term the column would only say "Pick a Section".
+  const sections = kind === "planned" && rows.some((r) => r.slot);
+  const columns = kind === "planned" ? (sections ? 4 : 3) : 5;
   return (
-    <div className={`plan-term${className ? ` ${className}` : ""}`}>
+    <div className={`plan-term${open ? " is-open" : " is-collapsed"}`}>
       <h4 className="plan-term-head" id={headingId}>
-        {term}
-        <span>
-          <span className="plan-term-sep"> · </span>
-          {status} · {institution}
-        </span>
+        <button
+          type="button"
+          className="plan-term-toggle"
+          aria-expanded={open}
+          aria-controls={`${id}-table`}
+          onClick={onToggle}
+        >
+          <span className="plan-term-name">{term}</span>
+          <span className="plan-term-meta">
+            <span className="plan-term-sep"> · </span>
+            {status} · {rows.length} {plural(rows.length, "course")} ·{" "}
+            {fmtUnits(total)} {unitLabel}
+            <span className="plan-term-where"> · {institution}</span>
+          </span>
+          <Icon name="chevron" size={20} />
+        </button>
       </h4>
       <div
+        id={`${id}-table`}
         className="plan-table-scroll"
         role="region"
         aria-labelledby={headingId}
         tabIndex={0}
       >
-        <table className={`plan-table ${kind}`} aria-labelledby={headingId}>
+        <table
+          className={`plan-table ${kind}${sections ? " with-sections" : ""}`}
+          aria-labelledby={headingId}
+        >
           <thead>
             <tr>
               <th scope="col">Course</th>
@@ -405,13 +450,13 @@ function TermTable({
               <th scope="col" className="num">
                 Units
               </th>
-              {kind === "planned" ? (
-                <th scope="col">Section</th>
-              ) : (
+              {kind === "completed" ? (
                 <>
                   <th scope="col">Grade</th>
                   <th scope="col">Agreement Year</th>
                 </>
+              ) : (
+                sections && <th scope="col">Section</th>
               )}
             </tr>
           </thead>
@@ -431,20 +476,28 @@ function TermTable({
                   )}
                 </td>
                 <td>
-                  <CountsList counts={r.counts} grade={r.grade} />
+                  <CountsList
+                    counts={r.counts}
+                    grade={r.grade}
+                    empty={r.empty}
+                  />
                 </td>
-                <td className="num">{fmtUnits(r.units)}</td>
-                {kind === "planned" ? (
-                  <td>
-                    <SectionCell slot={r.slot} />
-                  </td>
-                ) : (
+                <td className="num" data-unit={unitLabel}>
+                  {fmtUnits(r.units)}
+                </td>
+                {kind === "completed" ? (
                   <>
-                    <td className="nowrap">
+                    <td className="nowrap" data-label="Grade">
                       {GRADE[r.grade ?? ""] ?? (r.grade || "—")}
                     </td>
-                    <td>{r.agreement ?? "—"}</td>
+                    <td data-label="Agreement">{r.agreement ?? "—"}</td>
                   </>
+                ) : (
+                  sections && (
+                    <td>
+                      <SectionCell slot={r.slot} />
+                    </td>
+                  )
                 )}
               </tr>
             ))}
@@ -453,9 +506,14 @@ function TermTable({
             <tr>
               <th scope="row" colSpan={2}>
                 Term total
+                {columns === 3 && (
+                  <span className="plan-total-unit"> · {unitLabel}</span>
+                )}
               </th>
-              <td className="num">{fmtUnits(total)}</td>
-              <td colSpan={columns - 3}>{unitLabel}</td>
+              <td className="num" data-unit={unitLabel}>
+                {fmtUnits(total)}
+              </td>
+              {columns > 3 && <td colSpan={columns - 3}>{unitLabel}</td>}
             </tr>
           </tfoot>
         </table>
@@ -467,21 +525,30 @@ function TermTable({
 const unitLabelOf = (s?: Semester) =>
   s?.term_system === "quarter" ? "quarter units" : "units";
 
+const termId = (prefix: string, term: string) =>
+  `${prefix}-${term.replace(/\s+/g, "-").toLowerCase()}`;
+
 function PlannedTerm({
   semester,
   ctx,
   schedule,
   tint,
+  open,
+  onToggle,
 }: {
   semester: Semester;
   ctx: PlanContext;
   schedule: Schedule;
   tint: (code: string) => number;
+  open: boolean;
+  onToggle: () => void;
 }) {
   const before = semester.phase === "before_transfer";
   return (
     <TermTable
-      id={`plan-${semester.term.replace(/\s+/g, "-").toLowerCase()}`}
+      id={termId("plan", semester.term)}
+      open={open}
+      onToggle={onToggle}
       term={semester.term}
       status="Planned"
       institution={
@@ -505,30 +572,60 @@ function PlannedTerm({
   );
 }
 
-/** The next term with courses, for "Take Next". */
-export function NextTermTable({ ctx }: { ctx: PlanContext }) {
-  const schedule = useSchedule(ctx.profileId);
-  const next = ctx.plans?.combined.find((s) => s.courses.length > 0);
-  if (!next) return null;
-  return (
-    <PlannedTerm
-      semester={next}
-      ctx={ctx}
-      schedule={schedule}
-      tint={subjectTints(ctx)}
-    />
-  );
-}
+type TakenTerm = {
+  term: string;
+  at: number;
+  rows: TableRow[];
+  inProgress: boolean;
+};
 
-/** Transcript courses by term, newest first; an undated course goes last. */
-function transcriptTerms(courses: Course[]) {
-  const byTerm = new Map<string, Course[]>();
-  for (const c of courses) {
+/** Transcript courses by term, newest first (an undated course goes last), with the saved schedule's
+ *  classes that aren't on the transcript yet added as in progress: the planner counts them so. */
+function takenTerms(ctx: PlanContext, schedule: Schedule): TakenTerm[] {
+  const byTerm = new Map<string, TableRow[]>();
+  const add = (term: string, row: TableRow) =>
+    byTerm.set(term, [...(byTerm.get(term) ?? []), row]);
+  const onTranscript = new Set<string>();
+  (ctx.courses ?? []).forEach((c, j) => {
+    const code = `${c.prefix} ${c.number}`;
     const term = c.term.trim() || "Term not listed";
-    byTerm.set(term, [...(byTerm.get(term) ?? []), c]);
+    if (!NO_CREDIT.test(c.grade.trim().toUpperCase()))
+      onTranscript.add(courseKey(code));
+    onTranscript.add(`${term}|${courseKey(code)}`);
+    const hits = creditedBy(c, ctx);
+    const agreements = [...new Set(hits.flatMap((r) => r.agreement ?? []))];
+    add(term, {
+      key: `${code} ${j}`,
+      code,
+      title: c.title,
+      units: c.units,
+      counts: completedCounts(hits, ctx),
+      grade: c.grade,
+      agreement: agreements.length ? agreements.join(", ") : undefined,
+    });
+  });
+  for (const cls of schedule.values()) {
+    const key = courseKey(cls.course);
+    if (onTranscript.has(key) || onTranscript.has(`${cls.term}|${key}`))
+      continue;
+    onTranscript.add(`${cls.term}|${key}`);
+    add(cls.term, {
+      key: `scheduled ${cls.course}`,
+      code: cls.course,
+      title: cls.title ?? "",
+      units: cls.units ?? 0,
+      counts: scheduledCounts(cls.course, ctx),
+      grade: "IP",
+      empty: "On your class schedule",
+    });
   }
   return [...byTerm]
-    .map(([term, list]) => ({ term, courses: list, at: termIndex(term) ?? -1 }))
+    .map(([term, rows]) => ({
+      term,
+      rows,
+      at: termIndex(term) ?? -1,
+      inProgress: rows.some((r) => r.grade?.toUpperCase() === "IP"),
+    }))
     .sort((a, b) => b.at - a.at);
 }
 
@@ -572,9 +669,53 @@ export function PlanTables({
   ].map(yearSpan);
   const allCatalogRefs = Object.values(ctx.catalogRefs);
 
-  const [showEarlier, setShowEarlier] = useState(false);
-  const taken = ctx.courses?.length ? transcriptTerms(ctx.courses) : [];
-  const earlier = taken.length - RECENT_TERMS;
+  const taken = takenTerms(ctx, schedule);
+  const current = taken.filter((t) => t.inProgress);
+  const completed = taken.filter((t) => !t.inProgress);
+  // The next planned terms open; a click opens or closes any term. Keyed by term id.
+  const firstPlanned = [...before, ...after]
+    .filter((s) => s.courses.length > 0)
+    .slice(0, OPEN_TERMS)
+    .map((s) => termId("plan", s.term));
+  const [toggled, setToggled] = useState<Record<string, boolean>>({});
+  const isOpen = (id: string) => toggled[id] ?? firstPlanned.includes(id);
+  const toggle = (id: string) => () =>
+    setToggled((t) => ({ ...t, [id]: !isOpen(id) }));
+  const [showCompleted, setShowCompleted] = useState(false);
+  const unitLabel = quarters ? "quarter units" : "units";
+
+  const takenTable = (t: TakenTerm) => {
+    const id = termId("taken", t.term);
+    return (
+      <TermTable
+        key={t.term}
+        id={id}
+        open={isOpen(id)}
+        onToggle={toggle(id)}
+        term={t.term}
+        status={t.inProgress ? "In Progress" : "Completed"}
+        institution={names.collegeLong}
+        kind="completed"
+        unitLabel={unitLabel}
+        tint={tint}
+        rows={t.rows}
+      />
+    );
+  };
+  const plannedTable = (s: Semester) => {
+    const id = termId("plan", s.term);
+    return (
+      <PlannedTerm
+        key={s.term}
+        semester={s}
+        ctx={ctx}
+        schedule={schedule}
+        tint={tint}
+        open={isOpen(id)}
+        onToggle={toggle(id)}
+      />
+    );
+  };
 
   const pathway = `${majors.map(shortMajor).join(" + ")} · ${names.collegeLong} to ${names.campusLong}`;
 
@@ -610,75 +751,43 @@ export function PlanTables({
         </dl>
       </header>
 
-      <div className="plan-actions">
-        <PrintButton title={`Ed Plan · ${pathway}`} disabled={loading} />
-      </div>
+      {plans && geLate && geLate.length > 0 && (
+        <p className="plan-warning" role="status">
+          {transfer} is too early to finish {listing(geLate)} at {names.college}
+          .
+          {earliest &&
+            ` Transferring in ${earliest} leaves time for all of them.`}
+        </p>
+      )}
+      {plans && late && late.length > 0 && (
+        <p className="plan-warning" role="status">
+          {transfer} is too early for {listing(late)} at {names.college}, so{" "}
+          {late.length === 1 ? "its" : "their"} {names.campus}{" "}
+          {late.length === 1 ? "equivalent is" : "equivalents are"} planned
+          after transfer instead.
+          {earliest &&
+            ` Transferring in ${earliest} leaves time for all of them.`}
+        </p>
+      )}
+
+      {current.length > 0 && (
+        <div className="phase">
+          <h3 className="phase-head">
+            <span className="phase-kicker">In Progress</span> on Your Transcript
+            and Class Schedule
+          </h3>
+          <div className="plan-terms">{current.map(takenTable)}</div>
+        </div>
+      )}
 
       {plans && (
         <>
-          <p className="plan-caveat">
-            Course offerings aren’t confirmed. Check {names.college} and{" "}
-            {names.campus} schedules before registering.
-          </p>
-          <div className="term-picks">
-            {response?.default_start_term && response.start_term_choices && (
-              <TermSelect
-                id="start-term"
-                label={`Starting at ${names.college} in`}
-                value={picks.start}
-                defaultTerm={response.default_start_term}
-                defaultNote="default"
-                choices={response.start_term_choices}
-                onPick={(t) => onPick("start", t)}
-              />
-            )}
-            {transfer && (
-              <TermSelect
-                id="transfer-term"
-                label={`Transfer to ${names.campus} in`}
-                value={picks.transfer}
-                defaultTerm={earliest ?? transfer}
-                defaultNote="earliest"
-                choices={transferChoices()}
-                onPick={(t) => onPick("transfer", t)}
-              />
-            )}
-          </div>
-          {geLate && geLate.length > 0 && (
-            <p className="plan-warning" role="status">
-              {transfer} is too early to finish {listing(geLate)} at{" "}
-              {names.college}.
-              {earliest &&
-                ` Transferring in ${earliest} leaves time for all of them.`}
-            </p>
-          )}
-          {late && late.length > 0 && (
-            <p className="plan-warning" role="status">
-              {transfer} is too early for {listing(late)} at {names.college}, so{" "}
-              {late.length === 1 ? "its" : "their"} {names.campus}{" "}
-              {late.length === 1 ? "equivalent is" : "equivalents are"} planned
-              after transfer instead.
-              {earliest &&
-                ` Transferring in ${earliest} leaves time for all of them.`}
-            </p>
-          )}
-
           <div className="phase">
             <h3 className="phase-head">
               <span className="phase-kicker">Before Transfer</span> at {college}
             </h3>
             {before.length ? (
-              <div className="plan-terms">
-                {before.map((s) => (
-                  <PlannedTerm
-                    key={s.term}
-                    semester={s}
-                    ctx={ctx}
-                    schedule={schedule}
-                    tint={tint}
-                  />
-                ))}
-              </div>
+              <div className="plan-terms">{before.map(plannedTable)}</div>
             ) : (
               <p className="lede">
                 Nothing left to take at {names.college} for{" "}
@@ -707,17 +816,7 @@ export function PlanTables({
               </p>
             ) : after.length ? (
               <>
-                <div className="plan-terms">
-                  {after.map((s) => (
-                    <PlannedTerm
-                      key={s.term}
-                      semester={s}
-                      ctx={ctx}
-                      schedule={schedule}
-                      tint={tint}
-                    />
-                  ))}
-                </div>
+                <div className="plan-terms">{after.map(plannedTable)}</div>
                 <p className="phase-note">
                   Up to {UNIT_CAP} units per term, following prerequisites in
                   the {names.campus} Catalog {listing(years)}.
@@ -734,61 +833,65 @@ export function PlanTables({
         </>
       )}
 
-      {taken.length > 0 && (
-        <div className="phase">
+      {completed.length > 0 && (
+        <div
+          className={`phase plan-completed${showCompleted ? " is-open" : ""}`}
+        >
           <h3 className="phase-head">
-            <span className="phase-kicker">Completed</span> from your transcript
-          </h3>
-          <div className="plan-terms">
-            {taken.map((t, i) => (
-              <TermTable
-                key={t.term}
-                id={`taken-${i}`}
-                className={
-                  i >= RECENT_TERMS && !showEarlier ? "is-collapsed" : undefined
-                }
-                term={t.term}
-                status={
-                  t.courses.some((c) => c.grade.toUpperCase() === "IP")
-                    ? "In Progress"
-                    : "Completed"
-                }
-                institution={names.collegeLong}
-                kind="completed"
-                unitLabel={quarters ? "quarter units" : "units"}
-                tint={tint}
-                rows={t.courses.map((c, j) => {
-                  const hits = creditedBy(c, ctx);
-                  const agreements = [
-                    ...new Set(hits.flatMap((r) => r.agreement ?? [])),
-                  ];
-                  return {
-                    key: `${c.prefix} ${c.number} ${j}`,
-                    code: `${c.prefix} ${c.number}`,
-                    title: c.title,
-                    units: c.units,
-                    counts: completedCounts(hits, ctx),
-                    grade: c.grade,
-                    agreement: agreements.length
-                      ? agreements.join(", ")
-                      : undefined,
-                  };
-                })}
-              />
-            ))}
-          </div>
-          {earlier > 0 && (
             <button
               type="button"
-              className="text plan-earlier"
-              aria-expanded={showEarlier}
-              onClick={() => setShowEarlier((s) => !s)}
+              className="plan-group-toggle"
+              aria-expanded={showCompleted}
+              aria-controls="plan-completed-terms"
+              onClick={() => setShowCompleted((o) => !o)}
             >
-              {showEarlier
-                ? "Hide earlier terms"
-                : `Show ${earlier} earlier ${plural(earlier, "term")}`}
+              <span className="phase-kicker">
+                Completed ({completed.length} {plural(completed.length, "term")}
+                )
+              </span>{" "}
+              from Your Transcript
+              <Icon name="chevron" size={20} />
             </button>
-          )}
+          </h3>
+          <div id="plan-completed-terms" className="plan-terms">
+            {completed.map(takenTable)}
+          </div>
+        </div>
+      )}
+
+      {plans && (
+        <div className="plan-settings">
+          <div className="term-picks">
+            {response?.default_start_term && response.start_term_choices && (
+              <TermSelect
+                id="start-term"
+                label={`Starting at ${names.college} in`}
+                value={picks.start}
+                defaultTerm={response.default_start_term}
+                defaultNote="default"
+                choices={response.start_term_choices}
+                onPick={(t) => onPick("start", t)}
+              />
+            )}
+            {transfer && (
+              <TermSelect
+                id="transfer-term"
+                label={`Transfer to ${names.campus} in`}
+                value={picks.transfer}
+                defaultTerm={earliest ?? transfer}
+                defaultNote="earliest"
+                choices={transferChoices()}
+                onPick={(t) => onPick("transfer", t)}
+              />
+            )}
+          </div>
+          <div className="plan-actions">
+            <PrintButton title={`Ed Plan · ${pathway}`} disabled={loading} />
+          </div>
+          <p className="plan-caveat">
+            Course offerings aren’t confirmed. Check {names.college} and{" "}
+            {names.campus} schedules before registering.
+          </p>
         </div>
       )}
     </div>

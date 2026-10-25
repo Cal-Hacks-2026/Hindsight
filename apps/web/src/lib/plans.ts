@@ -2,8 +2,9 @@
 // (the "earliest finish" note compares them). Each is a two-phase roadmap: community-college
 // terms before transfer, university terms after. Cached per page session like the Radar feed.
 import { useEffect, useState } from "react";
-import type { PlanResponse, Semester } from "@hindsight/contracts";
+import type { MatchResult, PlanResponse, Profile, Semester } from "@hindsight/contracts";
 import { api } from "./api";
+import { catalogMajor, hasFullPlan } from "./catalog";
 import { loadGePattern } from "./ge";
 
 export type Plans = { combined: Semester[]; single: Record<string, Semester[]>; response: PlanResponse };
@@ -84,6 +85,24 @@ export function loadTerm(which: keyof TermPicks, profileId: string): string | un
   } catch {
     return undefined;
   }
+}
+
+/** The picks the Plan page uses: a saved transfer term that's no longer offered is dropped. */
+export function loadPicks(profileId: string): TermPicks {
+  const transfer = loadTerm("transfer", profileId);
+  return {
+    transfer: transfer && transferChoices().includes(transfer) ? transfer : undefined,
+    start: loadTerm("start", profileId),
+  };
+}
+
+/** The majors the Plan page plans: every matched major when one has the university's requirements
+ *  (or the university has none curated), else none. `planned`: the majors with a plan. */
+export function planMajors(profile: Profile, matches: MatchResult[] | undefined) {
+  const majors = matches?.map((m) => m.major_label) ?? [];
+  const fullPlan = hasFullPlan(profile.receiving_institution_id);
+  const planned = fullPlan ? majors.filter((m) => catalogMajor(m, profile.receiving_institution_id)) : majors;
+  return { majors, planned, fullPlan, query: planned.length ? majors : [] };
 }
 
 export function saveTerm(which: keyof TermPicks, profileId: string, term: string | undefined): void {

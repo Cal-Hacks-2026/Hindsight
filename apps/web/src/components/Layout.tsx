@@ -7,6 +7,19 @@ import { ASK_PANEL_ID, AskPanel } from "./AskPanel";
 import { Icon, type IconName } from "./Icons";
 import "../styles/shell.css";
 
+/** Sources and other answers sit in closed <details>: open the one holding a citation's target
+ *  (and any around it) so following "#source-3" lands on visible text. */
+function openCitedSource(hash: string) {
+  if (hash.length < 2) return;
+  let details = document
+    .getElementById(decodeURIComponent(hash.slice(1)))
+    ?.closest("details");
+  while (details) {
+    details.open = true;
+    details = details.parentElement?.closest("details");
+  }
+}
+
 const HEALTH_RETRIES = 4;
 const HEALTH_RETRY_MS = 8000;
 
@@ -51,6 +64,28 @@ export function Layout() {
       </button>
     );
 
+  useEffect(() => {
+    // Capture phase: open the details before the browser follows the link and scrolls.
+    const onClick = (e: MouseEvent) => {
+      const link = (e.target as Element | null)?.closest?.('a[href^="#"]');
+      if (link) openCitedSource(link.getAttribute("href")!);
+    };
+    const onHash = () => openCitedSource(window.location.hash);
+    // A printed ed plan lists its sources in full.
+    const onPrint = () =>
+      document
+        .querySelectorAll<HTMLDetailsElement>("details.sources-details")
+        .forEach((d) => (d.open = true));
+    document.addEventListener("click", onClick, true);
+    window.addEventListener("hashchange", onHash);
+    window.addEventListener("beforeprint", onPrint);
+    return () => {
+      document.removeEventListener("click", onClick, true);
+      window.removeEventListener("hashchange", onHash);
+      window.removeEventListener("beforeprint", onPrint);
+    };
+  }, []);
+
   // The API host sleeps when idle and takes a while to wake, so retry before calling it unreachable.
   useEffect(() => {
     let live = true;
@@ -86,7 +121,7 @@ export function Layout() {
   return (
     <div className="app-shell">
       <a className="skip-link" href="#main-content">
-        Skip to content
+        Skip to Content
       </a>
       <aside className="sidebar">
         <Link to="/" className="brand" aria-label={`${APP_NAME}, home`}>
@@ -132,13 +167,16 @@ export function Layout() {
         </div>
       </aside>
       <div className="workspace">
-        {askHere && <div className="topbar">{askButton("ask-open-wide")}</div>}
         {degraded && (
           <p className="status-banner" role="status">
             {degraded}
           </p>
         )}
         <main id="main-content" tabIndex={-1}>
+          {/* Floats beside the page header, so it takes no height of its own. */}
+          {askHere && (
+            <div className="topbar">{askButton("ask-open-wide")}</div>
+          )}
           <Outlet />
         </main>
       </div>

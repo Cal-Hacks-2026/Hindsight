@@ -5,9 +5,9 @@ import { useNow } from "../lib/time";
 
 // The first load is one long Claude call (DECISIONS.md D-005); say what's happening as time passes.
 function loadingMessage(seconds: number): string {
-  if (seconds < 4) return "Finding your opportunities…";
-  if (seconds < 20) return "Matching opportunities to your interests…";
-  return "Still working. The first load sometimes runs a little long.";
+  if (seconds < 4) return "Finding Your Opportunities…";
+  if (seconds < 20) return "Matching Opportunities to Your Interests…";
+  return "Still Working…";
 }
 
 export function RadarLoading({
@@ -32,7 +32,13 @@ export function RadarLoading({
           </span>
         </div>
         <div className="loading-bar" aria-hidden="true" />
-        {!quick && <p>The first visit can take about 15 seconds.</p>}
+        {!quick && (
+          <p>
+            {seconds >= 20
+              ? "The first load sometimes runs a little long."
+              : "The first visit can take about 15 seconds."}
+          </p>
+        )}
       </div>
       <div aria-hidden="true">
         {Array.from({ length: skeletons }, (_, i) => (
@@ -55,14 +61,14 @@ export function RadarError({
   error: unknown;
   onRetry: () => void;
 }) {
-  let title = "Couldn't load your opportunities.";
+  let title = "Couldn't Load Your Opportunities";
   let detail =
     "We couldn't reach the Hindsight server. Check your connection and try again.";
   let canRetry = true;
 
   if (error instanceof ApiError) {
     if (error.status === 404) {
-      title = "We couldn't find your profile.";
+      title = "We Couldn't Find Your Profile";
       detail =
         "It may have been reset on the server. Set it up again to get your opportunities back.";
       canRetry = false;
@@ -81,11 +87,11 @@ export function RadarError({
       <div className="actions">
         {canRetry ? (
           <button className="primary" onClick={onRetry}>
-            Try again
+            Try Again
           </button>
         ) : (
           <Link className="button primary" to="/onboarding">
-            Set up your profile
+            Set Up Your Profile
           </Link>
         )}
       </div>
@@ -96,10 +102,10 @@ export function RadarError({
 export function RadarEmpty({ campus }: { campus: string }) {
   return (
     <div className="state">
-      <h3>No opportunities yet.</h3>
+      <h3>No Opportunities Yet</h3>
       <p>
-        No upcoming {campus} listings match your profile yet. Check back
-        after the next campus scan.
+        No upcoming {campus} listings match your profile yet. Check back after
+        the next campus scan.
       </p>
     </div>
   );
@@ -112,8 +118,7 @@ export function RadarUnwatched({ university }: { university: string }) {
       <h3>{university}'s Campus Isn't Covered Yet</h3>
       <p>
         Opportunities are listed only for campuses Hindsight scans, and{" "}
-        {university} isn't one of them yet. Your plan and credits work the
-        same.
+        {university} isn't one of them yet. Your plan and credits work the same.
       </p>
       <div className="actions">
         <Link className="button" to="/plan">
@@ -127,14 +132,14 @@ export function RadarUnwatched({ university }: { university: string }) {
 export function NoProfile() {
   return (
     <div className="state">
-      <h3>Set up your profile first.</h3>
+      <h3>Set Up Your Profile First</h3>
       <p>
         Hindsight ranks campus events and opportunities against your majors,
         goals, and interests.
       </p>
       <div className="actions">
         <Link className="button primary" to="/onboarding">
-          Create your profile
+          Create Your Profile
         </Link>
       </div>
     </div>

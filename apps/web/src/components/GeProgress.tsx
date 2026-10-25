@@ -9,11 +9,12 @@ import type {
   GePattern,
   GeResponse,
 } from "@hindsight/contracts";
+import { Icon } from "./Icons";
 import { Note, Section, StatusMark, type StatusTone } from "./Paper";
 import { loadGePattern, saveGePattern, useGe } from "../lib/ge";
 import "../styles/ge.css";
 
-const OPTIONS_SHOWN = 8;
+const OPTIONS_SHOWN = 4;
 const PATTERNS: [GePattern, string][] = [
   ["calgetc", "Cal-GETC"],
   ["igetc", "IGETC"],
@@ -78,28 +79,40 @@ function CourseLine({ course, college }: { course: GeCourse; college: string }) 
   );
 }
 
+/** The first few approved courses; "+N more" opens the whole list with titles. */
 function Options({ area }: { area: GeArea }) {
+  const [all, setAll] = useState(false);
   const options = area.options ?? [];
   if (!options.length) return null;
   const lead = area.still_needed > 1 ? `Take ${area.still_needed} of:` : "Take one of:";
+  const more = options.length - OPTIONS_SHOWN;
+  const listId = `ge-options-${area.code}`;
   return (
     <div className="ge-take">
       <p>
         <strong>{lead}</strong>{" "}
-        {options.slice(0, OPTIONS_SHOWN).map((o) => nb(o.code)).join(" · ")}
-        {options.length > OPTIONS_SHOWN && " …"}
+        {!all && options.slice(0, OPTIONS_SHOWN).map((o) => nb(o.code)).join(" · ")}
+        {!all && more > 0 && " "}
+        {more > 0 && (
+          <button
+            type="button"
+            className="ge-more"
+            aria-expanded={all}
+            aria-controls={listId}
+            onClick={() => setAll((a) => !a)}
+          >
+            {all ? "Show Fewer" : `+${more} More`}
+          </button>
+        )}
       </p>
-      {options.length > OPTIONS_SHOWN && (
-        <details>
-          <summary>All {options.length} approved courses</summary>
-          <ul>
-            {options.map((o) => (
-              <li key={o.code}>
-                <strong>{nb(o.code)}</strong> {o.title}
-              </li>
-            ))}
-          </ul>
-        </details>
+      {all && (
+        <ul id={listId}>
+          {options.map((o) => (
+            <li key={o.code}>
+              <strong>{nb(o.code)}</strong> {o.title}
+            </li>
+          ))}
+        </ul>
       )}
     </div>
   );
@@ -191,8 +204,13 @@ export function GeProgress({ profileId, courses }: { profileId: string; courses?
     setPattern(pick);
   }
 
+  const [showDone, setShowDone] = useState(false);
   const required = ge?.areas.filter((a) => a.required) ?? [];
   const done = ge?.summary.done ?? 0;
+  // Areas done (and ones the student's university doesn't require) fold into one row.
+  const settled = ge?.areas.filter((a) => !a.required || a.status === "done") ?? [];
+  const open = ge?.areas.filter((a) => a.required && a.status !== "done") ?? [];
+  const notRequired = settled.filter((a) => !a.required).length;
   return (
     <Section
       id="general-education"
@@ -243,7 +261,35 @@ export function GeProgress({ profileId, courses }: { profileId: string; courses?
             ))}
           </div>
           <div className="ge-list" aria-live="polite">
-            {ge.areas.map((area) => (
+            {settled.length > 0 && (
+              <div className="fold ge-fold">
+                <button
+                  type="button"
+                  className="fold-toggle"
+                  aria-expanded={showDone}
+                  aria-controls="ge-done"
+                  onClick={() => setShowDone((o) => !o)}
+                >
+                  <StatusMark tone="ok">
+                    {settled.length - notRequired} {settled.length - notRequired === 1 ? "area" : "areas"} done
+                  </StatusMark>
+                  <span className="fold-meta">
+                    {settled
+                      .filter((a) => a.required)
+                      .map((a) => a.code)
+                      .join(" · ")}
+                    {notRequired > 0 && ` · ${notRequired} not required`}
+                  </span>
+                  <Icon name="chevron" size={20} />
+                </button>
+                <div id="ge-done" hidden={!showDone}>
+                  {settled.map((area) => (
+                    <AreaRow key={area.code} area={area} ge={ge} />
+                  ))}
+                </div>
+              </div>
+            )}
+            {open.map((area) => (
               <AreaRow key={area.code} area={area} ge={ge} />
             ))}
           </div>
