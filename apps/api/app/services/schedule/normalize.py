@@ -176,17 +176,22 @@ def units(raw: str) -> float | None:
     return float(m.group()) if m else None
 
 
-def course_key(code: str) -> str:
-    """Comparable form of a course code: 'MATH D001B', 'math-1b' and 'MATH 1B' → 'MATH1B'.
+def split_code(code: str) -> tuple[str, str]:
+    """'MATH D001B' → ('MATH', '1B'), 'ENGL C1000' → ('ENGL', 'C1000'): the transcript's form.
 
     Colleges print local forms (some add a campus letter and zero-pad: D001B). The
     letter is dropped only before a zero-padded number, so CCN codes like C1000 stay intact.
     """
     m = re.match(r"^\s*([A-Za-z&]+)[\s\-_.]*([A-Za-z0-9\-. ]+?)\s*$", code)
     if not m:
-        return re.sub(r"[^A-Z0-9]", "", code.upper())
+        return "", re.sub(r"[^A-Z0-9]", "", code.upper())
     prefix, number = m.group(1).upper(), re.sub(r"[^A-Z0-9]", "", m.group(2).upper())
     padded = re.match(r"^[A-Z]?0+(\d.*)$", number)
     if padded:
         number = padded.group(1)
-    return prefix + number
+    return prefix, number
+
+
+def course_key(code: str) -> str:
+    """Comparable form of a course code: 'MATH D001B', 'math-1b' and 'MATH 1B' → 'MATH1B'."""
+    return "".join(split_code(code))

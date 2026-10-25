@@ -63,6 +63,15 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
 }
 
 const json = (body: unknown) => JSON.stringify(body);
+
+function planQuery(majors: string[], terms: { transfer?: string; start?: string }, ge?: { pattern?: GePattern }) {
+  return new URLSearchParams({
+    majors: majors.join(","),
+    ...(terms.transfer ? { transfer_term: terms.transfer } : {}),
+    ...(terms.start ? { start_term: terms.start } : {}),
+    ...(ge ? { ge: "true", ...(ge.pattern ? { ge_pattern: ge.pattern } : {}) } : {}),
+  });
+}
 const enc = encodeURIComponent;
 
 export const api = {
@@ -102,14 +111,7 @@ export const api = {
     terms: { transfer?: string; start?: string } = {},
     ge?: { pattern?: GePattern },
   ) =>
-    request<PlanResponse>(
-      `/profiles/${enc(id)}/plan?${new URLSearchParams({
-        majors: majors.join(","),
-        ...(terms.transfer ? { transfer_term: terms.transfer } : {}),
-        ...(terms.start ? { start_term: terms.start } : {}),
-        ...(ge ? { ge: "true", ...(ge.pattern ? { ge_pattern: ge.pattern } : {}) } : {}),
-      })}`,
-    ),
+    request<PlanResponse>(`/profiles/${enc(id)}/plan?${planQuery(majors, terms, ge)}`),
 
   // Class schedule (SCHEDULE): upload → confirm → save, like transcripts.
   uploadSchedule: (id: string, file: File) => {
@@ -128,7 +130,14 @@ export const api = {
       `/profiles/${enc(id)}/schedule/free-blocks?${new URLSearchParams({ week, ...(term ? { term } : {}) })}`,
     ),
 
-  scheduledPlan: (id: string) => request<ScheduledPlanResponse>(`/profiles/${enc(id)}/schedule/planned`),
+  // The same query as plan(): the saved classes that plan counts or schedules.
+  scheduledPlan: (
+    id: string,
+    majors: string[],
+    terms: { transfer?: string; start?: string } = {},
+    ge?: { pattern?: GePattern },
+  ) =>
+    request<ScheduledPlanResponse>(`/profiles/${enc(id)}/schedule/planned?${planQuery(majors, terms, ge)}`),
 
   ge: (id: string, pattern?: GePattern) =>
     request<GeResponse>(

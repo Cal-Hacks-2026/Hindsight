@@ -191,6 +191,8 @@ class Student:
     planning_matches: dict[str, MatchResult | None] = field(default_factory=dict)
     _ge: GeResponse | None = None
     ge_error: str | None = None
+    _scheduled: list[Course] | None = None
+    _planning_ge: GeResponse | None = None
 
     @property
     def year(self) -> int:
@@ -232,8 +234,35 @@ class Student:
                 self.ge_error = "GE progress is unavailable right now"
         return self._ge
 
+    @property
+    def planning_courses(self) -> list[Course]:
+        """The transcript plus the saved schedule's classes as in progress, as GET /plan plans."""
+        if self._scheduled is None:
+            try:
+                rows = schedule_store.schedule(self.profile.id)
+            except StoreError as e:
+                log.warning("counselor: class schedule unavailable for planning: %s", e)
+                rows = []
+            self._scheduled = schedule_week.as_in_progress(rows, self.courses)
+        return self.courses + self._scheduled
+
+    def planning_ge(self) -> GeResponse | None:
+        """GE progress for the planner's GE slots: saved classes count as in progress, as on /plan."""
+        if not self.planning_courses[len(self.courses):]:
+            return self.ge()
+        if self._planning_ge is None:
+            p = self.profile
+            try:
+                self._planning_ge = ge.progress(self.planning_courses, p.sending_institution_id, ge.get_store(),
+                                                None, p.receiving_institution_id)
+            except AssistError as e:
+                log.warning("counselor: GE progress for planning failed: %s", e)
+                return None
+        return self._planning_ge
+
     def in_progress(self) -> list[str]:
-        return [f"{c.prefix} {c.number}" for c in self.courses if c.grade.strip().upper() == planner.IN_PROGRESS]
+        return [f"{c.prefix} {c.number}" for c in self.planning_courses
+                if c.grade.strip().upper() == planner.IN_PROGRESS]
 
     def planning_match(self, label: str) -> MatchResult | None:
         """ASSIST match for the planner, with in-progress courses as passed. Never shown as a match result."""
@@ -244,7 +273,7 @@ class Student:
             try:
                 self.planning_matches[label] = get_service().match(
                     p.sending_institution_id, p.receiving_institution_id, self.year, label,
-                    planner.assume_in_progress_passed(self.courses))
+                    planner.assume_in_progress_passed(self.planning_courses))
             except AssistError as e:
                 log.warning("counselor: ASSIST planning match for %r failed: %s", label, e)
                 self.planning_matches[label] = None
@@ -255,7 +284,8 @@ class Student:
         """The planner's roadmap for `labels` (default: the profile's majors), with sources:
         community-college terms before transfer, then university semesters from the transfer term.
 
-        A course counts as done when it's passed or in progress on the transcript, or the
+        A course counts as done when it's passed or in progress on the transcript or the saved
+        class schedule, or the
         ASSIST match for one of the chosen majors marked it satisfied (in-progress courses
         matched as passed). Chosen majors without curated requirements are left out of the
         university semesters and named; their community-college courses are still planned.
@@ -264,14 +294,14 @@ class Student:
             majors, uncurated, full = planner.plan_majors(",".join(labels) if labels else None, self.profile.majors,
                                                           self.profile.receiving_institution_id,
                                                           planner.load_majors())
-            progress = self.ge()
-            roadmap = planner.roadmap_for(self.profile, self.courses, majors, uncurated, self.planning_match,
+            progress = self.planning_ge()
+            roadmap = planner.roadmap_for(self.profile, self.planning_courses, majors, uncurated, self.planning_match,
                                           today=self.today, transfer_term=transfer_term,
                                           ge_slots=ge_plan.slots(progress) if progress else ())
         except planner.PlannerError as e:
             return {"error": str(e)}
         satisfied = planner.satisfied(
-            self.courses, filter(None, (self.planning_match(m.major_label) for m in majors)), majors)
+            self.planning_courses, filter(None, (self.planning_match(m.major_label) for m in majors)), majors)
         before = [s for s in roadmap.semesters if s.phase == "before_transfer"]
         semesters = [s for s in roadmap.semesters if s.phase == "after_transfer"]
 

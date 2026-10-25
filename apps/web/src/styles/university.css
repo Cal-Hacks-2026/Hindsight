@@ -19,3 +19,25 @@
 .guide-items li + li {
   border-top: 1px solid var(--hair);
 }
+
+/* Sections two to a row on wide screens. */
+.guide-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 28px;
+  align-items: start;
+}
+.guide-items li {
+  font-size: 20px;
+}
+@media (max-width: 1100px) {
+  .guide-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 700px) {
+  .guide-items li {
+    font-size: 18px;
+    padding: 14px 0;
+  }
+}

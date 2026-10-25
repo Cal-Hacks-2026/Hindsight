@@ -3,6 +3,27 @@
 .ge-list {
   border-top: 1px solid var(--hair);
 }
+.ge-fold {
+  padding: 20px 0;
+  border-bottom: 1px solid var(--hair);
+}
+.ge-fold > div > .ge-row:last-child {
+  border-bottom: 0;
+}
+.section button.ge-more {
+  display: inline;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.section button.ge-more:hover:not(:disabled) {
+  background: none;
+}
 .ge-row {
   display: grid;
   grid-template-columns: 72px minmax(0, 1fr) auto;
@@ -65,15 +86,9 @@
 .ge-take p {
   margin: 0;
 }
-.ge-take details {
-  margin-top: 10px;
-  font-size: 18px;
-}
-.ge-take summary {
-  cursor: pointer;
-}
 .ge-take ul {
   margin: 10px 0 0;
+  font-size: 18px;
   padding: 0;
   list-style: none;
   columns: 2 280px;

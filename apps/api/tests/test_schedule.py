@@ -16,7 +16,12 @@ from fastapi.testclient import TestClient
 
 from app.main import app
 from app.models import (
+    Citation,
+    Course,
     FreeBlocksResponse,
+    MatchResult,
+    MatchSummary,
+    Requirement,
     PlanResponse,
     ScheduledClass,
     ScheduledPlanResponse,
@@ -289,6 +294,50 @@ def test_scheduled_plan_courses_match_local_codes():
     ]
 
 
+def transcript_course(prefix, number, grade="A", term="Fall 2025") -> Course:
+    return Course(prefix=prefix, number=number, title="t", units=5, grade=grade, term=term, confirmed=True)
+
+
+def test_saved_classes_count_as_in_progress():
+    rows = saved(PDF)  # MATH D001B, CIS D022C (lecture + lab), ENGL C1000, ECON D001A; Fall 2026
+    ip = week.as_in_progress(rows, [transcript_course("MATH", "1A")])
+    assert [(c.prefix, c.number, c.grade, c.term) for c in ip] == [
+        ("MATH", "1B", "IP", "Fall 2026"), ("CIS", "22C", "IP", "Fall 2026"),
+        ("ENGL", "C1000", "IP", "Fall 2026"), ("ECON", "1A", "IP", "Fall 2026")]
+    assert ip[0].academic_year_id == 77 and ip[1].units == 4.5 and all(c.confirmed for c in ip)
+
+
+def test_saved_classes_already_on_the_transcript_count_once():
+    courses = [transcript_course("MATH", "1B", "B+"),  # passed: the schedule doesn't add it again
+               transcript_course("CIS", "22C", "W"),  # withdrew: taking it again counts
+               transcript_course("ENGL", "C1000", "IP", "Fall 2026")]  # same term, already in progress
+    ip = week.as_in_progress(saved(PDF), courses)
+    assert [f"{c.prefix} {c.number}" for c in ip] == ["CIS 22C", "ECON 1A"]
+
+
+def requirement(receiving, status, satisfied_by) -> Requirement:
+    return Requirement(id=receiving, receiving_course=receiving, group_title="REQUIRED", rule="all", status=status,
+                       satisfied_by=satisfied_by, confidence="high", flags=[],
+                       citation=Citation(source="assist", label="ASSIST", url="https://assist.org"))
+
+
+def match_result(requirements: list[Requirement]) -> MatchResult:
+    return MatchResult(major_label="Data Science, B.S.", agreement_key="test", requirements=requirements,
+                       summary=MatchSummary(satisfied=0, partial=0, missing=0, at_university=0))
+
+
+def test_counted_classes_are_the_ones_the_plan_uses():
+    rows = saved(PDF)
+    ip = week.as_in_progress(rows, [])
+    match = match_result([
+        requirement("CS 46B - Data Structures", "satisfied", ["CIS 22C"]),
+        requirement("MATH 31 - Calculus II", "partial", ["MATH 1B"]),
+        requirement("CS 49J - Java", "missing", [])])
+    marked = week.counted_classes(ip, [match], None, rows)
+    assert [(c.code, c.planned_term, c.scheduled_term, c.crn) for c in marked] == [
+        ("MATH D001B", "Fall 2026", "Fall 2026", "40112"), ("CIS D022C", "Fall 2026", "Fall 2026", "40387")]
+
+
 # ---- Store (Supabase via PostgREST, mocked) ----
 
 
@@ -417,21 +466,26 @@ def test_planned_route_marks_scheduled_courses(schedule_fake, monkeypatch):
     pid = make_profile()
     calls = []
 
-    # No defaults: the route must pass every argument (plan()'s own defaults are Query objects).
-    def fake_plan(profile_id, *, majors, transfer_term, start_term, ge, ge_pattern):
+    # No defaults: the route must pass every argument, as GET /plan takes them.
+    def fake_planned(profile_id, *, majors, transfer_term, start_term, ge, ge_pattern):
         calls.append((majors, transfer_term, start_term, ge, ge_pattern))
-        return PlanResponse(semesters=[Semester(term="Winter 2027", courses=[
+        rows = schedule_fake.rows[profile_id]
+        response = PlanResponse(semesters=[Semester(term="Spring 2027", courses=[
             SemesterCourse(code="MATH 1C", title="Calculus III", units=5, reason="", prereqs=[]),
             SemesterCourse(code="MATH 2A", title="Differential Equations", units=5, reason="", prereqs=[])])])
+        match = match_result([requirement("STAT 95 - Statistics", "satisfied", ["STAT C1000"])])
+        return profiles.Planned(response, [match], None, week.as_in_progress(rows, []))
 
-    monkeypatch.setattr(profiles, "plan", fake_plan)
+    monkeypatch.setattr(profiles, "planned", fake_planned)
     res = client.get(f"/profiles/{pid}/schedule/planned")
     assert res.json() == {"courses": []} and calls == []  # no schedule: the plan isn't built
 
-    schedule_fake.rows[pid] = saved(PNG)
+    schedule_fake.rows[pid] = saved(PNG)  # Winter 2027: MATH D001C, CIS D035A, STAT C1000, PHYS D004A
     res = client.get(f"/profiles/{pid}/schedule/planned", params={"transfer_term": "Fall 2028"})
     marked = ScheduledPlanResponse.model_validate(res.json()).courses
-    assert [(c.code, c.scheduled_term, c.crn) for c in marked] == [("MATH 1C", "Winter 2027", "10234")]
+    assert [(c.code, c.planned_term, c.scheduled_term) for c in marked] == [
+        ("STAT C1000", "Winter 2027", "Winter 2027"),  # in progress toward a requirement
+        ("MATH 1C", "Spring 2027", "Winter 2027")]  # planned in another term
     assert calls == [(None, "Fall 2028", None, False, None)]
     client.get(f"/profiles/{pid}/schedule/planned", params={"ge": "true", "ge_pattern": "igetc"})
     assert calls[-1] == (None, None, None, True, "igetc")

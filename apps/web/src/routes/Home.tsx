@@ -16,10 +16,10 @@ import type {
 } from "@hindsight/contracts";
 import { Icon } from "../components/Icons";
 import { safeUrl } from "../components/Listing";
-import { Masthead, Section } from "../components/Paper";
+import { Masthead, Section, SourceList } from "../components/Paper";
 import { api } from "../lib/api";
 import { watched as readsAFeed } from "../lib/campuses";
-import { catalogMajor, hasFullPlan, yearSpan } from "../lib/catalog";
+import { catalogMajor, yearSpan } from "../lib/catalog";
 import {
   collapse,
   shortMajor,
@@ -33,8 +33,8 @@ import { useOpportunities } from "../lib/opportunities";
 import {
   beforeTransfer,
   lastTerm,
-  loadTerm,
-  transferChoices,
+  loadPicks,
+  planMajors,
   usePlans,
   type PlansState,
 } from "../lib/plans";
@@ -288,7 +288,7 @@ function courseMove(
       : `Take ${course.code} in ${next.term}`,
     why: why.text,
     refs: why.refs,
-    action: { label: "See your plan", to: "/plan" },
+    action: { label: "See Your Plan", to: "/plan" },
     geArea: course.ge_options && course.ge_area ? areaCode(course.ge_area) : undefined,
   };
 }
@@ -351,7 +351,7 @@ function geMove(
       ...sources.add(area.citation.url, area.citation.label),
       ...(options.length && list ? sources.add(list.url, list.label) : []),
     ],
-    action: { label: "See GE progress", to: "/credits#general-education" },
+    action: { label: "See GE Progress", to: "/credits#general-education" },
   };
 }
 
@@ -438,8 +438,8 @@ function roomMoves(
         [item.org, item.title].filter(Boolean).join(" · "),
       ),
       action: link
-        ? { label: "Open the listing", href: link.href }
-        : { label: "See opportunities", to: "/radar" },
+        ? { label: "Open the Listing", href: link.href }
+        : { label: "See Opportunities", to: "/radar" },
     };
   });
 }
@@ -467,20 +467,9 @@ function HomePage({
   const university = shortUniversity(universityName(profile), profile.receiving_institution_id);
 
   // The same plan as the Plan page: chosen majors, picked terms, GE included.
-  const majors = matches?.map((m) => m.major_label) ?? [];
-  const fullPlan = hasFullPlan(profile.receiving_institution_id);
-  const planned = fullPlan
-    ? majors.filter((m) => catalogMajor(m, profile.receiving_institution_id))
-    : majors;
-  const [picks] = useState(() => {
-    const transfer = loadTerm("transfer", profile.id);
-    return {
-      transfer:
-        transfer && transferChoices().includes(transfer) ? transfer : undefined,
-      start: loadTerm("start", profile.id),
-    };
-  });
-  const plans = usePlans(profile.id, planned.length ? majors : [], picks);
+  const { planned, fullPlan, query } = planMajors(profile, matches);
+  const [picks] = useState(() => loadPicks(profile.id));
+  const plans = usePlans(profile.id, query, picks);
   const planState: PlansState | { status: "none" } = planned.length
     ? plans
     : { status: "none" };
@@ -514,7 +503,7 @@ function HomePage({
       title: "Add Your Courses",
       why: "Upload a transcript, or continue with no courses, to see what to take next.",
       refs: [],
-      action: { label: "Add your courses", to: "/onboarding" },
+      action: { label: "Add Your Courses", to: "/onboarding" },
     });
   const course = matches?.length
     ? courseMove(
@@ -563,7 +552,7 @@ function HomePage({
       title: "Add Your Class Schedule",
       why: "With your classes saved, Home shows your week and which opportunities fit your free time.",
       refs: [],
-      action: { label: "Add your class schedule", to: "/schedule" },
+      action: { label: "Add Your Class Schedule", to: "/schedule" },
     });
 
   const pending = [
@@ -647,18 +636,16 @@ function HomePage({
         </div>
       </div>
       {sources.list.length > 0 && (
-        <Section id="sources" label="Sources" title="Sources" last>
-          <div className="source-list">
-            {sources.list.map((s) => (
-              <p key={s.n} id={`source-${s.n}`}>
-                <strong>{s.n}.</strong>{" "}
-                <a href={s.url} target="_blank" rel="noreferrer">
-                  {s.text}
-                </a>
-              </p>
-            ))}
-          </div>
-        </Section>
+        <SourceList count={sources.list.length}>
+          {sources.list.map((s) => (
+            <p key={s.n} id={`source-${s.n}`}>
+              <strong>{s.n}.</strong>{" "}
+              <a href={s.url} target="_blank" rel="noreferrer">
+                {s.text}
+              </a>
+            </p>
+          ))}
+        </SourceList>
       )}
     </>
   );
@@ -776,7 +763,7 @@ function PathSummary({
         </p>
       )}
       <Link className="inline-link" to="/plan">
-        See your plan <Icon name="arrow" size={20} />
+        See Your Plan <Icon name="arrow" size={20} />
       </Link>
     </Section>
   );
@@ -813,7 +800,7 @@ function YourWeek({
             : "No class schedule yet."}
         </p>
         <Link className="inline-link" to="/schedule">
-          {state.status === "error" ? "Open your schedule" : "Add your class schedule"}{" "}
+          {state.status === "error" ? "Open Your Schedule" : "Add Your Class Schedule"}{" "}
           <Icon name="arrow" size={20} />
         </Link>
       </Section>
@@ -880,7 +867,7 @@ function YourWeek({
         </p>
       )}
       <Link className="inline-link" to="/schedule">
-        Open your schedule <Icon name="arrow" size={20} />
+        Open Your Schedule <Icon name="arrow" size={20} />
       </Link>
     </Section>
   );

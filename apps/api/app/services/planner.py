@@ -629,9 +629,17 @@ def default_start(today: date, system: TermSystem, courses: Iterable[Course],
                   stage: ProfileStage | None = None) -> tuple[str, int]:
     """Where the college terms start by default: the next term they can register for when they're
     already at a community college or have courses, otherwise the next Fall (a high-school senior
-    starts in Fall)."""
+    starts in Fall). Terms they're already taking classes in (in progress, e.g. from a saved
+    schedule) win: the start moves past the latest one."""
+    courses = list(courses)
     if stage == "community_college" or any(c.confirmed for c in courses):
-        return next_cc_term(today, system)
+        busy = max((k for c in courses if c.confirmed and c.grade.strip().upper() == IN_PROGRESS
+                    and (k := term_key(c.term)) is not None), default=None)
+        terms = _cc_terms(next_cc_term(today, system), system)
+        term = next(terms)
+        while busy is not None and term_key("{} {}".format(*term)) <= busy:
+            term = next(terms)
+        return term
     return "Fall", today.year if today.month <= 8 else today.year + 1
 
 

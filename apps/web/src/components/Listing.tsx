@@ -1,4 +1,4 @@
-// One Radar listing as a ruled entry: a big numeral (time left, or rank), the listing, its source.
+// One Radar listing as a compact card: title, when and where, one reason line, its source.
 import type { RankedOpportunity } from "@hindsight/contracts";
 import { closeAt, formatDay, formatWhen, timeLeft } from "../lib/time";
 
@@ -55,18 +55,16 @@ export function NewLabel() {
   );
 }
 
+/** One opportunity as a compact card: title, when and where, one reason line, the source. */
 export function Listing({
   item,
   now,
-  rank,
   kind,
   fit,
   campus,
 }: {
   item: RankedOpportunity;
   now: number;
-  /** Lead with the rank numeral instead of the time left. */
-  rank?: number;
   /** The listing's subcategory label ("Career Fairs"); the item type otherwise. */
   kind?: string;
   /** Why it fits the student's week: "Free Tuesday 2–5 PM". */
@@ -80,102 +78,81 @@ export function Listing({
   const beforeStart = isHackathon && target === item.starts_at;
   const raw = target ? timeLeft(target, now) : null;
   const left =
-    raw && beforeStart && raw.urgency !== "past"
-      ? { ...raw, unit: raw.unit.replace(/ left$/, " to start") }
-      : raw;
+    raw && raw.urgency !== "past"
+      ? `${raw.value} ${(beforeStart ? raw.unit.replace(/ left$/, " to start") : raw.unit).toLowerCase()}`
+      : raw
+        ? "Closed"
+        : null;
   const starts = item.starts_at ? formatWhen(item.starts_at) : null;
   const due = item.deadline ? formatWhen(item.deadline) : null;
   // A hackathon's scraped end date is when it wraps up, not a registration deadline.
   const from = item.starts_at ? formatDay(item.starts_at) : null;
   const to = item.deadline ? formatDay(item.deadline) : null;
+  const recurring = item.type === "program" && item.window;
   const when = isHackathon
     ? from && to && from !== to
       ? `Runs ${from} – ${to}`
       : (from ?? to ?? "")
-    : [starts && `Starts ${starts}`, due && `Deadline ${due}`]
-        .filter(Boolean)
-        .join(" · ");
-  const meta = [kind ?? typeLabel(item.type), item.org, link && hostOf(link)]
+    : recurring
+      ? item.window!
+      : [starts && `Starts ${starts}`, due && `Deadline ${due}`]
+          .filter(Boolean)
+          .join(" · ");
+  const where = [
+    campus,
+    item.modality && MODALITY_LABEL[item.modality],
+    item.location,
+  ]
     .filter(Boolean)
     .join(" · ");
-  const where = [campus, item.modality && MODALITY_LABEL[item.modality], item.location]
-    .filter(Boolean)
-    .join(" · ");
-  const recurring = item.type === "program" && item.window;
 
   return (
-    <li className="entry">
-      <div className="entry-lead">
-        {rank !== undefined ? (
-          <>
-            <div className="entry-big rank" aria-label={`Rank ${rank}`}>
-              {String(rank).padStart(2, "0")}
-            </div>
-            {left && (
-              <div className={`label ${left.urgency}`}>
-                {left.urgency === "past"
-                  ? "Closed"
-                  : `${left.value} ${left.unit.toLowerCase()}`}
-              </div>
-            )}
-          </>
-        ) : left ? (
-          <>
-            <div className="entry-big">
-              {left.urgency === "past" ? "—" : left.value}
-            </div>
-            <div className={`label ${left.urgency}`}>{left.unit}</div>
-          </>
+    <li className="opp-card">
+      <h3 className="opp-title">
+        {link ? (
+          <a href={link.href} target="_blank" rel="noreferrer">
+            {item.title}
+          </a>
         ) : (
+          item.title
+        )}
+        {item.notified && <NewLabel />}
+      </h3>
+      {fit && <p className="entry-fit">{fit}</p>}
+      {(when || left) && (
+        <p className="opp-when">
+          {when}
+          {left && (
+            <span className={`opp-left ${raw!.urgency}`}>
+              {when ? " · " : ""}
+              {left}
+            </span>
+          )}
+        </p>
+      )}
+      {where && <p className="opp-where">{where}</p>}
+      {item.reason && (
+        <p className="opp-reason" title={item.reason}>
+          {item.reason}
+        </p>
+      )}
+      <p className="opp-foot">
+        {[kind ?? typeLabel(item.type), item.org].filter(Boolean).join(" · ")}
+        {recurring && item.last_checked && ` · ${checkedOn(item.last_checked)}`}
+        {link && (
           <>
-            <div className="entry-big">—</div>
-            <div className="label later">
-              {recurring ? "Recurring" : "No deadline"}
-            </div>
+            {" · "}
+            <a
+              href={link.href}
+              target="_blank"
+              rel="noreferrer"
+              aria-label={`Source: ${hostOf(link)}`}
+            >
+              {hostOf(link)} ↗
+            </a>
           </>
         )}
-      </div>
-      <div className="entry-body">
-        <div className="meta">
-          {meta}
-          {item.notified && <NewLabel />}
-        </div>
-        <h3>
-          {link ? (
-            <a href={link.href} target="_blank" rel="noreferrer">
-              {item.title}
-            </a>
-          ) : (
-            item.title
-          )}
-        </h3>
-        {fit && <p className="entry-fit">{fit}</p>}
-        {item.reason && <p className="entry-reason">{item.reason}</p>}
-        {when && <p className="entry-when">{when}</p>}
-        {where && <p className="entry-where">{where}</p>}
-        {recurring && (
-          <p className="entry-when">
-            {item.window}
-            {item.last_checked && (
-              <span className="entry-checked">
-                {" "}
-                · {checkedOn(item.last_checked)}
-              </span>
-            )}
-          </p>
-        )}
-      </div>
-      {link && (
-        <a
-          className="entry-source"
-          href={link.href}
-          target="_blank"
-          rel="noreferrer"
-          aria-label={`Source: ${hostOf(link)}`}
-        >
-          Source ↗
-        </a>
-      )}
+      </p>
     </li>
   );
 }

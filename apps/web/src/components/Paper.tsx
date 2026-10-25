@@ -34,8 +34,10 @@ const sectionIcons: Record<string, IconName> = {
   "This week": "calendar",
   Ranked: "compass",
   "About you": "user",
+  "About You": "user",
   Transcript: "upload",
   "Confirm courses": "check",
+  "Confirm Courses": "check",
 };
 
 export function Section({
@@ -73,6 +75,33 @@ export function Section({
           {notes}
         </aside>
       )}
+    </section>
+  );
+}
+
+/** The page's numbered sources, closed by default under "Sources (N)". A citation link
+ *  (#source-n) opens it on the way there (Layout's openCitedSource). */
+export function SourceList({
+  count,
+  children,
+}: {
+  count: number;
+  children: ReactNode;
+}) {
+  return (
+    <section
+      className="section sources"
+      id="sources"
+      aria-labelledby="sources-label"
+    >
+      <details className="sources-details">
+        <summary className="section-head">
+          <Icon name="book" size={19} />
+          <h2 id="sources-label">Sources ({count})</h2>
+          <Icon name="chevron" size={20} />
+        </summary>
+        <div className="source-list">{children}</div>
+      </details>
     </section>
   );
 }

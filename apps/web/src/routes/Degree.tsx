@@ -1,5 +1,5 @@
-import { Fragment, useEffect, useState, type FormEvent } from "react";
-import { Link, useLocation, useNavigate } from "react-router";
+import { Fragment, useEffect, useState } from "react";
+import { Link, useLocation } from "react-router";
 import type {
   Course,
   MatchResult,
@@ -10,20 +10,21 @@ import {
   Masthead,
   Note,
   Section,
+  SourceList,
   StatusMark,
   type StatusTone,
 } from "../components/Paper";
 import { GeProgress } from "../components/GeProgress";
 import { Icon } from "../components/Icons";
 import {
-  NextTermTable,
   PlanTables,
   PlanTablesLoading,
   type PlanContext,
 } from "../components/PlanTables";
 import { ApiError } from "../lib/api";
-import { catalogMajor, hasFullPlan, yearSpan } from "../lib/catalog";
+import { catalogMajor, yearSpan } from "../lib/catalog";
 import {
+  collapse,
   collegeName,
   countWord,
   listing,
@@ -38,9 +39,9 @@ import { mentionsGraduation, parseGoalTerm, termIndex } from "../lib/goal";
 import {
   beforeTransfer,
   lastTerm,
-  loadTerm,
+  loadPicks,
+  planMajors,
   saveTerm,
-  transferChoices,
   usePlans,
   type Plans,
   type TermPicks,
@@ -269,7 +270,7 @@ function NoResults({
         </p>
         <p className="actions" style={{ marginTop: 28 }}>
           <Link className="button primary" to="/onboarding">
-            {hasProfile ? "Upload your transcript" : "Set up your profile"}
+            {hasProfile ? "Upload Your Transcript" : "Set Up Your Profile"}
           </Link>
         </p>
       </Section>
@@ -288,31 +289,14 @@ function Report({
   courses?: Course[];
   view: "plan" | "credits";
 }) {
-  const majors = matches.map((m) => m.major_label);
   // With the university's requirements (a registry entry that lists them), the planner plans curated majors only; the rest get
   // the ASSIST rows and no plan. Without them (any other university), every major gets its
   // community-college terms and the after-transfer block says what's missing.
-  const fullPlan = hasFullPlan(profile.receiving_institution_id);
-  const planned = fullPlan
-    ? majors.filter((m) => catalogMajor(m, profile.receiving_institution_id))
-    : majors;
-  const uncurated = fullPlan
-    ? majors.filter((m) => !catalogMajor(m, profile.receiving_institution_id))
-    : [];
+  const { majors, planned, fullPlan, query } = planMajors(profile, matches);
+  const uncurated = majors.filter((m) => !planned.includes(m));
   // The student's start and transfer terms, if they picked them; otherwise the planner's defaults.
-  const [picks, setPicks] = useState<TermPicks>(() => {
-    const transfer = loadTerm("transfer", profile.id);
-    return {
-      transfer:
-        transfer && transferChoices().includes(transfer) ? transfer : undefined,
-      start: loadTerm("start", profile.id),
-    };
-  });
-  const plans = usePlans(
-    profile.id,
-    view === "plan" && planned.length ? majors : [],
-    picks,
-  );
+  const [picks, setPicks] = useState<TermPicks>(() => loadPicks(profile.id));
+  const plans = usePlans(profile.id, view === "plan" ? query : [], picks);
   function pick(which: keyof TermPicks, term: string | undefined) {
     saveTerm(which, profile.id, term);
     setPicks((p) => ({ ...p, [which]: term }));
@@ -379,19 +363,17 @@ function Report({
     catalogRefs: catalogRefByMajor,
     profileId: profile.id,
   };
-  const citations = (
-    <Section id="sources" label="Sources" title="Sources">
-      <div className="source-list">
-        {sources.list.map((source) => (
-          <p key={source.n} id={`source-${source.n}`}>
-            <strong>{source.n}.</strong>{" "}
-            <a href={source.url} target="_blank" rel="noreferrer">
-              {source.text}
-            </a>
-          </p>
-        ))}
-      </div>
-    </Section>
+  const citations = sources.list.length > 0 && (
+    <SourceList count={sources.list.length}>
+      {sources.list.map((source) => (
+        <p key={source.n} id={`source-${source.n}`}>
+          <strong>{source.n}.</strong>{" "}
+          <a href={source.url} target="_blank" rel="noreferrer">
+            {source.text}
+          </a>
+        </p>
+      ))}
+    </SourceList>
   );
 
   return (
@@ -415,36 +397,19 @@ function Report({
         </>
       ) : (
         <>
-          {ready && <NextTerm ctx={planContext} />}
-          {planned.length > 0 && plans.status === "loading" && (
-            <Section label="Plan" title="Building Your Plan">
-              <PlanTablesLoading />
-            </Section>
-          )}
           {plans.status === "error" && (
             <Section label="Plan" title="Your Plan">
               <PlanError error={plans.error} />
             </Section>
           )}
-          <Attention rows={rows} />
-          <Section label="Summary" title="Your Progress">
-            <Abstract
-              rows={rows}
-              majors={planned}
-              plans={ready}
-              catalogRefs={catalogRefs}
-              names={names}
-              fullPlan={fullPlan}
-            />
-          </Section>
-          {/* Without the university's requirements there's no finish term to check a goal against. */}
-          {fullPlan && ready && (
-            <GoalCheck goals={profile.goals} majors={planned} plans={ready} />
-          )}
           <Section
             id="course-plan"
             label="Plan"
-            title="Your Course Plan"
+            title={
+              planned.length > 0 && plans.status === "loading"
+                ? "Building Your Plan"
+                : "Your Course Plan"
+            }
             notes={
               <PlanNotes
                 majors={planned}
@@ -454,7 +419,18 @@ function Report({
               />
             }
           >
+            {ready && (
+              <PlanGlance
+                plans={ready}
+                names={names}
+                fullPlan={fullPlan}
+                catalogRefs={catalogRefs}
+              />
+            )}
             <NotPlanned majors={uncurated} campus={campus} />
+            {planned.length > 0 && plans.status === "loading" && (
+              <PlanTablesLoading />
+            )}
             <PlanTables
               ctx={planContext}
               student={profile.name}
@@ -464,7 +440,23 @@ function Report({
               loading={planned.length > 0 && plans.status === "loading"}
             />
           </Section>
-          <Ask names={names} fullPlan={fullPlan} />
+          {/* Side by side on wide screens: what to check, and the counts behind the plan. */}
+          <div className="plan-side-grid">
+            <Section label="Summary" title="Your Progress">
+              <Abstract
+                rows={rows}
+                majors={planned}
+                plans={ready}
+                catalogRefs={catalogRefs}
+                fullPlan={fullPlan}
+              />
+            </Section>
+            <Attention rows={rows} />
+            {/* Without the university's requirements there's no finish term to check a goal against. */}
+            {fullPlan && ready && (
+              <GoalCheck goals={profile.goals} majors={planned} plans={ready} />
+            )}
+          </div>
         </>
       )}
       {citations}
@@ -506,25 +498,20 @@ function Abstract({
   majors,
   plans,
   catalogRefs,
-  names,
   fullPlan,
 }: {
   rows: Row[];
   majors: string[];
   plans?: Plans;
   catalogRefs: number[];
-  names: Names;
   fullPlan: boolean;
 }) {
-  const { campus, college } = names;
   const done = rows.filter((r) => r.req.status === "satisfied");
   const partial = rows.filter((r) => r.req.status === "partial");
   const inProgress = rows.filter((r) => r.req.status === "in_progress");
   const open = rows.filter(
     (r) => r.req.status === "missing" || r.req.status === "at_university",
   );
-  const combined = plans && lastTerm(plans.combined);
-  const before = plans && beforeTransfer(plans.combined);
   return (
     <>
       <dl className="progress-stats">
@@ -545,47 +532,18 @@ function Abstract({
           <dd>{open.length}</dd>
         </div>
       </dl>
-      {combined && plans && (
-        <>
-          <dl className="milestones">
-            {plans.response.transfer_term && (
-              <div>
-                <dt>Planned transfer to {campus}</dt>
-                <dd>{plans.response.transfer_term}</dd>
-              </div>
-            )}
-            {/* Without the university's requirements the last planned term is a community-college one, not a finish. */}
-            {fullPlan && (
-              <div>
-                <dt>
-                  Estimated major completion
-                  <Refs ns={catalogRefs} />
-                </dt>
-                <dd>{combined}</dd>
-              </div>
-            )}
-          </dl>
-          {before && before.length > 0 && (
-            <p className="plan-note">
-              {countWord(before.length, true)} {plural(before.length, "term")}{" "}
-              at {college} before transfer.
-            </p>
-          )}
-          {fullPlan && majors.length > 1 && (
-            <div className="major-comparison">
-              {majors.map((major) => {
-                const term =
-                  plans.single[major] && lastTerm(plans.single[major]!);
-                return term ? (
-                  <p key={major}>
-                    {shortMajor(major)} alone: <strong>{term}</strong>
-                    <Refs ns={catalogRefs} />
-                  </p>
-                ) : null;
-              })}
-            </div>
-          )}
-        </>
+      {plans && fullPlan && majors.length > 1 && (
+        <div className="major-comparison">
+          {majors.map((major) => {
+            const term = plans.single[major] && lastTerm(plans.single[major]!);
+            return term ? (
+              <p key={major}>
+                {shortMajor(major)} alone: <strong>{term}</strong>
+                <Refs ns={catalogRefs} />
+              </p>
+            ) : null;
+          })}
+        </div>
       )}
       <p className="plan-note">
         {plans?.response.ge_pattern
@@ -593,24 +551,49 @@ function Abstract({
           : "Major requirements only. General education and other graduation requirements aren’t included."}
       </p>
       <Link className="inline-link" to="/credits">
-        Review my credits <Icon name="arrow" size={20} />
+        Review My Credits <Icon name="arrow" size={20} />
       </Link>
     </>
   );
 }
 
-function NextTerm({ ctx }: { ctx: PlanContext }) {
+/** The plan in one line: transfer term, estimated finish, terms left at the college. */
+function PlanGlance({
+  plans,
+  names,
+  fullPlan,
+  catalogRefs,
+}: {
+  plans: Plans;
+  names: Names;
+  fullPlan: boolean;
+  catalogRefs: number[];
+}) {
+  const finish = lastTerm(plans.combined);
+  const before = beforeTransfer(plans.combined).length;
   return (
-    <Section label="Plan" title="Take Next">
-      <NextTermTable ctx={ctx} />
-      <p className="plan-note">
-        Proposed courses. Check availability and prerequisites before
-        registering.
-      </p>
-      <a className="inline-link" href="#course-plan">
-        See the full plan <Icon name="arrow" size={20} />
-      </a>
-    </Section>
+    <dl className="plan-glance">
+      {plans.response.transfer_term && (
+        <div>
+          <dt>Transfer to {names.campus}</dt>
+          <dd>{plans.response.transfer_term}</dd>
+        </div>
+      )}
+      {/* Without the university's requirements the last planned term is a community-college one, not a finish. */}
+      {fullPlan && finish && (
+        <div>
+          <dt>
+            Estimated finish
+            <Refs ns={catalogRefs} />
+          </dt>
+          <dd>{finish}</dd>
+        </div>
+      )}
+      <div>
+        <dt>Terms at {names.college} before transfer</dt>
+        <dd>{before}</dd>
+      </div>
+    </dl>
   );
 }
 
@@ -645,13 +628,13 @@ function Attention({ rows }: { rows: Row[] }) {
               className="inline-link"
               to={`/counselor?${new URLSearchParams({ q: `What should I do next for ${row.req.receiving_course}?` })}`}
             >
-              Get next steps <Icon name="arrow" size={20} />
+              Get Next Steps <Icon name="arrow" size={20} />
             </Link>
           </li>
         ))}
       </ul>
       <Link className="inline-link" to="/credits">
-        Review all credits <Icon name="arrow" size={20} />
+        Review All Credits <Icon name="arrow" size={20} />
       </Link>
     </Section>
   );
@@ -681,7 +664,7 @@ function GoalCheck({
         <p className="goal">
           You wrote "{text}", but we couldn't read a target term from it. Add
           one like "Spring 2028" so we can check it against your plan.{" "}
-          <Link to="/onboarding">Edit your goals</Link>
+          <Link to="/onboarding">Edit Your Goals</Link>
         </p>
       </Section>
     );
@@ -737,6 +720,7 @@ function Credits({
   campus: string;
 }) {
   const [filter, setFilter] = useState<"all" | "met" | "review">("all");
+  const [showMet, setShowMet] = useState(false);
   const done = rows.filter((row) => row.req.status === "satisfied").length;
   const shown = rows.filter(
     ({ req }) =>
@@ -744,6 +728,20 @@ function Credits({
       (filter === "met"
         ? req.status === "satisfied"
         : req.status !== "satisfied" || req.confidence !== "high"),
+  );
+  // In the full list, requirements met with confidence fold into one row; the rest stay open.
+  const settled = (row: Row) =>
+    row.req.status === "satisfied" && row.req.confidence === "high";
+  const met = filter === "all" ? shown.filter(settled) : [];
+  const open = filter === "all" ? shown.filter((r) => !settled(r)) : shown;
+  const card = (row: Row) => (
+    <RequirementRow
+      key={row.key}
+      row={row}
+      courses={courses}
+      majors={majors}
+      campus={campus}
+    />
   );
   return (
     <Section
@@ -771,7 +769,7 @@ function Credits({
           [
             ["all", "All"],
             ["met", "Met"],
-            ["review", "To resolve"],
+            ["review", "To Resolve"],
           ] as const
         ).map(([value, label]) => (
           <button
@@ -785,15 +783,29 @@ function Credits({
         ))}
       </div>
       <div className="credit-list" aria-live="polite">
-        {shown.map((row) => (
-          <RequirementRow
-            key={row.key}
-            row={row}
-            courses={courses}
-            majors={majors}
-            campus={campus}
-          />
-        ))}
+        {met.length > 0 && (
+          <div className="fold">
+            <button
+              type="button"
+              className="fold-toggle"
+              aria-expanded={showMet}
+              aria-controls="credits-met"
+              onClick={() => setShowMet((o) => !o)}
+            >
+              <StatusMark tone="ok">
+                {met.length} {plural(met.length, "requirement")} met
+              </StatusMark>
+              <span className="fold-meta">
+                {collapse(met.map(rowCode), " · ", 4)}
+              </span>
+              <Icon name="chevron" size={20} />
+            </button>
+            <div id="credits-met" className="credit-list" hidden={!showMet}>
+              {met.map(card)}
+            </div>
+          </div>
+        )}
+        {open.map(card)}
         {!shown.length && <p className="lede">No requirements in this view.</p>}
       </div>
     </Section>
@@ -802,7 +814,7 @@ function Credits({
 
 function Missed({ rows, courses }: { rows: Row[]; courses?: Course[] }) {
   return (
-    <Section label="Heads up" notesFlush>
+    <Section label="Heads up" title="Heads Up" notesFlush>
       <div className="missed">
         <h2>Credits Worth a Second Look</h2>
         <ul>
@@ -864,7 +876,7 @@ function RequirementRow({
       <header className="credit-heading">
         <div>
           <p className="credit-context">{campus} requirement</p>
-          <h3>{parsed.choose ? "Choose an elective" : parsed.code}</h3>
+          <h3>{parsed.choose ? "Choose an Elective" : parsed.code}</h3>
           {parsed.title && <p className="credit-title">{parsed.title}</p>}
         </div>
         <StatusMark tone={status.tone}>{status.label}</StatusMark>
@@ -925,7 +937,7 @@ function RequirementRow({
             className="inline-link"
             to={`/counselor?${new URLSearchParams({ q: question ?? evaluationQuestion })}`}
           >
-            {question ? "Review this match" : "Ask about an evaluation"}
+            {question ? "Review This Match" : "Ask About an Evaluation"}
             <Icon name="arrow" size={20} />
           </Link>
         )}
@@ -1081,45 +1093,8 @@ function PlanError({ error }: { error: unknown }) {
       : "We couldn't reach the Hindsight server. Reload to try again.";
   return (
     <div className="state" role="alert">
-      <h3>Couldn't build a plan.</h3>
+      <h3>Couldn't Build a Plan</h3>
       <p>{detail}</p>
     </div>
-  );
-}
-
-// ---- 03 Ask ----
-
-function Ask({ names, fullPlan }: { names: Names; fullPlan: boolean }) {
-  const navigate = useNavigate();
-  const [question, setQuestion] = useState("");
-  function submit(e: FormEvent) {
-    e.preventDefault();
-    const q = question.trim();
-    navigate(q ? `/counselor?${new URLSearchParams({ q })}` : "/counselor", {
-      state: q ? { question: q } : undefined,
-    });
-  }
-  return (
-    <Section num={3} label="Ask" last>
-      <form className="ask" onSubmit={submit}>
-        <label htmlFor="ask-q">Questions about your plan?</label>
-        <div className="ask-row">
-          <input
-            id="ask-q"
-            type="text"
-            value={question}
-            onChange={(e) => setQuestion(e.target.value)}
-            placeholder="Can I graduate by Spring 2028 if I add a major?"
-          />
-          <button className="primary" type="submit">
-            Ask the counselor
-          </button>
-        </div>
-        <p>
-          Answers grounded in your transcript
-          {fullPlan ? `, ASSIST and the ${names.campus} catalog.` : " and ASSIST."}
-        </p>
-      </form>
-    </Section>
   );
 }

@@ -1,6 +1,7 @@
+import { useEffect, useState } from "react";
 import type { RankedOpportunity } from "@hindsight/contracts";
 import { Link, useSearchParams } from "react-router";
-import { Listing, NewLabel, safeUrl, typeLabel } from "../components/Listing";
+import { Listing, typeLabel } from "../components/Listing";
 import { Masthead, Section } from "../components/Paper";
 import {
   NoProfile,
@@ -15,8 +16,9 @@ import { fitFor, nextSevenDays, useFreeWeek, type FreeWeek } from "../lib/fits";
 import { useOpportunities } from "../lib/opportunities";
 import { loadSession } from "../lib/session";
 import "../styles/opportunities.css";
-import { closeAt, formatWhen, useNow } from "../lib/time";
+import { closeAt, useNow } from "../lib/time";
 
+/** Listings shown at first, and added by each "Show More". */
 const SHOWN = 10;
 const WEEK = 7 * 24 * 60 * 60 * 1000;
 
@@ -41,7 +43,7 @@ function dates(item: RankedOpportunity, now: number): Omit<Upcoming, "item">[] {
     .filter((d) => !Number.isNaN(d.at) && d.at >= now);
 }
 
-/** Listings that start or close within 7 days: Droid's alerts first, then soonest first. */
+/** Listings that start or close within 7 days ("This Week"): Droid's alerts first, then soonest first. */
 function thisWeek(items: RankedOpportunity[], now: number): Upcoming[] {
   const out: Upcoming[] = [];
   for (const item of items) {
@@ -55,7 +57,7 @@ function thisWeek(items: RankedOpportunity[], now: number): Upcoming[] {
   );
 }
 
-/** The soonest dated listing past this week, for the empty strip's "Next up". */
+/** The soonest dated listing past this week, for an empty "This Week". */
 function nextUp(
   items: RankedOpportunity[],
   now: number,
@@ -84,6 +86,7 @@ export function Radar() {
   const category = params.get("category") ?? undefined;
   const subcategory = category ? (params.get("subcategory") ?? undefined) : undefined;
   const fits = params.get("fits") === "1";
+  const weekOnly = params.get("week") === "1";
   const type = params.get("type") ?? undefined; // University links: /radar?type=workshop
   const now = useNow(60_000);
 
@@ -122,8 +125,13 @@ export function Radar() {
     );
 
   let shown: { item: RankedOpportunity; fit?: string }[] | undefined;
+  let next: { title: string; at: number } | undefined;
   if (state.status === "ready") {
-    const items = state.items.filter((i) => !type || i.type === type);
+    let items = state.items.filter((i) => !type || i.type === type);
+    if (weekOnly) {
+      next = nextUp(items, now);
+      items = thisWeek(items, now).map((w) => w.item);
+    }
     if (fits && free.status === "ready") {
       const seen = new Set<string>();
       shown = items.flatMap((item) => {
@@ -134,18 +142,12 @@ export function Radar() {
         return [{ item, fit }];
       });
     } else if (!fits) {
-      shown = (filtered ? items : items.slice(0, SHOWN)).map((item) => ({ item }));
+      shown = items.map((item) => ({ item }));
     }
   }
-
-  const week =
-    !unwatched && base.status === "ready" && base.items.length
-      ? thisWeek(base.items, now)
-      : undefined;
-  const next =
-    week?.length === 0 && base.status === "ready"
-      ? nextUp(base.items, now)
-      : undefined;
+  // Ten at a time; a new filter starts over at ten.
+  const [limit, setLimit] = useState(SHOWN);
+  useEffect(() => setLimit(SHOWN), [category, subcategory, fits, weekOnly, type]);
   const scope = current
     ? (current.subcategories.find((s) => s.id === subcategory)?.label ?? current.label)
     : undefined;
@@ -153,33 +155,12 @@ export function Radar() {
   return (
     <>
       <Masthead sketch="compass">Opportunities</Masthead>
-      {week && (
-        <Section
-          num={1}
-          label="This week"
-          title={week.length ? "This Week" : undefined}
-        >
-          {week.length ? (
-            <ol className="week">
-              {week.map((w) => (
-                <WeekRow key={w.item.id} {...w} />
-              ))}
-            </ol>
-          ) : (
-            <p className="lede">
-              Nothing starts or closes this week.
-              {next ? ` Next up: ${next.title}, in ${monthOf(next.at)}.` : ""}
-            </p>
-          )}
-        </Section>
-      )}
       <Section
-        num={week ? 2 : 1}
         label="Ranked"
         title={
           shown?.length
-            ? `${shown.length} ${plural(shown.length, "opportunity", "opportunities")}${
-                fits ? " that fit your week" : scope ? ` in ${scope}` : " for you"
+            ? `${shown.length} ${plural(shown.length, "Opportunity", "Opportunities")}${
+                fits ? " That Fit Your Week" : weekOnly ? " This Week" : scope ? ` in ${scope}` : " for You"
               }`
             : undefined
         }
@@ -234,6 +215,15 @@ export function Radar() {
               </div>
             )}
             <div className="opp-fits">
+              <div className="credit-filters opp-time" role="group" aria-label="When">
+                <button
+                  type="button"
+                  aria-pressed={weekOnly}
+                  onClick={() => set({ week: weekOnly ? undefined : "1" })}
+                >
+                  This Week
+                </button>
+              </div>
               <button
                 type="button"
                 className="opp-fits-toggle"
@@ -270,32 +260,50 @@ export function Radar() {
         ) : fits && free.status === "error" ? (
           <RadarError error={free.error} onRetry={() => set({ fits: undefined })} />
         ) : fits && free.status === "no-schedule" ? null : !shown?.length ? (
-          filtered || type ? (
+          filtered || type || weekOnly ? (
             <div className="state">
-              <h3>{fits ? "Nothing Fits Your Week Yet" : "Nothing Here Right Now"}</h3>
+              <h3>
+                {fits
+                  ? "Nothing Fits Your Week Yet"
+                  : weekOnly
+                    ? "Nothing This Week"
+                    : "Nothing Here Right Now"}
+              </h3>
               <p>
                 {fits
                   ? `No ${scope ? `${scope} ` : ""}listings in the next 7 days start and end inside your free time.`
-                  : `No current ${campus} listings${scope ? ` in ${scope}` : ""}. Check back after the next campus scan.`}
+                  : weekOnly
+                    ? `Nothing ${scope ? `in ${scope} ` : ""}starts or closes in the next 7 days.${next ? ` Next up: ${next.title}, in ${monthOf(next.at)}.` : ""}`
+                    : `No current ${campus} listings${scope ? ` in ${scope}` : ""}. Check back after the next campus scan.`}
               </p>
             </div>
           ) : (
             <RadarEmpty campus={campus!} />
           )
         ) : (
-          <ol className="entries">
-            {shown.map(({ item, fit }, i) => (
-              <Listing
-                key={item.id}
-                item={item}
-                now={now}
-                rank={i + 1}
-                kind={kindOf(item)}
-                fit={fit}
-                campus={campusLabel(item.campus_id, profile)}
-              />
-            ))}
-          </ol>
+          <>
+            <ol className="opp-cards">
+              {shown.slice(0, limit).map(({ item, fit }) => (
+                <Listing
+                  key={item.id}
+                  item={item}
+                  now={now}
+                  kind={kindOf(item)}
+                  fit={fit}
+                  campus={campusLabel(item.campus_id, profile)}
+                />
+              ))}
+            </ol>
+            {shown.length > limit && (
+              <button
+                type="button"
+                className="more-toggle"
+                onClick={() => setLimit((n) => n + SHOWN)}
+              >
+                Show {Math.min(SHOWN, shown.length - limit)} More
+              </button>
+            )}
+          </>
         )}
       </Section>
     </>
@@ -318,35 +326,5 @@ function FitsNote({ free }: { free: FreeWeek }) {
       {free.term ? `, around your ${free.term} classes` : ""}. Free time is 7 AM–10 PM outside class.{" "}
       <Link to="/schedule">See Your Week</Link>
     </p>
-  );
-}
-
-function WeekRow({ item, iso, verb }: Upcoming) {
-  const link = safeUrl(item.url);
-  const when = formatWhen(iso);
-  return (
-    <li>
-      <span className="week-when">
-        {verb} {when}
-      </span>
-      <div className="week-body">
-        {link ? (
-          <a
-            className="week-title"
-            href={link.href}
-            target="_blank"
-            rel="noreferrer"
-          >
-            {item.title}
-          </a>
-        ) : (
-          <span className="week-title">{item.title}</span>
-        )}
-        {item.notified && <NewLabel />}
-        <div className="meta">
-          {[typeLabel(item.type), item.org].filter(Boolean).join(" · ")}
-        </div>
-      </div>
-    </li>
   );
 }

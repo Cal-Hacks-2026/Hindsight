@@ -7,7 +7,7 @@ import type {
   UniversityGuide,
   UniversityGuideResponse,
 } from "@hindsight/contracts";
-import { Masthead, Section } from "../components/Paper";
+import { Masthead, Section, SourceList } from "../components/Paper";
 import { safeUrl } from "../components/Listing";
 import { ApiError, api } from "../lib/api";
 import { guideNames, watched } from "../lib/campuses";
@@ -21,6 +21,9 @@ type GuideState =
   | { status: "ready"; body: UniversityGuideResponse };
 
 // Opportunities categories (RankedOpportunity.type), as the links name them.
+/** Items each section shows before "Show N more". */
+const ITEMS_SHOWN = 2;
+
 const CATEGORY: Record<string, string> = {
   club: "Clubs",
   event: "Events",
@@ -76,7 +79,7 @@ export function University() {
         sketch="cap"
         byline={
           guide
-            ? `What to Expect at ${guide.university_name} · Last updated ${formatDate(guide.last_updated)}`
+            ? `What to Expect at ${shortUniversity(guide.university_name, guide.university_id)} · Updated ${formatDate(guide.last_updated)}`
             : name
         }
       >
@@ -91,7 +94,7 @@ export function University() {
             </p>
             <div className="actions">
               <Link className="button primary" to="/onboarding">
-                Create your profile
+                Create Your Profile
               </Link>
             </div>
           </div>
@@ -108,7 +111,7 @@ export function University() {
             <p>{errorDetail(state.error)}</p>
             <div className="actions">
               <button className="primary" onClick={retry}>
-                Try again
+                Try Again
               </button>
             </div>
           </div>
@@ -116,7 +119,7 @@ export function University() {
       ) : !guide ? (
         <Section
           label="University"
-          title={`We don't have a guide for ${name ? shortUniversity(name, profile.receiving_institution_id) : "your university"} yet.`}
+          title={`We Don't Have a Guide for ${name ? shortUniversity(name, profile.receiving_institution_id) : "Your University"} Yet`}
           last
         >
           <p className="lede-sub">
@@ -154,36 +157,36 @@ function Guide({
   const footnote = new Map(guide.sources.map((s, i) => [s.id, i + 1]));
   return (
     <>
-      {guide.sections.map((section) => (
-        <GuideSectionView
-          key={section.id}
-          section={section}
-          footnote={footnote}
-          opportunities={opportunities}
-        />
-      ))}
-      <Section id="sources" label="Sources" title="Sources" last>
-        <div className="source-list">
-          {guide.sources.map((source, i) => {
-            const url = safeUrl(source.url);
-            return (
-              <p key={source.id} id={`source-${i + 1}`}>
-                <strong>{i + 1}.</strong>{" "}
-                {url ? (
-                  <a href={url.href} target="_blank" rel="noreferrer">
-                    {source.title}
-                  </a>
-                ) : (
-                  source.title
-                )}
-                , {source.publisher}.
-                {source.retrieved_on !== guide.last_updated &&
-                  ` Read ${formatDate(source.retrieved_on)}.`}
-              </p>
-            );
-          })}
-        </div>
-      </Section>
+      <div className="guide-grid">
+        {guide.sections.map((section) => (
+          <GuideSectionView
+            key={section.id}
+            section={section}
+            footnote={footnote}
+            opportunities={opportunities}
+          />
+        ))}
+      </div>
+      <SourceList count={guide.sources.length}>
+        {guide.sources.map((source, i) => {
+          const url = safeUrl(source.url);
+          return (
+            <p key={source.id} id={`source-${i + 1}`}>
+              <strong>{i + 1}.</strong>{" "}
+              {url ? (
+                <a href={url.href} target="_blank" rel="noreferrer">
+                  {source.title}
+                </a>
+              ) : (
+                source.title
+              )}
+              , {source.publisher}.
+              {source.retrieved_on !== guide.last_updated &&
+                ` Read ${formatDate(source.retrieved_on)}.`}
+            </p>
+          );
+        })}
+      </SourceList>
     </>
   );
 }
@@ -197,9 +200,12 @@ function GuideSectionView({
   footnote: Map<string, number>;
   opportunities: boolean;
 }) {
+  const [all, setAll] = useState(false);
   const categories = opportunities
     ? (section.opportunity_types ?? []).filter((t) => CATEGORY[t])
     : [];
+  const more = section.items.length - ITEMS_SHOWN;
+  const listId = `guide-${section.id}-items`;
   return (
     <Section
       id={`guide-${section.id}`}
@@ -221,16 +227,29 @@ function GuideSectionView({
         )
       }
     >
-      <ul className="guide-items">
-        {section.items.map((item, i) => (
-          <li key={i}>
-            {item.text}
-            <Refs
-              ns={item.source_ids.flatMap((id) => footnote.get(id) ?? [])}
-            />
-          </li>
-        ))}
+      <ul className="guide-items" id={listId}>
+        {(all ? section.items : section.items.slice(0, ITEMS_SHOWN)).map(
+          (item, i) => (
+            <li key={i}>
+              {item.text}
+              <Refs
+                ns={item.source_ids.flatMap((id) => footnote.get(id) ?? [])}
+              />
+            </li>
+          ),
+        )}
       </ul>
+      {more > 0 && (
+        <button
+          type="button"
+          className="more-toggle"
+          aria-expanded={all}
+          aria-controls={listId}
+          onClick={() => setAll((a) => !a)}
+        >
+          {all ? "Show Fewer" : `Show ${more} More`}
+        </button>
+      )}
     </Section>
   );
 }

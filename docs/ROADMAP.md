@@ -7,10 +7,12 @@ The goal is to prevent wasted courses, missed requirements, and lost semesters f
 - Name: Hindsight. Slogan: Transfer Planner.
 - The original Janus engraving remains the main logo.
 - The student experience centers on three questions: what counts, what to take next, and what could delay transfer.
-- Navigation: My plan, My credits, Opportunities, Ask Hindsight.
-- Lead with the next proposed term, coursework, units, and the requirement each course addresses.
+- Navigation: Home, Plan, Credits, Schedule, Opportunities, University. Ask Hindsight opens from the top of every page.
+- Summary first, details on demand: each page's first screen says what to do next, and longer lists fold behind a row or a "Show more".
+- Lead with the next two proposed terms, coursework, units, and the requirement each course addresses. Later and completed terms stay one click away.
+- Classes on the saved class schedule count as in progress, on the Plan and the Schedule page alike.
 - Distinguish meeting a major requirement from receiving general transfer credit. Never treat a missing published equivalency as a denial.
-- Keep sources next to decisions. Explain uncertainty where it changes a student's next action.
+- Keep sources next to decisions: citations sit beside each claim and open the page's Sources list. Explain uncertainty where it changes a student's next action.
 - Background scanning and scraper maintenance stay out of student navigation.
 - Schools appear where they explain a plan or an equivalency, rather than as repeated page decoration.
 

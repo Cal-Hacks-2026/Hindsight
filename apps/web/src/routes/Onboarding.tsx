@@ -31,7 +31,7 @@ const STEPS: {
 }[] = [
   {
     id: "profile",
-    label: "About you",
+    label: "About You",
     title: "Your Profile",
     note: {
       lead: "Why we ask.",
@@ -49,7 +49,7 @@ const STEPS: {
   },
   {
     id: "confirm",
-    label: "Confirm courses",
+    label: "Confirm Courses",
     title: "Course Details",
     note: {
       lead: "Only what you confirm counts.",
@@ -614,9 +614,9 @@ function UploadStep({
       </p>
       {empty && (
         <div className="state" role="alert">
-          <h3>We didn't find any courses in this file.</h3>
+          <h3>We Didn't Find Any Courses in This File</h3>
           <p>
-            It may be blank, unreadable, or not a transcript. Try another file,
+            It may be blank, unreadable, or not a transcript. Try Another File,
             or continue without courses and every requirement will show as
             missing.
           </p>
@@ -647,14 +647,14 @@ function UploadStep({
               onClick={tryAnother}
               disabled={!!busy}
             >
-              Try another file
+              Try Another File
             </button>
             <button
               type="button"
               onClick={() => void continueWithoutCourses()}
               disabled={!!busy}
             >
-              {busy === "matching" ? "Matching…" : "Continue without courses"}
+              {busy === "matching" ? "Matching…" : "Continue Without Courses"}
             </button>
           </>
         ) : (
@@ -674,7 +674,7 @@ function UploadStep({
             >
               {busy === "matching"
                 ? "Matching…"
-                : "I haven’t taken college courses yet"}
+                : "I Haven’t Taken College Courses Yet"}
             </button>
           </>
         )}
@@ -827,7 +827,7 @@ function ConfirmStep({
       {error && <p className="error">{error}</p>}
       <div className="actions">
         <button type="button" onClick={add}>
-          + Add course
+          + Add Course
         </button>
         <button
           className="primary"
@@ -835,7 +835,7 @@ function ConfirmStep({
           onClick={confirmAndMatch}
           disabled={busy || rows.length === 0}
         >
-          {busy ? "Matching…" : "Confirm & match credits"}
+          {busy ? "Matching…" : "Confirm & Match Credits"}
         </button>
       </div>
     </div>
