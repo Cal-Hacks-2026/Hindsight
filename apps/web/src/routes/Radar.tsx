@@ -7,7 +7,7 @@ import {
   RadarError,
   RadarLoading,
 } from "../components/RadarStates";
-import { CAMPUS_SHORT, plural } from "../lib/format";
+import { plural } from "../lib/format";
 import { useOpportunities } from "../lib/opportunities";
 import { loadSession } from "../lib/session";
 import { closeAt, formatWhen, useNow } from "../lib/time";
@@ -84,13 +84,7 @@ export function Radar() {
 
   return (
     <>
-      <Masthead
-        kicker={profile ? CAMPUS_SHORT[profile.campus] : "ON CAMPUS"}
-        byline="Find your next thing."
-        sketch="compass"
-      >
-        Opportunities
-      </Masthead>
+      <Masthead sketch="compass">Opportunities</Masthead>
       {week && (
         <Section
           num={1}

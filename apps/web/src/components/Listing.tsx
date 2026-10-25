@@ -17,7 +17,9 @@ export const typeLabel = (type: string) => TYPE_LABEL[type] ?? type;
 export function safeUrl(url: string): URL | undefined {
   try {
     const parsed = new URL(url);
-    return parsed.protocol === "https:" || parsed.protocol === "http:" ? parsed : undefined;
+    return parsed.protocol === "https:" || parsed.protocol === "http:"
+      ? parsed
+      : undefined;
   } catch {
     return undefined;
   }
@@ -28,7 +30,7 @@ export const hostOf = (url: URL) => url.hostname.replace(/^www\./, "");
 /** Droid alerted on this listing (RankedOpportunity.notified). */
 export function NewLabel() {
   return (
-    <span className="new-label" title="Droid flagged this on a campus scan">
+    <span className="new-label" title="Found on a recent campus scan">
       New
     </span>
   );
@@ -49,16 +51,25 @@ export function Listing({
   const isHackathon = item.type === "hackathon";
   const beforeStart = isHackathon && target === item.starts_at;
   const raw = target ? timeLeft(target, now) : null;
-  const left = raw && beforeStart && raw.urgency !== "past" ? { ...raw, unit: raw.unit.replace(/ left$/, " to start") } : raw;
+  const left =
+    raw && beforeStart && raw.urgency !== "past"
+      ? { ...raw, unit: raw.unit.replace(/ left$/, " to start") }
+      : raw;
   const starts = item.starts_at ? formatWhen(item.starts_at) : null;
   const due = item.deadline ? formatWhen(item.deadline) : null;
   // A hackathon's scraped end date is when it wraps up, not a registration deadline.
   const from = item.starts_at ? formatDay(item.starts_at) : null;
   const to = item.deadline ? formatDay(item.deadline) : null;
   const when = isHackathon
-    ? from && to && from !== to ? `Runs ${from} – ${to}` : (from ?? to ?? "")
-    : [starts && `Starts ${starts}`, due && `Deadline ${due}`].filter(Boolean).join(" · ");
-  const meta = [typeLabel(item.type), item.org, link && hostOf(link)].filter(Boolean).join(" · ");
+    ? from && to && from !== to
+      ? `Runs ${from} – ${to}`
+      : (from ?? to ?? "")
+    : [starts && `Starts ${starts}`, due && `Deadline ${due}`]
+        .filter(Boolean)
+        .join(" · ");
+  const meta = [typeLabel(item.type), item.org, link && hostOf(link)]
+    .filter(Boolean)
+    .join(" · ");
 
   return (
     <li className="entry">
@@ -70,13 +81,17 @@ export function Listing({
             </div>
             {left && (
               <div className={`label ${left.urgency}`}>
-                {left.urgency === "past" ? "Closed" : `${left.value} ${left.unit.toLowerCase()}`}
+                {left.urgency === "past"
+                  ? "Closed"
+                  : `${left.value} ${left.unit.toLowerCase()}`}
               </div>
             )}
           </>
         ) : left ? (
           <>
-            <div className="entry-big">{left.urgency === "past" ? "—" : left.value}</div>
+            <div className="entry-big">
+              {left.urgency === "past" ? "—" : left.value}
+            </div>
             <div className={`label ${left.urgency}`}>{left.unit}</div>
           </>
         ) : (
@@ -91,12 +106,26 @@ export function Listing({
           {meta}
           {item.notified && <NewLabel />}
         </div>
-        <h3>{link ? <a href={link.href} target="_blank" rel="noreferrer">{item.title}</a> : item.title}</h3>
+        <h3>
+          {link ? (
+            <a href={link.href} target="_blank" rel="noreferrer">
+              {item.title}
+            </a>
+          ) : (
+            item.title
+          )}
+        </h3>
         {item.reason && <p className="entry-reason">{item.reason}</p>}
         {when && <p className="entry-when">{when}</p>}
       </div>
       {link && (
-        <a className="entry-source" href={link.href} target="_blank" rel="noreferrer" aria-label={`Source: ${hostOf(link)}`}>
+        <a
+          className="entry-source"
+          href={link.href}
+          target="_blank"
+          rel="noreferrer"
+          aria-label={`Source: ${hostOf(link)}`}
+        >
           Source ↗
         </a>
       )}

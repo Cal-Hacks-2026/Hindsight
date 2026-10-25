@@ -1,7 +1,7 @@
 {
   "name": "Hindsight",
   "short_name": "Hindsight",
-  "description": "Everything you'd wish you knew, before you need it.",
+  "description": "Transfer Planner",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
-import { Link, NavLink, Outlet, useLocation } from "react-router";
+import { Link, NavLink, Outlet } from "react-router";
 import { api } from "../lib/api";
-import { APP_NAME } from "../lib/config";
-import { CAMPUS_SHORT, currentTerm } from "../lib/format";
+import { APP_NAME, TAGLINE } from "../lib/config";
 import { loadSession } from "../lib/session";
 import { Icon, type IconName } from "./Icons";
 
@@ -10,14 +9,13 @@ const HEALTH_RETRIES = 4;
 const HEALTH_RETRY_MS = 8000;
 
 const NAV: { to: string; label: string; icon: IconName }[] = [
-  { to: "/degree", label: "My degree", icon: "book" },
+  { to: "/plan", label: "My plan", icon: "calendar" },
+  { to: "/credits", label: "My credits", icon: "book" },
   { to: "/radar", label: "Opportunities", icon: "compass" },
-  { to: "/counselor", label: "Counselor", icon: "chat" },
-  { to: "/agent", label: "Droid activity", icon: "activity" },
+  { to: "/counselor", label: "Ask Hindsight", icon: "chat" },
 ];
 
 export function Layout() {
-  const { pathname } = useLocation(); // also re-reads the session on navigation (onboarding writes it)
   const { profile } = loadSession();
   const [degraded, setDegraded] = useState<string | null>(null);
 
@@ -53,8 +51,6 @@ export function Layout() {
     };
   }, []);
 
-  const page = NAV.find((item) => item.to === pathname)?.label ?? "Get started";
-
   return (
     <div className="app-shell">
       <a className="skip-link" href="#main-content">
@@ -62,29 +58,27 @@ export function Layout() {
       </a>
       <aside className="sidebar">
         <Link to="/" className="brand" aria-label={`${APP_NAME}, home`}>
-          <span className="brand-symbol">
-            <Icon name="book" size={23} />
-          </span>
-          <span className="wordmark">
-            {APP_NAME.toLowerCase()}
-            <span className="brand-period">.</span>
+          <img
+            className="brand-logo"
+            src="/brand/janus-ink.svg"
+            alt=""
+            width={54}
+            height={62}
+          />
+          <span className="brand-text">
+            <span className="wordmark">{APP_NAME}</span>
+            <span className="brand-tagline">{TAGLINE}</span>
           </span>
         </Link>
         <nav className="nav" aria-label="Main">
           {NAV.map((item) => (
             <NavLink key={item.to} to={item.to} end>
-              <Icon name={item.icon} size={19} />
+              <Icon name={item.icon} size={24} />
               <span>{item.label}</span>
             </NavLink>
           ))}
         </nav>
         <div className="sidebar-bottom">
-          <div className="campus-label">
-            <Icon name="school" size={18} />
-            <span>
-              De Anza <span aria-hidden="true">→</span> SJSU
-            </span>
-          </div>
           <Link
             to="/onboarding"
             className="profile-link"
@@ -94,30 +88,17 @@ export function Layout() {
           >
             <span className="avatar">
               {profile?.name.trim().charAt(0).toUpperCase() || (
-                <Icon name="user" size={17} />
+                <Icon name="user" size={24} />
               )}
             </span>
             <span>
               <strong>{profile?.name || "Your profile"}</strong>
-              <small>
-                {profile ? CAMPUS_SHORT[profile.campus] : "Get started"}
-              </small>
             </span>
             <Icon name="chevron" size={15} />
           </Link>
         </div>
       </aside>
       <div className="workspace">
-        <header className="workspace-bar">
-          <span>
-            My workspace <span className="breadcrumb-divider">/</span>{" "}
-            <strong>{page}</strong>
-          </span>
-          <span className="term-meta">
-            <Icon name="calendar" size={15} />
-            {currentTerm()}
-          </span>
-        </header>
         {degraded && (
           <p className="status-banner" role="status">
             {degraded}
@@ -126,10 +107,6 @@ export function Layout() {
         <main id="main-content" tabIndex={-1}>
           <Outlet />
         </main>
-        <footer className="app-footer">
-          <span>{APP_NAME}</span>
-          <span>Confirm academic decisions with your advisor.</span>
-        </footer>
       </div>
     </div>
   );

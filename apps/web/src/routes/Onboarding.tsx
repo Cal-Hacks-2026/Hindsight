@@ -4,13 +4,7 @@ import type { AssistMajor, Course, Profile } from "@hindsight/contracts";
 import { Icon } from "../components/Icons";
 import { Masthead, Note, Section } from "../components/Paper";
 import { api } from "../lib/api";
-import {
-  ASSIST_YEAR_2026_27,
-  DE_ANZA_ID,
-  DE_ANZA_NAME,
-  SJSU_ID,
-  SJSU_NAME,
-} from "../lib/config";
+import { ASSIST_YEAR_2026_27, DE_ANZA_ID, SJSU_ID } from "../lib/config";
 import { saveSession } from "../lib/session";
 
 type Step = "profile" | "upload" | "confirm";
@@ -25,7 +19,7 @@ const STEPS: {
   {
     id: "profile",
     label: "About you",
-    title: "A little about you",
+    title: "Your profile",
     note: {
       lead: "Why we ask.",
       body: "Majors shape your degree plan. Goals and interests help us find opportunities for you.",
@@ -34,7 +28,7 @@ const STEPS: {
   {
     id: "upload",
     label: "Transcript",
-    title: "Add your transcript",
+    title: "Upload a file",
     note: {
       lead: "What happens next.",
       body: "Your file isn't stored. Only the courses you review and confirm are saved.",
@@ -43,7 +37,7 @@ const STEPS: {
   {
     id: "confirm",
     label: "Confirm courses",
-    title: "Review your courses",
+    title: "Course details",
     note: {
       lead: "Only what you confirm counts.",
       body: "Check course names, grades and terms before matching your credits.",
@@ -67,29 +61,27 @@ export function Onboarding() {
   return (
     <div className="intake">
       <Masthead
-        kicker="YOUR NEXT CHAPTER"
-        byline={`${DE_ANZA_NAME} → ${SJSU_NAME}`}
         sketch={
           step === "upload" ? "pencil" : step === "confirm" ? "cap" : "books"
         }
       >
         {step === "profile" ? (
           <>
-            A clearer path
+            Plan your
             <br />
-            starts here.
+            transfer.
           </>
         ) : step === "upload" ? (
           <>
-            Bring what
+            Your
             <br />
-            you’ve learned.
+            transcript.
           </>
         ) : (
           <>
-            Make every
+            Review your
             <br />
-            course count.
+            courses.
           </>
         )}
       </Masthead>
@@ -114,7 +106,7 @@ export function Onboarding() {
               <span className="step-number">
                 {i < index ? <Icon name="check" size={12} /> : i + 1}
               </span>
-              {s.label}
+              <span className="step-label">{s.label}</span>
             </li>
           ))}
         </ol>
@@ -161,7 +153,7 @@ function useMatchAndOpenDegree(profile: Profile) {
       profile.majors.map((m) => api.match(profile.id, m)),
     );
     saveSession({ profile, courses, matches });
-    navigate("/degree", { state: { matches } });
+    navigate("/plan", { state: { matches } });
   };
 }
 

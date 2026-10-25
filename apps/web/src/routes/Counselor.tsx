@@ -32,13 +32,13 @@ type Exchange = {
 };
 
 const FIRST_CHIPS = [
-  "Can I graduate by Spring 2028 if I add Econ?",
+  "What should I take next term?",
   "What do I still need for my major?",
   "Which of my courses count at my university?",
 ];
 // No summer-term chip: the planner schedules Fall and Spring only (AUDIT I-12).
 const NEXT_CHIPS = [
-  "What if I drop my second major?",
+  "What changes if I switch majors?",
   "Which requirements should I check with my advisor?",
   "Which courses should I take next term?",
 ];
@@ -113,13 +113,7 @@ export function Counselor() {
 
   return (
     <div className="cs">
-      <Masthead
-        kicker="LET’S WORK IT OUT"
-        byline="A little clarity for your next step."
-        sketch="pencil"
-      >
-        Your counselor
-      </Masthead>
+      <Masthead sketch="pencil">Ask Hindsight</Masthead>
 
       {!profile ? (
         <section className="cs-row">

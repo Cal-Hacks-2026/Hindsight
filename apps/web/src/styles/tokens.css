@@ -14,4 +14,7 @@
   --sjsu: #5b5e58;
   --sans: Inter, "Helvetica Neue", Helvetica, Arial, sans-serif;
   --serif: var(--sans);
+  --text-body: 24px;
+  --text-label: 20px;
+  --text-small: 18px;
 }

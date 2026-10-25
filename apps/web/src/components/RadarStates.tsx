@@ -100,9 +100,6 @@ export function RadarEmpty({ campus }: { campus: Campus }) {
         No upcoming {CAMPUS_SHORT[campus]} listings match your profile yet.
         Check back after the next campus scan.
       </p>
-      <div className="actions">
-        <Link to="/agent">See the latest scan →</Link>
-      </div>
     </div>
   );
 }
