@@ -7,12 +7,18 @@ import { useNow } from "../lib/time";
 
 // The first load is one long Claude call (DECISIONS.md D-005); say what's happening as time passes.
 function loadingMessage(seconds: number): string {
-  if (seconds < 4) return "Pulling this week's campus events and opportunities…";
-  if (seconds < 20) return "Claude is writing why each one fits you…";
+  if (seconds < 4) return "Finding your opportunities…";
+  if (seconds < 20) return "Matching opportunities to your interests…";
   return "Still working. The first load sometimes runs a little long.";
 }
 
-export function RadarLoading({ startedAt, skeletons = 3 }: { startedAt: number; skeletons?: number }) {
+export function RadarLoading({
+  startedAt,
+  skeletons = 3,
+}: {
+  startedAt: number;
+  skeletons?: number;
+}) {
   const now = useNow(1000);
   const seconds = Math.max(0, Math.floor((now - startedAt) / 1000));
   return (
@@ -25,10 +31,7 @@ export function RadarLoading({ startedAt, skeletons = 3 }: { startedAt: number; 
           </span>
         </div>
         <div className="loading-bar" aria-hidden="true" />
-        <p>
-          Your first load takes about 15 seconds while we rank everything for your profile. After that it's
-          instant.
-        </p>
+        <p>The first visit can take about 15 seconds.</p>
       </div>
       <div aria-hidden="true">
         {Array.from({ length: skeletons }, (_, i) => (
@@ -44,18 +47,27 @@ export function RadarLoading({ startedAt, skeletons = 3 }: { startedAt: number; 
   );
 }
 
-export function RadarError({ error, onRetry }: { error: unknown; onRetry: () => void }) {
+export function RadarError({
+  error,
+  onRetry,
+}: {
+  error: unknown;
+  onRetry: () => void;
+}) {
   let title = "Couldn't load your opportunities.";
-  let detail = "We couldn't reach the Hindsight server. Check your connection and try again.";
+  let detail =
+    "We couldn't reach the Hindsight server. Check your connection and try again.";
   let canRetry = true;
 
   if (error instanceof ApiError) {
     if (error.status === 404) {
       title = "We couldn't find your profile.";
-      detail = "It may have been reset on the server. Set it up again to get your opportunities back.";
+      detail =
+        "It may have been reset on the server. Set it up again to get your opportunities back.";
       canRetry = false;
     } else if (error.status === 429) {
-      detail = "Too many requests in a short time. Wait a minute, then try again.";
+      detail =
+        "Too many requests in a short time. Wait a minute, then try again.";
     } else {
       detail = `The server returned an error (${error.status}${error.message ? `: ${error.message}` : ""}).`;
     }
@@ -85,8 +97,8 @@ export function RadarEmpty({ campus }: { campus: Campus }) {
     <div className="state">
       <h3>No opportunities yet.</h3>
       <p>
-        No upcoming {CAMPUS_SHORT[campus]} events or opportunities matched your profile. Droid rescans campus sources
-        on a schedule, so check back after the next run.
+        No upcoming {CAMPUS_SHORT[campus]} listings match your profile yet.
+        Check back after the next campus scan.
       </p>
       <div className="actions">
         <Link to="/agent">See the latest scan →</Link>
@@ -99,10 +111,13 @@ export function NoProfile() {
   return (
     <div className="state">
       <h3>Set up your profile first.</h3>
-      <p>Hindsight ranks campus events and opportunities against your majors, goals, and interests.</p>
+      <p>
+        Hindsight ranks campus events and opportunities against your majors,
+        goals, and interests.
+      </p>
       <div className="actions">
         <Link className="button primary" to="/onboarding">
-          Start onboarding
+          Create your profile
         </Link>
       </div>
     </div>

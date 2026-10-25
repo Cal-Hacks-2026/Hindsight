@@ -1,15 +1,17 @@
-/* Hindsight design tokens (DESIGN.md §4–5). One accent, used at most once per screen. */
 :root {
-  --paper: #F1EFE9;
-  --ink: #141414;
-  --gray: #5E5B55;
-  --gray-num: #85817A;
-  --hair: rgba(20,20,20,.22);
-  --accent: #2742C9;
-  --ok: #3F6B4A;
-  --check: #8A5F0E;
-  --missing: #A3402F;
-  --sjsu: #4A5A78;
-  --serif: 'Instrument Serif',Georgia,serif;
-  --sans: Inter,'Helvetica Neue',Helvetica,Arial,sans-serif;
+  color-scheme: light;
+  --paper: #f7f7f2;
+  --surface: #fefefb;
+  --ink: #20211f;
+  --gray: #686a64;
+  --gray-num: #777971;
+  --hair: #dedfd7;
+  --soft: #eeefe7;
+  --accent: #20211f;
+  --ok: #343a32;
+  --check: #555447;
+  --missing: #393936;
+  --sjsu: #5b5e58;
+  --sans: Inter, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --serif: var(--sans);
 }

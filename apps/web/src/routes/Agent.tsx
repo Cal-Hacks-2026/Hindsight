@@ -4,6 +4,8 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router";
 import type { AgentEvent } from "@hindsight/contracts";
+import { Masthead } from "../components/Paper";
+import { Icon } from "../components/Icons";
 import { api, ApiError } from "../lib/api";
 import { loadSession } from "../lib/session";
 import { useNow } from "../lib/time";
@@ -13,7 +15,12 @@ const POLL_MS = 2000;
 // apps/agent stops a run after 20 minutes by default; keep polling a little past that.
 const MAX_POLL_MS = 25 * 60_000;
 
-type Poll = { events: AgentEvent[]; done: boolean; gaveUp: boolean; fetchError?: unknown };
+type Poll = {
+  events: AgentEvent[];
+  done: boolean;
+  gaveUp: boolean;
+  fetchError?: unknown;
+};
 
 const EMPTY: Poll = { events: [], done: false, gaveUp: false };
 
@@ -57,7 +64,10 @@ export function Agent() {
         if (!live) return;
         const done = finished(events);
         // A run older than the agent's timeout that never logged an end won't finish now.
-        const stale = !done && events.length > 0 && Date.now() - Date.parse(events[0]!.created_at) > MAX_POLL_MS;
+        const stale =
+          !done &&
+          events.length > 0 &&
+          Date.now() - Date.parse(events[0]!.created_at) > MAX_POLL_MS;
         setPoll({ events, done, gaveUp: stale });
         if (done || stale) return;
       } catch (fetchError) {
@@ -95,25 +105,34 @@ export function Agent() {
 
   return (
     <div className="cs">
-      <header className="cs-title">
-        <div className="cs-label">Droid · Run log</div>
-        <h1>
-          Every run, on
-          <br />
-          the <em>record</em>.
-        </h1>
-      </header>
+      <Masthead
+        kicker="BEHIND THE SCENES"
+        byline="Keeping your campus opportunities up to date."
+        sketch="compass"
+      >
+        Droid activity
+      </Masthead>
 
       <section className="cs-row">
         <div className="cs-label cs-row-label">Run</div>
         <div className="cs-main">
           <p className="cs-para">
-            Droid scans {campus === "sjsu" ? "SJSU" : "UC Berkeley"} event sources, ranks what it finds, and repairs an
-            extractor when a site changes. Every plan, step, and patch it makes is logged below.
+            Scans {campus === "sjsu" ? "SJSU" : "UC Berkeley"} sources, ranks
+            opportunities, and repairs broken scrapers.
           </p>
           <div className="cs-actions">
-            <button type="button" className="cs-btn cs-btn-solid" onClick={() => void runNow()} disabled={starting || running}>
-              {starting ? "Starting…" : running ? "Running…" : "Run now"}
+            <button
+              type="button"
+              className="cs-btn cs-btn-solid"
+              onClick={() => void runNow()}
+              disabled={starting || running}
+            >
+              <Icon name="activity" size={16} />
+              {starting
+                ? "Starting…"
+                : running
+                  ? "Running…"
+                  : "Run campus scan"}
             </button>
           </div>
           {!runId && latest === "loading" && (
@@ -121,15 +140,23 @@ export function Agent() {
               Loading the latest run…
             </p>
           )}
-          {!runId && latest === "none" && <p className="cs-muted">No runs logged yet. Start one to see it here.</p>}
-          {!runId && latest === "error" && <p className="cs-muted">Couldn't load the latest run.</p>}
+          {!runId && latest === "none" && (
+            <p className="cs-muted">
+              No runs logged yet. Start one to see it here.
+            </p>
+          )}
+          {!runId && latest === "error" && (
+            <p className="cs-muted">Couldn't load the latest run.</p>
+          )}
           {startError !== undefined && (
             <p className="ag-alert" role="alert">
               {startErrorMessage(startError)}
             </p>
           )}
         </div>
-        <div className="cs-margin">{runId && <RunMeta runId={runId} poll={poll} />}</div>
+        <div className="cs-margin">
+          {runId && <RunMeta runId={runId} poll={poll} />}
+        </div>
       </section>
 
       {runId && (
@@ -150,7 +177,9 @@ export function Agent() {
               </ol>
             )}
             {poll.fetchError !== undefined && !poll.done && (
-              <p className="cs-muted">Couldn't refresh the log just now; retrying.</p>
+              <p className="cs-muted">
+                Couldn't refresh the log just now; retrying.
+              </p>
             )}
           </div>
           <div className="cs-margin" />
@@ -162,11 +191,20 @@ export function Agent() {
 
 function RunMeta({ runId, poll }: { runId: string; poll: Poll }) {
   const now = useNow(1000);
-  const first = poll.events[0] ? Date.parse(poll.events[0].created_at) : undefined;
-  const last = poll.events.at(-1) ? Date.parse(poll.events.at(-1)!.created_at) : undefined;
+  const first = poll.events[0]
+    ? Date.parse(poll.events[0].created_at)
+    : undefined;
+  const last = poll.events.at(-1)
+    ? Date.parse(poll.events.at(-1)!.created_at)
+    : undefined;
   const end = poll.done || poll.gaveUp ? last : now;
-  const elapsed = first !== undefined && end !== undefined ? Math.max(0, end - first) : undefined;
-  const outcome = [...poll.events].reverse().find((e) => e.kind === "result" || isTerminalError(e));
+  const elapsed =
+    first !== undefined && end !== undefined
+      ? Math.max(0, end - first)
+      : undefined;
+  const outcome = [...poll.events]
+    .reverse()
+    .find((e) => e.kind === "result" || isTerminalError(e));
   const status = poll.done
     ? outcome?.kind === "result"
       ? "Finished"
@@ -181,7 +219,17 @@ function RunMeta({ runId, poll }: { runId: string; poll: Poll }) {
     <dl className="ag-meta">
       <div>
         <dt className="cs-label">Status</dt>
-        <dd className={poll.done ? (outcome?.kind === "result" ? "ag-ok" : "ag-bad") : poll.gaveUp ? undefined : "ag-live"}>
+        <dd
+          className={
+            poll.done
+              ? outcome?.kind === "result"
+                ? "ag-ok"
+                : "ag-bad"
+              : poll.gaveUp
+                ? undefined
+                : "ag-live"
+          }
+        >
           {status}
         </dd>
       </div>
@@ -219,7 +267,9 @@ function EventRow({ event }: { event: AgentEvent }) {
       <time className="cs-num ag-time" dateTime={event.created_at}>
         {clock(event.created_at)}
       </time>
-      <span className="cs-label ag-kind">{KIND_LABEL[event.kind] ?? event.kind}</span>
+      <span className="cs-label ag-kind">
+        {KIND_LABEL[event.kind] ?? event.kind}
+      </span>
       <div className="ag-body">
         {event.kind === "plan" ? (
           <ol className="ag-plan">
@@ -230,7 +280,11 @@ function EventRow({ event }: { event: AgentEvent }) {
                 const { status, text } = planLine(line);
                 return (
                   <li key={i}>
-                    {status && <span className="cs-label ag-status">{STATUS_LABEL[status] ?? status}</span>}
+                    {status && (
+                      <span className="cs-label ag-status">
+                        {STATUS_LABEL[status] ?? status}
+                      </span>
+                    )}
                     {text}
                   </li>
                 );
@@ -248,11 +302,19 @@ function EventRow({ event }: { event: AgentEvent }) {
 
 function DiffBlock({ payload }: { payload: unknown }) {
   const p = record(payload);
-  const text = typeof p?.diff === "string" ? p.diff : typeof p?.preview === "string" ? p.preview : undefined;
+  const text =
+    typeof p?.diff === "string"
+      ? p.diff
+      : typeof p?.preview === "string"
+        ? p.preview
+        : undefined;
   if (!text) return null;
   const lines = text.split("\n").filter((line) => !/^=+$/.test(line));
   return (
-    <pre className="ag-diff" aria-label={typeof p?.file === "string" ? `Diff of ${p.file}` : "Diff"}>
+    <pre
+      className="ag-diff"
+      aria-label={typeof p?.file === "string" ? `Diff of ${p.file}` : "Diff"}
+    >
       <code>
         {lines.map((line, i) => (
           <span key={i} className={diffClass(line)}>
@@ -261,7 +323,9 @@ function DiffBlock({ payload }: { payload: unknown }) {
           </span>
         ))}
       </code>
-      {p?.truncated === true && <span className="ag-truncated">Diff truncated.</span>}
+      {p?.truncated === true && (
+        <span className="ag-truncated">Diff truncated.</span>
+      )}
     </pre>
   );
 }
@@ -269,11 +333,15 @@ function DiffBlock({ payload }: { payload: unknown }) {
 function ResultMeta({ payload }: { payload: unknown }) {
   const p = record(payload);
   if (!p) return null;
-  const patched = Array.isArray(p.patched) ? p.patched.filter((f): f is string => typeof f === "string") : [];
+  const patched = Array.isArray(p.patched)
+    ? p.patched.filter((f): f is string => typeof f === "string")
+    : [];
   const items: [string, string][] = [];
-  if (typeof p.alerts_new === "number") items.push(["New alerts", String(p.alerts_new)]);
+  if (typeof p.alerts_new === "number")
+    items.push(["New alerts", String(p.alerts_new)]);
   items.push(["Patched", patched.length ? patched.join(", ") : "none"]);
-  if (typeof p.duration_ms === "number") items.push(["Duration", duration(p.duration_ms)]);
+  if (typeof p.duration_ms === "number")
+    items.push(["Duration", duration(p.duration_ms)]);
   return (
     <dl className="ag-result">
       {items.map(([k, v]) => (
@@ -288,12 +356,19 @@ function ResultMeta({ payload }: { payload: unknown }) {
 
 // ---- helpers ----
 
-const STATUS_LABEL: Record<string, string> = { completed: "Done", in_progress: "Doing", pending: "To do" };
+const STATUS_LABEL: Record<string, string> = {
+  completed: "Done",
+  in_progress: "Doing",
+  pending: "To do",
+};
 
 // Droid's TodoWrite lines arrive as "1. [completed] Scan sources"; the <ol> already numbers them.
 function planLine(line: string): { status?: string; text: string } {
   const m = /^\s*(?:\d+[.)]\s*)?(?:\[([a-z_ ]+)\]\s*)?(.*)$/i.exec(line)!;
-  return { status: m[1]?.trim().toLowerCase().replace(/ /g, "_"), text: m[2]!.trim() };
+  return {
+    status: m[1]?.trim().toLowerCase().replace(/ /g, "_"),
+    text: m[2]!.trim(),
+  };
 }
 
 // apps/agent/src/job.ts ends every run with one result, or an error that starts "Run ".
@@ -306,7 +381,9 @@ function finished(events: AgentEvent[]): boolean {
 }
 
 function record(value: unknown): Record<string, unknown> | undefined {
-  return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : undefined;
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : undefined;
 }
 
 function diffClass(line: string): string | undefined {
@@ -317,7 +394,11 @@ function diffClass(line: string): string | undefined {
   return undefined;
 }
 
-const clockFmt = new Intl.DateTimeFormat(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+const clockFmt = new Intl.DateTimeFormat(undefined, {
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+});
 
 function clock(iso: string): string {
   const at = new Date(iso);
@@ -330,7 +411,9 @@ function duration(ms: number): string {
 }
 
 function startErrorMessage(error: unknown): string {
-  if (!(error instanceof ApiError)) return "We couldn't reach the Hindsight server. Check your connection and try again.";
-  if (error.status === 429) return "Too many runs in a short time. Wait a minute, then try again.";
+  if (!(error instanceof ApiError))
+    return "We couldn't reach the Hindsight server. Check your connection and try again.";
+  if (error.status === 429)
+    return "Too many runs in a short time. Wait a minute, then try again.";
   return error.message || "Couldn't start a run. Try again in a moment.";
 }
