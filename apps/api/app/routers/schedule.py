@@ -1,6 +1,7 @@
 """Class schedule: upload → confirm → save, then free blocks and planned-course marks."""
 
 from datetime import date
+from typing import Literal
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from fastapi.concurrency import run_in_threadpool
@@ -76,11 +77,16 @@ def free_blocks(profile_id: str,
             response_model_exclude_none=True, dependencies=[Depends(assist_limits.per_ip)])
 def planned(profile_id: str, majors: str | None = Query(None, description="Same as GET /plan"),
             transfer_term: str | None = Query(None, description="Same as GET /plan"),
-            start_term: str | None = Query(None, description="Same as GET /plan")) -> ScheduledPlanResponse:
+            start_term: str | None = Query(None, description="Same as GET /plan"),
+            ge: bool = Query(False, description="Same as GET /plan"),
+            ge_pattern: Literal["calgetc", "igetc"] | None = Query(None, description="Same as GET /plan")
+            ) -> ScheduledPlanResponse:
     """Which courses on the student's plan (same query as GET /plan) are now on their schedule."""
     profiles._get_profile(profile_id)
     rows = store.schedule(profile_id)
     if not rows:  # no plan (or ASSIST) needed
         return ScheduledPlanResponse(courses=[])
-    plan = profiles.plan(profile_id, majors=majors, transfer_term=transfer_term, start_term=start_term)
+    # Every argument is passed: called directly, plan()'s defaults are Query objects, not values.
+    plan = profiles.plan(profile_id, majors=majors, transfer_term=transfer_term, start_term=start_term,
+                         ge=ge, ge_pattern=ge_pattern)
     return ScheduledPlanResponse(courses=week.scheduled_plan_courses(plan.semesters, rows))
