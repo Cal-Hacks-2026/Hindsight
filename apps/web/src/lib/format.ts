@@ -29,12 +29,6 @@ export function formatDateline(d: Date = new Date()): string {
   return `${dateline.format(d)} · ${edition} edition`;
 }
 
-/** Initial + surname for a byline: "Atishay Pahadiya" → "A. Pahadiya"; one name stays as is. */
-export function bylineName(name: string): string {
-  const parts = name.trim().split(/\s+/);
-  return parts.length < 2 ? name.trim() : `${parts[0]![0]}. ${parts.slice(1).join(" ")}`;
-}
-
 /** Written-out small counts read better in an abstract: "Five", "two". */
 const WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"];
 export const countWord = (n: number, capital = false) => {
