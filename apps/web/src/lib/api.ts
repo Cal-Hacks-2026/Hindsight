@@ -12,11 +12,15 @@ import type {
   Course,
   CoursesResponse,
   CreateProfileRequest,
+  FreeBlocksResponse,
   HealthResponse,
   MatchResult,
   OpportunitiesResponse,
   PlanResponse,
   ProfileResponse,
+  ScheduledClass,
+  ScheduledPlanResponse,
+  ScheduleResponse,
   UniversityGuideResponse,
   WebhookResponse,
 } from "@hindsight/contracts";
@@ -96,6 +100,25 @@ export const api = {
         ...(terms.start ? { start_term: terms.start } : {}),
       })}`,
     ),
+
+  // Class schedule (SCHEDULE): upload → confirm → save, like transcripts.
+  uploadSchedule: (id: string, file: File) => {
+    const form = new FormData();
+    form.append("file", file);
+    return request<ScheduleResponse>(`/profiles/${enc(id)}/schedule`, { method: "POST", body: form });
+  },
+
+  saveSchedule: (id: string, rows: ScheduledClass[]) =>
+    request<ScheduleResponse>(`/profiles/${enc(id)}/schedule`, { method: "PUT", body: json({ rows }) }),
+
+  schedule: (id: string) => request<ScheduleResponse>(`/profiles/${enc(id)}/schedule`),
+
+  freeBlocks: (id: string, week: string, term?: string) =>
+    request<FreeBlocksResponse>(
+      `/profiles/${enc(id)}/schedule/free-blocks?${new URLSearchParams({ week, ...(term ? { term } : {}) })}`,
+    ),
+
+  scheduledPlan: (id: string) => request<ScheduledPlanResponse>(`/profiles/${enc(id)}/schedule/planned`),
 
   opportunities: (id: string) => request<OpportunitiesResponse>(`/profiles/${enc(id)}/opportunities`),
 

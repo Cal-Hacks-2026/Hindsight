@@ -271,3 +271,76 @@ class UniversityGuideResponse(BaseModel):
     available: bool  # false: no guide for this university yet
     university_name: str | None = None
     guide: UniversityGuide | None = None
+
+
+# ---- Class schedule (SCHEDULE) ----
+
+ClassMode = Literal["in_person", "online", "hybrid", "asynchronous"]
+Weekday = Literal["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+
+
+class ScheduledClass(BaseModel):
+    """One meeting pattern of a class; a lecture plus a lab is two rows with the same CRN."""
+
+    term: str
+    course: str  # as printed, e.g. "MATH 1B" or "MATH D001B"
+    title: str
+    crn: str | None = None
+    section: str | None = None
+    professor: str | None = None
+    units: float | None = None
+    location: str | None = None
+    mode: ClassMode
+    days: list[Weekday]  # empty for asynchronous or TBA
+    start_time: str | None = None  # "HH:MM", 24-hour
+    end_time: str | None = None
+    start_date: str | None = None  # "YYYY-MM-DD", when the schedule prints class dates
+    end_date: str | None = None
+    # Upload only, for the confirm table: why a row needs a second look (never stored).
+    flags: list[str] | None = None
+    confirmed: bool
+
+
+class ScheduleTerm(BaseModel):
+    term: str
+    units: float  # each class counted once, however many meeting rows it has
+    classes: int
+
+
+class ScheduleResponse(BaseModel):
+    rows: list[ScheduledClass]
+    terms: list[ScheduleTerm] | None = None  # saved schedules only
+
+
+class UpdateScheduleRequest(BaseModel):
+    rows: list[ScheduledClass]
+
+
+class FreeBlock(BaseModel):
+    start: str  # "HH:MM"
+    end: str
+    minutes: int
+
+
+class FreeDay(BaseModel):
+    day: Weekday
+    date: str  # "YYYY-MM-DD"
+    blocks: list[FreeBlock]
+
+
+class FreeBlocksResponse(BaseModel):
+    week: str  # the Monday, "YYYY-MM-DD"
+    day_start: str  # "07:00"
+    day_end: str  # "22:00"
+    days: list[FreeDay]  # Mon–Sun
+
+
+class ScheduledPlanCourse(BaseModel):
+    code: str  # the plan's course code
+    planned_term: str
+    scheduled_term: str
+    crn: str | None = None
+
+
+class ScheduledPlanResponse(BaseModel):
+    courses: list[ScheduledPlanCourse]  # planned courses that are on the saved schedule

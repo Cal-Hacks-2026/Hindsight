@@ -1,0 +1,494 @@
+/* Schedule page: confirm table, week grid, and the list by term. Uses the app.css tokens and type scale. */
+
+.schedule-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.schedule-gap {
+  margin-top: 28px;
+}
+.schedule-muted {
+  color: var(--gray);
+  font-weight: 400;
+}
+.schedule-source {
+  margin: 28px 0 0;
+  color: var(--gray);
+  font-size: var(--text-small);
+  font-weight: 400;
+}
+
+/* ---- Confirm ---- */
+
+.schedule-flag-summary {
+  margin: 0;
+}
+/* Thirteen fields don't fit one line: each class is a labeled card, at every width. */
+table.confirm.schedule-confirm,
+table.confirm.schedule-confirm tbody {
+  display: block;
+}
+table.confirm.schedule-confirm caption {
+  display: block;
+}
+table.confirm.schedule-confirm thead {
+  display: none;
+}
+table.confirm.schedule-confirm tr {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr)) auto;
+  grid-template-areas:
+    "course course course title title title title title title mode mode mode remove"
+    "days days days days days days start start start end end end ."
+    "term term units section location location professor professor professor professor crn crn .";
+  gap: 16px 14px;
+  padding: 24px 0;
+  border-bottom: 1px solid var(--hair);
+}
+table.paper.confirm.schedule-confirm td {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+table.confirm.schedule-confirm td[data-label]::before {
+  content: attr(data-label);
+  font-size: 18px;
+  color: var(--gray);
+  margin-bottom: 7px;
+}
+table.confirm.schedule-confirm td:nth-child(1) {
+  grid-area: course;
+}
+table.confirm.schedule-confirm td:nth-child(2) {
+  grid-area: title;
+}
+table.confirm.schedule-confirm td:nth-child(3) {
+  grid-area: term;
+}
+table.confirm.schedule-confirm td:nth-child(4) {
+  grid-area: days;
+}
+table.confirm.schedule-confirm td:nth-child(5) {
+  grid-area: start;
+}
+table.confirm.schedule-confirm td:nth-child(6) {
+  grid-area: end;
+}
+table.confirm.schedule-confirm td:nth-child(7) {
+  grid-area: mode;
+  justify-content: flex-start;
+}
+table.confirm.schedule-confirm td:nth-child(8) {
+  grid-area: location;
+}
+table.confirm.schedule-confirm td:nth-child(9) {
+  grid-area: units;
+}
+table.confirm.schedule-confirm td:nth-child(10) {
+  grid-area: section;
+}
+table.confirm.schedule-confirm td:nth-child(11) {
+  grid-area: professor;
+}
+table.confirm.schedule-confirm td:nth-child(12) {
+  grid-area: crn;
+}
+table.confirm.schedule-confirm td:nth-child(13) {
+  grid-area: remove;
+  justify-content: flex-end;
+}
+table.confirm.schedule-confirm select {
+  width: 100%;
+  min-height: 50px;
+  padding: 8px;
+  font-size: 20px;
+}
+table.confirm.schedule-confirm tr.flagged {
+  border-left: 3px solid var(--ink);
+  padding-left: 16px;
+}
+.schedule-flag {
+  display: block;
+  margin-top: 8px;
+  font-size: var(--text-small);
+  color: var(--gray);
+  font-weight: 500;
+  line-height: 1.35;
+}
+.day-toggles {
+  display: flex;
+  gap: 4px;
+}
+.section .day-toggles button {
+  min-height: 50px;
+  min-width: 44px;
+  padding: 6px 4px;
+  border: 1px solid var(--hair);
+  font-size: 18px;
+}
+.section .day-toggles button[aria-pressed="true"],
+.section .day-toggles button[aria-pressed="true"]:hover {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+.section .day-toggles button:disabled {
+  opacity: 0.45;
+}
+.section table.confirm input:disabled {
+  background: var(--soft);
+}
+
+/* ---- Toolbar ---- */
+
+.schedule-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 28px;
+}
+.schedule-toolbar .credit-filters {
+  margin: 0;
+}
+.section .schedule-term select {
+  min-height: 58px;
+  padding: 10px 14px;
+  font-size: 20px;
+}
+
+/* ---- Week grid ---- */
+
+.sched-week-nav {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 24px;
+}
+.sched-week-nav h3 {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 650;
+  min-width: 10ch;
+}
+.section .sched-week-nav button {
+  min-width: 58px;
+  font-size: 22px;
+}
+.sched-week-grid {
+  display: grid;
+  grid-template-columns: 64px repeat(7, minmax(0, 1fr));
+  border-top: 1px solid var(--hair);
+}
+.sched-week-hours {
+  position: relative;
+  margin-top: 48px;
+}
+.sched-week-hours span {
+  position: absolute;
+  right: 10px;
+  transform: translateY(-50%);
+  font-size: 15px;
+  color: var(--gray-num);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.sched-week-day {
+  border-left: 1px solid var(--hair);
+  min-width: 0;
+}
+.sched-week-day-head {
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 18px;
+  color: var(--gray);
+  border-bottom: 1px solid var(--hair);
+}
+.sched-week-day-head strong {
+  color: var(--ink);
+  font-weight: 650;
+}
+.sched-week-day-body {
+  position: relative;
+  /* hour lines */
+  background-image: linear-gradient(var(--hair) 1px, transparent 1px);
+  background-size: 100% 64px; /* HOUR_PX */
+}
+.sched-week-free {
+  position: absolute;
+  left: 3px;
+  right: 3px;
+  border-radius: 6px;
+  background-color: var(--paper);
+  background-image: radial-gradient(var(--hair) 1px, transparent 1.2px);
+  background-size: 10px 10px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  overflow: hidden;
+}
+.sched-week-free span {
+  margin-top: 8px;
+  padding: 2px 6px;
+  font-size: 15px;
+  color: var(--gray);
+  background: var(--paper);
+  border-radius: 4px;
+}
+.sched-week-class {
+  position: absolute;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 5px 6px;
+  border: 1px solid var(--ink);
+  border-radius: 6px;
+  background: var(--surface);
+  overflow: hidden;
+  font-size: 15px;
+  line-height: 1.3;
+  min-width: 0;
+}
+.sched-week-class strong {
+  font-size: 15px;
+  font-weight: 650;
+}
+.sched-week-class span {
+  font-size: 14px;
+  color: var(--gray);
+}
+.sched-week-class.short span + span {
+  display: none; /* a 50-minute class shows the course and time only */
+}
+.sched-week-class.online,
+.sched-week-class.hybrid {
+  border-style: dashed;
+}
+.sched-week-agenda {
+  display: none;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.sched-week-offgrid {
+  margin: 24px 0 0;
+  font-size: var(--text-small);
+  color: var(--gray);
+  font-weight: 400;
+}
+.sched-week-offgrid strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+/* ---- List by term ---- */
+
+.sched-terms {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+.sched-term {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.sched-term-label {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 650;
+}
+.sched-term-label span {
+  color: var(--gray);
+  font-size: 20px;
+  font-weight: 500;
+  margin-left: 14px;
+}
+
+table.paper.schedule-list td {
+  font-size: 20px;
+}
+table.paper.schedule-list .num {
+  text-align: right;
+  white-space: nowrap;
+}
+.schedule-title {
+  display: block;
+  color: var(--gray);
+  font-weight: 400;
+  margin: 4px 0 10px;
+}
+.schedule-line {
+  display: block;
+}
+table.paper.schedule-list td .schedule-muted {
+  font-size: var(--text-small);
+}
+table.paper.schedule-list tfoot th,
+table.paper.schedule-list tfoot td {
+  padding: 14px 6px;
+  font-size: 20px;
+  font-weight: 650;
+  color: var(--ink);
+  border-bottom: 0;
+}
+
+@media (max-width: 1100px) {
+  .sched-week-class span {
+    display: none;
+  }
+}
+
+@media (max-width: 700px) {
+  /* Seven columns don't fit a phone: show the week as a day-by-day agenda. */
+  .sched-week-grid {
+    display: none;
+  }
+  .sched-week-agenda {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  .sched-week-agenda h4 {
+    margin: 0 0 10px;
+    font-size: 22px;
+    font-weight: 650;
+  }
+  .sched-week-agenda ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .agenda-class {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 12px 14px;
+    border: 1px solid var(--ink);
+    border-radius: 8px;
+    background: var(--surface);
+    font-size: 20px;
+  }
+  .agenda-class strong {
+    font-weight: 650;
+  }
+  .agenda-class span {
+    color: var(--gray);
+    font-size: var(--text-small);
+  }
+  .agenda-free {
+    padding: 8px 14px;
+    border-radius: 8px;
+    background-color: var(--paper);
+    background-image: radial-gradient(var(--hair) 1px, transparent 1.2px);
+    background-size: 10px 10px;
+    color: var(--gray);
+    font-size: var(--text-small);
+  }
+
+  /* Confirm: a narrower card. */
+  table.confirm.schedule-confirm tr {
+    grid-template-columns: 1fr 1fr auto;
+    grid-template-areas:
+      "course course remove"
+      "title title title"
+      "term mode mode"
+      "days days days"
+      "start end end"
+      "location units units"
+      "section professor professor"
+      "crn crn crn";
+  }
+  table.confirm.schedule-confirm td:nth-child(13) {
+    justify-content: flex-start;
+  }
+  table.confirm.schedule-confirm tr.flagged {
+    padding-left: 12px;
+  }
+  .section table.confirm.schedule-confirm input[type="time"] {
+    font-size: 16px;
+  }
+  .sched-week-nav h3 {
+    font-size: 22px;
+  }
+  .day-toggles {
+    justify-content: space-between;
+  }
+  .section .day-toggles button {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 6px 0;
+  }
+  table.confirm.schedule-confirm select {
+    font-size: 18px;
+  }
+
+  .sched-term-label span {
+    display: block;
+    margin: 4px 0 0;
+    font-size: var(--text-small);
+  }
+
+  /* List: one block per class. */
+  table.paper.schedule-list,
+  table.paper.schedule-list tbody,
+  table.paper.schedule-list tfoot {
+    display: block;
+  }
+  table.paper.schedule-list thead {
+    display: none;
+  }
+  table.paper.schedule-list tr {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px 14px;
+    padding: 18px 0;
+    border-bottom: 1px solid var(--hair);
+  }
+  table.paper.schedule-list td {
+    padding: 0;
+    border: 0;
+    font-size: 20px;
+  }
+  table.paper.schedule-list td:first-child {
+    grid-column: 1 / -1;
+  }
+  table.paper.schedule-list td[data-label="Meets"],
+  table.paper.schedule-list td[data-label="Location"],
+  table.paper.schedule-list td[data-label="Professor"] {
+    grid-column: 1;
+    font-size: var(--text-small);
+  }
+  table.paper.schedule-list td[data-label="Units"] {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  table.paper.schedule-list td[data-label="Units"]::after {
+    content: " units";
+    color: var(--gray);
+    font-size: var(--text-small);
+  }
+  table.paper.schedule-list tfoot tr {
+    border-bottom: 0;
+  }
+  table.paper.schedule-list tfoot th {
+    padding: 0;
+  }
+  table.paper.schedule-list tfoot td {
+    padding: 0;
+  }
+}
