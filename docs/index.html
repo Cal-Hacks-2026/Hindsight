@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hindsight</title>
+<meta name="description" content="Hindsight is a transfer planner for California community-college students: what your credits count for, a plan for every term, and what's worth your time this week. Every answer cites its source.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#f7f7f2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#161714" media="(prefers-color-scheme: dark)">
+<link rel="canonical" href="https://cal-hacks-2026.github.io/Hindsight/">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Hindsight">
+<meta property="og:url" content="https://cal-hacks-2026.github.io/Hindsight/">
+<meta property="og:title" content="Hindsight · Transfer Planner">
+<meta property="og:description" content="Your whole path through college, in one place: what your credits count for, a plan for every term, and what's worth your time this week.">
+<meta property="og:image" content="https://cal-hacks-2026.github.io/Hindsight/media/hindsight-01-banner.jpg">
+<meta property="og:image:width" content="2000">
+<meta property="og:image:height" content="1333">
+<meta property="og:image:alt" content="Hindsight, Transfer Planner. The Janus mark beside the line: Your whole path through college, in one place.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Hindsight · Transfer Planner">
+<meta name="twitter:description" content="Your whole path through college, in one place: what your credits count for, a plan for every term, and what's worth your time this week.">
+<meta name="twitter:image" content="https://cal-hacks-2026.github.io/Hindsight/media/hindsight-01-banner.jpg">
+<meta name="twitter:image:alt" content="Hindsight, Transfer Planner. The Janus mark beside the line: Your whole path through college, in one place.">
+
+<link rel="icon" href="screenshots/transfer-planner/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  /* Hindsight's own tokens (apps/web/src/styles/tokens.css), with a dark counterpart. */
+  :root {
+    color-scheme: light;
+    --paper: #f7f7f2;
+    --surface: #ffffff;
+    --ink: #20211f;
+    --gray: #686a64;
+    --hair: #dedfd7;
+    --soft: #eeefe7;
+    --dot: #d9dbd1;
+    --band: #20211f;
+    --band-ink: #f7f7f2;
+    --band-gray: #b9bbb2;
+    --band-hair: #3a3b37;
+    --sans: Inter, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+    --read: 720px;
+    --wide: 1120px;
+    --gutter: 24px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      color-scheme: dark;
+      --paper: #161714;
+      --surface: #1e1f1c;
+      --ink: #ecede6;
+      --gray: #a3a59d;
+      --hair: #33342f;
+      --soft: #262723;
+      --dot: #2b2c28;
+      --band: #0e0f0d;
+      --band-ink: #ecede6;
+      --band-gray: #a3a59d;
+      --band-hair: #2c2d29;
+    }
+  }
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  @media (prefers-reduced-motion: no-preference) {
+    html { scroll-behavior: smooth; }
+  }
+  body {
+    margin: 0;
+    background-color: var(--paper);
+    background-image: radial-gradient(var(--dot) 0.8px, transparent 0.8px);
+    background-size: 24px 24px;
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 18px;
+    line-height: 1.6;
+    font-feature-settings: "cv11", "ss01";
+    -webkit-font-smoothing: antialiased;
+    overflow-wrap: break-word;
+  }
+  img { display: block; max-width: 100%; height: auto; }
+  a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+  a:hover { text-decoration-thickness: 2px; }
+  :focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 4px; }
+  .mono { font-family: var(--mono); font-size: 0.92em; letter-spacing: -0.01em; }
+
+  .skip {
+    position: absolute; left: var(--gutter); top: -100px;
+    background: var(--ink); color: var(--paper); padding: 8px 14px; border-radius: 6px; text-decoration: none;
+  }
+  .skip:focus { top: 12px; }
+
+  .wrap { max-width: calc(var(--read) + 2 * var(--gutter)); margin: 0 auto; padding: 0 var(--gutter); }
+  .wide { max-width: calc(var(--wide) + 2 * var(--gutter)); margin: 0 auto; padding: 0 var(--gutter); }
+
+  /* Top bar */
+  .top { border-bottom: 1px solid var(--hair); background: var(--paper); }
+  .top .wide { display: flex; align-items: center; justify-content: space-between; gap: 16px; height: 72px; }
+  .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+  /* The logo sits on paper (#f7f7f2); contrast lifts that to white so multiply drops it entirely. */
+  .brand img { width: 40px; height: auto; filter: contrast(1.25); mix-blend-mode: multiply; }
+  .brand b { display: block; font-size: 19px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; }
+  .brand span { display: block; font-size: 14px; color: var(--gray); line-height: 1.2; }
+  .top nav a { font-size: 15px; font-weight: 500; text-decoration: none; padding: 8px 2px; }
+  .top nav a:hover { text-decoration: underline; }
+  @media (prefers-color-scheme: dark) {
+    /* The logo is ink on paper; inverted and screened, only the lines remain. */
+    .brand img { filter: contrast(1.25) invert(1); mix-blend-mode: screen; }
+  }
+
+  /* Hero */
+  .hero { padding-top: 88px; padding-bottom: 56px; }
+  .label { margin: 0 0 20px; font-size: 14px; font-weight: 500; color: var(--gray); }
+  h1 {
+    margin: 0; max-width: 15ch;
+    font-size: clamp(40px, 7vw, 64px); line-height: 1.04; letter-spacing: -0.035em; font-weight: 700; text-wrap: balance;
+  }
+  .lede { margin: 24px 0 0; font-size: 20px; line-height: 1.55; color: var(--gray); max-width: 36em; }
+  .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; }
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 0 20px;
+    border-radius: 8px; border: 1px solid var(--ink); font-size: 16px; font-weight: 600; text-decoration: none;
+  }
+  .btn-primary { background: var(--ink); color: var(--paper); }
+  .btn-primary:hover { background: transparent; color: var(--ink); text-decoration: none; }
+  .btn-secondary { background: var(--surface); border-color: var(--hair); }
+  .btn-secondary:hover { border-color: var(--ink); text-decoration: none; }
+
+  .facts {
+    display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0;
+    margin: 48px 0 0; padding: 0; border-top: 1px solid var(--hair);
+  }
+  .facts div { padding: 16px 16px 0 0; }
+  .facts dt { font-size: 13px; color: var(--gray); }
+  .facts dd { margin: 4px 0 0; font-size: 15px; font-weight: 600; line-height: 1.4; }
+
+  /* Product frame */
+  .frame-band { padding-top: 8px; padding-bottom: 24px; }
+  .frame {
+    display: block; text-decoration: none; background: var(--surface);
+    border: 1px solid var(--hair); border-radius: 12px; overflow: hidden;
+  }
+  .frame:hover { border-color: var(--gray); }
+  .frame-bar {
+    display: flex; align-items: center; gap: 14px; height: 44px; padding: 0 16px;
+    border-bottom: 1px solid var(--hair); background: var(--soft);
+  }
+  .frame-dots { display: flex; gap: 6px; flex: none; }
+  .frame-dots i { width: 10px; height: 10px; border-radius: 50%; background: var(--hair); }
+  .frame-url {
+    flex: 1; min-width: 0; max-width: 420px; margin: 0 auto; padding: 4px 12px;
+    background: var(--surface); border: 1px solid var(--hair); border-radius: 6px;
+    font-size: 13px; color: var(--gray); text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .frame-spacer { width: 42px; flex: none; }
+  .caption { margin: 12px 0 0; font-size: 14px; color: var(--gray); }
+
+  /* Sections */
+  section { padding: 72px 0 0; }
+  h2 { margin: 0 0 20px; font-size: 32px; line-height: 1.15; letter-spacing: -0.025em; font-weight: 700; }
+  h3 { margin: 0 0 6px; font-size: 18px; line-height: 1.3; font-weight: 700; letter-spacing: -0.01em; }
+  p { margin: 0 0 16px; }
+  .muted { color: var(--gray); }
+  .key { font-size: 20px; font-weight: 600; line-height: 1.45; letter-spacing: -0.01em; }
+
+  .principles {
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 32px;
+  }
+  .card { background: var(--surface); border: 1px solid var(--hair); border-radius: 10px; padding: 20px 22px; }
+  .card p { margin: 0; font-size: 16px; color: var(--gray); line-height: 1.55; }
+
+  .steps { list-style: none; margin: 8px 0 0; padding: 0; counter-reset: step; }
+  .steps li {
+    counter-increment: step; display: grid; grid-template-columns: 44px 1fr; gap: 4px 12px;
+    padding: 18px 0; border-top: 1px solid var(--hair);
+  }
+  .steps li:last-child { border-bottom: 1px solid var(--hair); }
+  .steps li::before {
+    content: counter(step); grid-row: span 2;
+    font-size: 15px; font-weight: 600; color: var(--gray); font-variant-numeric: tabular-nums; padding-top: 1px;
+  }
+  .steps h3 { margin: 0; }
+  .steps p { margin: 0; font-size: 16px; color: var(--gray); }
+
+  .gallery { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 40px 32px; margin-top: 32px; }
+  .gallery figure { margin: 0; }
+  .gallery img { border: 1px solid var(--hair); border-radius: 10px; width: 100%; aspect-ratio: 3 / 2; object-fit: cover; }
+  .gallery figcaption { margin-top: 14px; font-size: 16px; color: var(--gray); line-height: 1.55; }
+  .gallery figcaption b { display: block; color: var(--ink); font-size: 17px; margin-bottom: 2px; }
+  .coverage { margin-top: 40px; max-width: var(--read); }
+
+  /* The campus operator: dark ink band */
+  .band { margin-top: 72px; padding: 72px 0; background: var(--band); color: var(--band-ink); }
+  .band section { padding: 0; }
+  .band p { color: var(--band-gray); }
+  .band p.key { color: var(--band-ink); }
+  .band h3 { margin-top: 32px; font-size: 15px; font-weight: 600; color: var(--band-ink); }
+  .rules { list-style: none; margin: 12px 0 0; padding: 0; }
+  .rules li { padding: 14px 0; border-top: 1px solid var(--band-hair); font-size: 16px; color: var(--band-gray); }
+  .rules li:last-child { border-bottom: 1px solid var(--band-hair); }
+  .rules b { color: var(--band-ink); font-weight: 600; }
+  .band code { font-family: var(--mono); font-size: 0.9em; color: var(--band-ink); }
+
+  .stack { margin: 8px 0 0; padding: 0; }
+  .stack div { display: grid; grid-template-columns: 200px 1fr; gap: 16px; padding: 12px 0; border-top: 1px solid var(--hair); }
+  .stack div:last-child { border-bottom: 1px solid var(--hair); }
+  .stack dt { font-weight: 600; font-size: 16px; }
+  .stack dd { margin: 0; font-size: 16px; color: var(--gray); }
+
+  .limits { margin: 8px 0 0; padding-left: 20px; }
+  .limits li { margin: 0 0 10px; font-size: 16px; color: var(--gray); }
+  .limits li::marker { color: var(--hair); }
+  .limits b { color: var(--ink); font-weight: 600; }
+
+  .next { margin: 20px 0 0; padding-left: 20px; }
+  .next li { margin: 0 0 8px; font-size: 17px; }
+  .next li::marker { color: var(--gray); }
+
+  .team { list-style: none; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 8px 0 0; padding: 0; }
+  .team a {
+    display: block; padding: 16px 18px; background: var(--surface); border: 1px solid var(--hair); border-radius: 10px;
+    text-decoration: none; font-weight: 600; font-size: 16px;
+  }
+  .team a span { display: block; font-weight: 400; font-size: 14px; color: var(--gray); }
+  .team a:hover { border-color: var(--ink); }
+
+  footer { margin-top: 96px; border-top: 1px solid var(--hair); background: var(--paper); }
+  footer .wide { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; padding-top: 28px; padding-bottom: 40px; }
+  footer p { margin: 0; font-size: 14px; color: var(--gray); }
+  footer nav { display: flex; flex-wrap: wrap; gap: 8px 20px; font-size: 14px; }
+
+  @media (max-width: 720px) {
+    :root { --gutter: 16px; }
+    body { font-size: 17px; }
+    .top .wide { height: 64px; }
+    .brand img { width: 34px; }
+    .brand b { font-size: 17px; }
+    .brand span { font-size: 13px; }
+    .hero { padding-top: 48px; padding-bottom: 40px; }
+    .lede { font-size: 18px; }
+    .actions .btn { flex: 1 1 100%; }
+    .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .facts div { padding-bottom: 4px; }
+    .frame-bar { height: 36px; padding: 0 10px; gap: 10px; }
+    .frame-dots i { width: 8px; height: 8px; }
+    .frame-url { font-size: 12px; padding: 2px 8px; }
+    .frame-spacer { display: none; }
+    section { padding-top: 56px; }
+    h2 { font-size: 26px; }
+    .key { font-size: 18px; }
+    .principles, .gallery, .team { grid-template-columns: 1fr; }
+    .gallery { gap: 32px; }
+    .band { margin-top: 56px; padding: 56px 0; }
+    .stack div { grid-template-columns: 1fr; gap: 2px; }
+    footer { margin-top: 72px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="top">
+  <div class="wide">
+    <a class="brand" href="./" aria-label="Hindsight, Transfer Planner">
+      <img src="screenshots/transfer-planner/logo.png" alt="Hindsight’s Janus logo: one face looking back, one looking forward" width="624" height="696">
+      <div><b>Hindsight</b><span>Transfer Planner</span></div>
+    </a>
+    <nav aria-label="Project">
+      <a href="https://github.com/Cal-Hacks-2026/Hindsight">GitHub ↗</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main">
+  <div class="wrap hero">
+    <p class="label">Transfer planner · Built at Cal Hacks 13.0</p>
+    <h1>Your whole path through college, in one place.</h1>
+    <p class="lede">Hindsight is a transfer planner for California community-college students, from the first class to graduation: what your credits count for, a plan for every term, and what’s worth your time this week. Every answer cites its source.</p>
+    <div class="actions">
+      <a class="btn btn-primary" href="https://hindsight-web-yl0k.onrender.com" target="_blank" rel="noopener">Open Hindsight →</a>
+      <a class="btn btn-secondary" href="https://github.com/Cal-Hacks-2026/Hindsight">Source on GitHub</a>
+    </div>
+    <dl class="facts">
+      <div><dt>Team</dt><dd>Four people</dd></div>
+      <div><dt>When</dt><dd>Cal Hacks 13.0</dd></div>
+      <div><dt>Stack</dt><dd>Claude, Factory Droid, Apify</dd></div>
+      <div><dt>Data</dt><dd>ASSIST agreements and GE lists</dd></div>
+    </dl>
+  </div>
+
+  <div class="wide frame-band">
+    <a class="frame" href="https://hindsight-web-yl0k.onrender.com" target="_blank" rel="noopener" aria-label="Open the live Hindsight app (new tab)">
+      <div class="frame-bar" aria-hidden="true">
+        <span class="frame-dots"><i></i><i></i><i></i></span>
+        <span class="frame-url">hindsight-web-yl0k.onrender.com</span>
+        <span class="frame-spacer"></span>
+      </div>
+      <img src="screenshots/transfer-planner/home.png" width="1440" height="1100" alt="Hindsight’s Home screen: this week’s moves, including the next course and the GE area it counts toward, beside the student’s path: requirements met, IGETC areas done, terms before transfer, transfer term and estimated finish.">
+    </a>
+    <p class="caption">Screens show a fictional student. They are not a live evaluation of a real student.</p>
+  </div>
+
+  <div class="wrap">
+    <section id="why" aria-labelledby="why-h">
+      <h2 id="why-h">Why we built it</h2>
+      <p>Three of us, Atishay, Karthik and Amaan, transferred from California community colleges to a CSU or UC. Shiv works in the admissions office at Texas State University and answers transfer-credit questions every day.</p>
+      <p>Advising meant reading ASSIST together. It never felt personal, and everyone took the same classes without knowing why. A course can transfer as credit and still not count toward the major. An unfinished sequence, a changed course number or an agreement from the wrong year can change the path to graduation.</p>
+      <p>Many internships and programs close in August and September, right as the first semester starts. We wanted one place that gets students there prepared.</p>
+
+      <div class="principles">
+        <div class="card">
+          <h3>Official sources make the decisions</h3>
+          <p>A deterministic matcher and planner work from ASSIST agreements, GE lists and catalog data. Claude explains the results.</p>
+        </div>
+        <div class="card">
+          <h3>Every claim is cited</h3>
+          <p>Matches link to ASSIST agreements and GE areas to their lists. Code drops any University guide item whose quote isn’t on the page it cites.</p>
+        </div>
+        <div class="card">
+          <h3>Any college, any university</h3>
+          <p>The app names no school. Every college and university pair in ASSIST gets credits, GE progress and community-college terms.</p>
+        </div>
+        <div class="card">
+          <h3>Lead with the next step</h3>
+          <p>The interface leads with the student’s next decision: the next course, the missing GE area, the next deadline.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="how" aria-labelledby="how-h">
+      <h2 id="how-h">How it works</h2>
+      <ol class="steps">
+        <li><h3>Upload the transcript</h3><p>Claude extracts the course rows. It’s optional: students with no courses yet can continue without one.</p></li>
+        <li><h3>Confirm courses</h3><p>The student reviews every row. Only confirmed rows are saved; the file itself isn’t stored.</p></li>
+        <li><h3>Match against ASSIST for the year taken</h3><p>Each course is checked against the agreement and the Cal-GETC or IGETC list for the year it was taken.</p></li>
+        <li><h3>Plan every term</h3><p>The planner schedules the remaining major courses around prerequisites, then fills missing GE areas before transfer.</p></li>
+        <li><h3>See your week</h3><p>Upload a class schedule to see classes, free time and the campus opportunities that fit it.</p></li>
+      </ol>
+    </section>
+  </div>
+
+  <div class="wide">
+    <section id="features" aria-labelledby="features-h">
+      <h2 id="features-h">What it does</h2>
+      <div class="gallery">
+        <figure>
+          <img src="media/hindsight-03-credits.jpg" width="2000" height="1333" loading="lazy" alt="Credits page: requirements met, GE areas done, and each open requirement with the ASSIST agreement behind it">
+          <figcaption><b>Credits</b>Each open requirement with the coursework that meets it and the ASSIST agreement behind it, plus Cal-GETC or IGETC progress by area.</figcaption>
+        </figure>
+        <figure>
+          <img src="media/hindsight-04-plan.jpg" width="2000" height="1333" loading="lazy" alt="Plan page: transfer term, estimated finish, start and transfer controls, and the course plan by term">
+          <figcaption><b>Plan</b>Every term through transfer and graduation, with saved classes counted as in progress and a printable education plan.</figcaption>
+        </figure>
+        <figure>
+          <img src="media/hindsight-05-schedule.jpg" width="2000" height="1333" loading="lazy" alt="Schedule page: a week grid with classes and free time">
+          <figcaption><b>Schedule</b>Upload a class schedule, confirm the rows, and see the week with free time and the classes that count toward the plan.</figcaption>
+        </figure>
+        <figure>
+          <img src="media/hindsight-06-opportunities.jpg" width="2000" height="1333" loading="lazy" alt="Opportunities page: campus listings by category, with This Week and Fits Your Week filters">
+          <figcaption><b>Opportunities</b>Campus listings ranked against majors, goals and interests, with dates, one reason each and source links.</figcaption>
+        </figure>
+        <figure>
+          <img src="media/hindsight-07-university.jpg" width="2000" height="1333" loading="lazy" alt="University page: What to Expect sections on orientation, academic culture, getting around and housing, each with numbered citations">
+          <figcaption><b>University</b>What to expect at the university, written only from its own pages, every item cited.</figcaption>
+        </figure>
+        <figure>
+          <img src="media/hindsight-08-ask.jpg" width="2000" height="1333" loading="lazy" alt="Ask Hindsight panel answering which GE areas are still needed, with numbered sources">
+          <figcaption><b>Ask</b>A panel on every page that answers from the student’s own records, with numbered sources.</figcaption>
+        </figure>
+      </div>
+      <p class="coverage muted">Credits, GE progress and community-college terms work for every college and university pair. The full plan through graduation covers San José State University’s Data Science, B.S. and Economics, B.S. SJSU also has the first University guide and campus opportunities feed.</p>
+    </section>
+  </div>
+
+  <div class="band">
+    <div class="wrap">
+      <section id="operator" aria-labelledby="operator-h">
+        <h2 id="operator-h">The campus operator</h2>
+        <p class="key">A Factory Droid service keeps campus opportunities fresh, and repairs a source when it breaks.</p>
+        <p>Apify’s Cheerio Scraper fetches curated campus calendars and listings. Scheduled runs, every two hours by default, scan those sources, rank the results and write opportunity alerts. Missing dates stay empty, and every listing links to its original page.</p>
+        <p>When a source returns empty results or an extraction error, Droid can inspect the fetched page, repair that source’s extractor, and rerun extraction to check the fix.</p>
+        <h3>Its permissions are deliberately narrow</h3>
+        <ul class="rules">
+          <li><b>Only failed sources’ extractors.</b> Only existing extractor files associated with failed sources may be patched, with a per-run patch budget.</li>
+          <li><b>No shell, no open web.</b> Shell commands and direct web access are denied; campus operations go through scoped tools.</li>
+          <li><b>Separate users, no API credentials.</b> The API and agent run as separate OS users in the production container. API credentials are withheld from the agent, and run logs redact secrets.</li>
+          <li><b>Everything recorded.</b> Plans, steps, patches, results and errors are recorded in <code>agent_events</code>. A redeploy resets repairs; the recorded diffs remain for review.</li>
+        </ul>
+      </section>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <section id="stack" aria-labelledby="stack-h">
+      <h2 id="stack-h">Built with</h2>
+      <dl class="stack">
+        <div><dt>Anthropic Claude</dt><dd>Transcript and class-schedule extraction, source-grounded questions, opportunity explanations and the cited University guide.</dd></div>
+        <div><dt>Factory Droid SDK</dt><dd>Scheduled campus operations and permission-scoped extractor repair.</dd></div>
+        <div><dt>Apify</dt><dd>Cheerio Scraper for campus event and opportunity sources and the University guide’s pages.</dd></div>
+        <div><dt>ASSIST</dt><dd>Official California articulation agreements and Cal-GETC / IGETC course lists.</dd></div>
+        <div><dt>React, TypeScript, Vite</dt><dd>Responsive student workspace and PWA manifest.</dd></div>
+        <div><dt>FastAPI, Python</dt><dd>Matching, planning, service integrations and typed API responses.</dd></div>
+        <div><dt>Supabase</dt><dd>Profiles, confirmed coursework, class schedules, cached agreements and GE lists, opportunities and run events.</dd></div>
+        <div><dt>Render</dt><dd>Static frontend and a shared API and agent container.</dd></div>
+      </dl>
+    </section>
+
+    <section id="limits" aria-labelledby="limits-h">
+      <h2 id="limits-h">Current limits</h2>
+      <ul class="limits">
+        <li><b>A proposal is not a confirmed schedule.</b> Actual course offerings haven’t been verified. University requirements use the SJSU <span class="mono">2025–26</span> catalog and haven’t been checked against <span class="mono">2026–27</span>.</li>
+        <li><b>The plan covers major requirements and GE.</b> Total degree units, residency and graduation applications are outside it. AP and IB credit and courses from other colleges don’t count toward GE yet.</li>
+        <li><b>Some requirements stay unscheduled.</b> Requirements without a course list, including Data Science domain electives, aren’t planned or counted in the estimated finish.</li>
+        <li><b>Full coverage is SJSU only.</b> Only SJSU’s Data Science and Economics have a plan through graduation, and only SJSU has a University guide and an opportunities feed.</li>
+        <li><b>Profiles live in one browser.</b> Cross-device accounts and persistent conversations are future work.</li>
+      </ul>
+    </section>
+
+    <section id="next" aria-labelledby="next-h">
+      <h2 id="next-h">What’s next</h2>
+      <p class="key">Hindsight is where a student lands before they land at a university.</p>
+      <ul class="next">
+        <li>Compare schools side by side.</li>
+        <li>An application timeline built from the transfer term: UC TAG, UC and CSU applications, ADT and financial-aid deadlines.</li>
+        <li>The first semester planned before it starts, with the August–September internships and programs surfaced while the student is still at community college.</li>
+        <li>Calendar sync and a weekly digest.</li>
+        <li>More campuses with full plans, University guides and opportunity feeds.</li>
+        <li>Counselor sharing.</li>
+      </ul>
+    </section>
+
+    <section id="team" aria-labelledby="team-h">
+      <h2 id="team-h">Team</h2>
+      <ul class="team">
+        <li><a href="https://github.com/atishaypahadiya">Atishay Pahadiya<span>@atishaypahadiya</span></a></li>
+        <li><a href="https://github.com/sh1vendra">Shivendra Bhagat<span>@sh1vendra</span></a></li>
+        <li><a href="https://github.com/amaanshaghel">Amaan Shaghel<span>@amaanshaghel</span></a></li>
+        <li><a href="https://github.com/vdkarthikeya">Dhana Karthikeya Ventrapragada<span>@vdkarthikeya</span></a></li>
+      </ul>
+    </section>
+  </div>
+</main>
+
+<footer>
+  <div class="wide">
+    <p>Hindsight · Built at Cal Hacks 13.0</p>
+    <nav aria-label="Footer">
+      <a href="https://hindsight-web-yl0k.onrender.com" target="_blank" rel="noopener">Live app</a>
+      <a href="https://github.com/Cal-Hacks-2026/Hindsight">GitHub</a>
+      <a href="https://github.com/Cal-Hacks-2026/Hindsight/blob/main/docs/ROADMAP.md">Roadmap</a>
+    </nav>
+  </div>
+</footer>
+</body>
+</html>
