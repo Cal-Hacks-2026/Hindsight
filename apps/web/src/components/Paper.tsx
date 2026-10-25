@@ -1,11 +1,10 @@
-// The scientific-paper layout (DESIGN.md §6): a masthead, numbered sections on hairlines,
+// The scientific-paper layout (DESIGN.md §6): a page title, numbered sections on hairlines,
 // and sidenotes in the margin for sources and asides.
 import type { ReactNode } from "react";
 
-export function Masthead({ kicker, children, byline }: { kicker: ReactNode; children: ReactNode; byline?: ReactNode }) {
+export function Masthead({ children, byline }: { children: ReactNode; byline?: ReactNode }) {
   return (
     <div className="masthead">
-      <div className="kicker">{kicker}</div>
       <h1>{children}</h1>
       {byline && <div className="byline">{byline}</div>}
     </div>

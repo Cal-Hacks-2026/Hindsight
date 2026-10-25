@@ -9,7 +9,6 @@ import {
   CAMPUS_LONG,
   CAMPUS_SHORT,
   SENDING_LONG,
-  bylineName,
   collapse,
   countWord,
   formatLongDate,
@@ -192,11 +191,7 @@ export function Degree() {
 function NoResults({ hasProfile }: { hasProfile: boolean }) {
   return (
     <>
-      <Masthead kicker="Report No. 01 · Credit articulation & degree plan">
-        Your degree,
-        <br />
-        in <em>hindsight</em>.
-      </Masthead>
+      <Masthead>Your Degree</Masthead>
       <Section label="Summary" last>
         <p className="lede">
           No results yet. Upload your {SENDING_LONG} transcript and confirm your courses; this report then shows what
@@ -204,7 +199,7 @@ function NoResults({ hasProfile }: { hasProfile: boolean }) {
         </p>
         <p className="actions" style={{ marginTop: 28 }}>
           <Link className="button primary" to="/onboarding">
-            {hasProfile ? "Upload your transcript" : "Set up your profile"}
+            {hasProfile ? "Upload Your Transcript" : "Set Up Your Profile"}
           </Link>
         </p>
       </Section>
@@ -260,14 +255,7 @@ function Report({ profile, matches, courses }: { profile: Profile; matches: Matc
 
   return (
     <>
-      <Masthead
-        kicker="Report No. 01 · Credit articulation & degree plan"
-        byline={`${profile.name.trim() ? `Prepared for ${bylineName(profile.name)} · ` : ""}${names.collegeLong} → ${CAMPUS_LONG[profile.campus]} · ${today}`}
-      >
-        Your degree,
-        <br />
-        in <em>hindsight</em>.
-      </Masthead>
+      <Masthead byline={`${names.college} → ${names.campus} · ${today}`}>Your Degree</Masthead>
 
       {missed.length > 0 && <Missed rows={missed} courses={courses} />}
 
@@ -287,7 +275,7 @@ function Report({ profile, matches, courses }: { profile: Profile; matches: Matc
 
       <Credits rows={rows} courses={courses} majors={majors} campus={campus} />
 
-      <Section num={2} label="Plan" title="The books still to collect, term by term." notes={<PlanNotes majors={planned} plans={plans.status === "ready" ? plans.plans : undefined} names={names} />}>
+      <Section num={2} label="Plan" title="Remaining Courses, Term by Term" notes={<PlanNotes majors={planned} plans={plans.status === "ready" ? plans.plans : undefined} names={names} />}>
         <NotPlanned majors={uncurated} campus={campus} />
         {!planned.length ? null : plans.status === "loading" ? (
           <PlanLoading />
@@ -427,7 +415,7 @@ function GoalCheck({ goals, majors, plans }: { goals: string; majors: string[]; 
   if (!goal) {
     if (!mentionsGraduation(text)) return null;
     return (
-      <Section label="Your goal">
+      <Section label="Your Goal">
         <p className="goal">
           You wrote "{text}", but we couldn't read a target term from it. Add one like "Spring 2028" so we can check
           it against your plan.{" "}
@@ -440,7 +428,7 @@ function GoalCheck({ goals, majors, plans }: { goals: string; majors: string[]; 
 
   if (finishAt <= goal.index) {
     return (
-      <Section label="Your goal">
+      <Section label="Your Goal">
         <p className="goal ok">
           On track. Your plan finishes {finish}, in time for your goal of graduating by {goal.label}.
         </p>
@@ -456,7 +444,7 @@ function GoalCheck({ goals, majors, plans }: { goals: string; majors: string[]; 
       : [];
   });
   return (
-    <Section label="Your goal">
+    <Section label="Your Goal">
       <p className="goal late">
         {goal.label} isn't reachable with {majorsLine(majors)}: the plan finishes {finish}.
       </p>
@@ -511,7 +499,7 @@ function Credits({ rows, courses, majors, campus }: { rows: Row[]; courses?: Cou
   };
 
   return (
-    <Section num={1} label="Credits" title="What is already on your shelf." notes={<CreditNotes rows={rows} />}>
+    <Section num={1} label="Credits" title="Credits Toward Your Requirements" notes={<CreditNotes rows={rows} />}>
       <figure>
         <Shelf wide label="Requirements, as shelved books">
           {onShelf.map(spine)}
@@ -535,8 +523,8 @@ function Credits({ rows, courses, majors, campus }: { rows: Row[]; courses?: Cou
           <caption>Table 1. Requirement by requirement.</caption>
           <thead>
             <tr>
-              <th scope="col">{campus} requirement</th>
-              <th scope="col">Satisfied by</th>
+              <th scope="col">{campus} Requirement</th>
+              <th scope="col">Satisfied By</th>
               <th scope="col">Status</th>
               <th scope="col">Source</th>
             </tr>
@@ -555,9 +543,9 @@ function Credits({ rows, courses, majors, campus }: { rows: Row[]; courses?: Cou
 
 function Missed({ rows, courses }: { rows: Row[]; courses?: Course[] }) {
   return (
-    <Section label="Heads up" notesFlush>
+    <Section label="Heads Up" notesFlush>
       <div className="missed">
-        <h2>Things your counselor missed.</h2>
+        <h2>Things Your Counselor Missed</h2>
         <ul>
           {rows.map((r) => {
             const via = r.req.satisfied_by
@@ -775,9 +763,7 @@ function Roadmap({
       )}
 
       <div className="phase">
-        <h3 className="phase-head">
-          <span className="phase-kicker">Before transfer</span> at {college}
-        </h3>
+        <h3 className="phase-head">Before Transfer at {college}</h3>
         {before.length ? (
           <PlanShelves
             semesters={before}
@@ -797,9 +783,7 @@ function Roadmap({
       </div>
 
       <div className="phase">
-        <h3 className="phase-head">
-          <span className="phase-kicker">After transfer</span> at {campus}
-        </h3>
+        <h3 className="phase-head">After Transfer at {campus}</h3>
         {after.length ? (
           <PlanShelves
             semesters={after}
@@ -904,7 +888,7 @@ function PlanShelves({ semesters, caption, unitLabel }: { semesters: Semester[];
           </div>
           <div className="term-shelf">
             <button type="button" className="text" onClick={() => setExpanded((e) => !e)} aria-expanded={expanded}>
-              {expanded ? "Show the first three terms only" : `Show every term to ${lastTerm(semesters)}`}
+              {expanded ? "Show the First Three Terms Only" : `Show Every Term to ${lastTerm(semesters)}`}
             </button>
           </div>
         </div>
@@ -992,7 +976,7 @@ function PlanError({ error }: { error: unknown }) {
       : "We couldn't reach the Hindsight server. Reload to try again.";
   return (
     <div className="state" role="alert">
-      <h3>Couldn't build a plan.</h3>
+      <h3>Couldn't Build a Plan</h3>
       <p>{detail}</p>
     </div>
   );
@@ -1021,10 +1005,9 @@ function Ask() {
             placeholder="Can I graduate by Spring 2028 if I add a major?"
           />
           <button className="primary" type="submit">
-            Ask the counselor
+            Ask the Counselor
           </button>
         </div>
-        <p>Answers cite ASSIST and the SJSU catalog. Hindsight never decides whether a credit counts; it explains the computed result.</p>
       </form>
     </Section>
   );

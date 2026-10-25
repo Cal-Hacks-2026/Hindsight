@@ -4,6 +4,7 @@
 import { Fragment, useEffect, useRef, useState, type FormEvent, type ReactNode, type Ref } from "react";
 import { Link, useLocation, useNavigate, useSearchParams } from "react-router";
 import type { ChatMessage, Citation } from "@hindsight/contracts";
+import { Masthead } from "../components/Paper";
 import { api, ApiError } from "../lib/api";
 import { loadSession } from "../lib/session";
 import { useNow } from "../lib/time";
@@ -87,22 +88,14 @@ export function Counselor() {
 
   const asked = new Set(exchanges.map((e) => e.question));
   const chips = (exchanges.length ? NEXT_CHIPS : FIRST_CHIPS).filter((c) => !asked.has(c)).slice(0, 3);
-  const number = String(Math.max(1, exchanges.length)).padStart(2, "0");
 
   return (
     <div className="cs">
-      <header className="cs-title">
-        <div className="cs-label">Correspondence · Question {number}</div>
-        <h1>
-          Ask anything.
-          <br />
-          See the <em>sources</em>.
-        </h1>
-      </header>
+      <Masthead>Ask the Counselor</Masthead>
 
       {!profile ? (
         <section className="cs-row">
-          <div className="cs-label cs-row-label">Start here</div>
+          <div className="cs-label cs-row-label">Start Here</div>
           <div className="cs-main">
             <p className="cs-lead">The counselor answers from your transcript and degree plan.</p>
             <p>
@@ -124,7 +117,7 @@ export function Counselor() {
           ))}
 
           <section className="cs-row cs-ask">
-            <div className="cs-label cs-row-label">{exchanges.length ? "Ask next" : "Ask"}</div>
+            <div className="cs-label cs-row-label">{exchanges.length ? "Ask Next" : "Ask"}</div>
             <form className="cs-main cs-form" onSubmit={onSubmit}>
               <label htmlFor="cs-question" className="cs-sr">
                 Your question
@@ -157,8 +150,6 @@ export function Counselor() {
           </section>
         </>
       )}
-
-      <footer className="cs-foot cs-label">Hindsight explains computed results · It never decides whether a credit counts</footer>
     </div>
   );
 }
@@ -178,7 +169,7 @@ function ExchangeView({
   return (
     <article ref={ref} className="cs-exchange" aria-label={`Question ${index + 1}`}>
       <section className="cs-row">
-        <div className="cs-label cs-row-label">You asked</div>
+        <div className="cs-label cs-row-label">You Asked</div>
         <p className="cs-main cs-question">“{question}”</p>
         <div className="cs-margin" />
       </section>
@@ -193,7 +184,7 @@ function ExchangeView({
             <p className="cs-muted">{errorDetail(state.error)}</p>
             {onRetry && (
               <button type="button" className="cs-btn" onClick={onRetry}>
-                Try again
+                Try Again
               </button>
             )}
           </div>
@@ -311,14 +302,14 @@ function AdvisorBlock({ question, cite }: { question: string; cite: (text: strin
 
   return (
     <div className="cs-advisor">
-      <div className="cs-label">Confirm with your advisor · Drafted for you</div>
+      <div className="cs-label">Confirm with Your Advisor</div>
       <p className="cs-advisor-q">“{cite(question)}”</p>
       <div className="cs-actions">
         <a className="cs-btn cs-btn-solid" href={mailto}>
-          Email my advisor
+          Email My Advisor
         </a>
         <button type="button" className="cs-btn" onClick={() => void copy()}>
-          {copied ? "Copied" : "Copy question"}
+          {copied ? "Copied" : "Copy Question"}
         </button>
       </div>
     </div>

@@ -10,6 +10,6 @@
   --check: #8A5F0E;
   --missing: #A3402F;
   --sjsu: #4A5A78;
-  --serif: 'Instrument Serif',Georgia,serif;
-  --sans: Inter,'Helvetica Neue',Helvetica,Arial,sans-serif;
+  /* One family for everything; hierarchy comes from weight and size. */
+  --font: 'Helvetica Neue',Helvetica,Arial,sans-serif;
 }

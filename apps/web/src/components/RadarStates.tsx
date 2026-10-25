@@ -45,13 +45,13 @@ export function RadarLoading({ startedAt, skeletons = 3 }: { startedAt: number; 
 }
 
 export function RadarError({ error, onRetry }: { error: unknown; onRetry: () => void }) {
-  let title = "Couldn't load your opportunities.";
+  let title = "Couldn't Load Your Opportunities";
   let detail = "We couldn't reach the Hindsight server. Check your connection and try again.";
   let canRetry = true;
 
   if (error instanceof ApiError) {
     if (error.status === 404) {
-      title = "We couldn't find your profile.";
+      title = "We Couldn't Find Your Profile";
       detail = "It may have been reset on the server. Set it up again to get your opportunities back.";
       canRetry = false;
     } else if (error.status === 429) {
@@ -68,11 +68,11 @@ export function RadarError({ error, onRetry }: { error: unknown; onRetry: () => 
       <div className="actions">
         {canRetry ? (
           <button className="primary" onClick={onRetry}>
-            Try again
+            Try Again
           </button>
         ) : (
           <Link className="button primary" to="/onboarding">
-            Set up your profile
+            Set Up Your Profile
           </Link>
         )}
       </div>
@@ -83,7 +83,7 @@ export function RadarError({ error, onRetry }: { error: unknown; onRetry: () => 
 export function RadarEmpty({ campus }: { campus: Campus }) {
   return (
     <div className="state">
-      <h3>No opportunities yet.</h3>
+      <h3>No Opportunities Yet</h3>
       <p>
         No upcoming {CAMPUS_SHORT[campus]} events or opportunities matched your profile. Droid rescans campus sources
         on a schedule, so check back after the next run.
@@ -98,11 +98,11 @@ export function RadarEmpty({ campus }: { campus: Campus }) {
 export function NoProfile() {
   return (
     <div className="state">
-      <h3>Set up your profile first.</h3>
+      <h3>Set Up Your Profile First</h3>
       <p>Hindsight ranks campus events and opportunities against your majors, goals, and interests.</p>
       <div className="actions">
         <Link className="button primary" to="/onboarding">
-          Start onboarding
+          Start Onboarding
         </Link>
       </div>
     </div>

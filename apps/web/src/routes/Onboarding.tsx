@@ -9,33 +9,21 @@ import { saveSession } from "../lib/session";
 type Step = "profile" | "upload" | "confirm";
 type Row = { key: number; course: Course };
 
-const STEPS: { id: Step; label: string; title: string; note: { lead: string; body: string } }[] = [
+const STEPS: { id: Step; label: string; note: string }[] = [
   {
     id: "profile",
-    label: "About you",
-    title: "Who this report is for.",
-    note: {
-      lead: "Why we ask.",
-      body: "Your majors decide which ASSIST agreements and catalog requirements are checked. Goals and interests rank your opportunities.",
-    },
+    label: "About You",
+    note: "Your majors decide which ASSIST agreements and catalog requirements are checked. Goals and interests rank your opportunities.",
   },
   {
     id: "upload",
     label: "Transcript",
-    title: "Your transcript, as you have it.",
-    note: {
-      lead: "What happens next.",
-      body: "Claude reads the courses off the page. Your file isn't stored; we keep only the course rows you confirm. Nothing is matched until you've checked every row.",
-    },
+    note: "Claude reads the courses off the page. Your file isn't stored; we keep only the course rows you confirm. Nothing is matched until you've checked every row.",
   },
   {
     id: "confirm",
-    label: "Confirm courses",
-    title: "Check every row against your transcript.",
-    note: {
-      lead: "Only what you confirm counts.",
-      body: "Matching against ASSIST is deterministic and uses exactly these rows. Fix anything we misread.",
-    },
+    label: "Confirm Courses",
+    note: "Check every row against your transcript and fix anything we misread. Matching against ASSIST uses exactly these rows.",
   },
 ];
 
@@ -53,18 +41,8 @@ export function Onboarding() {
 
   return (
     <div className="intake">
-      <Masthead kicker="Intake · Three steps" byline={`${DE_ANZA_NAME} → ${SJSU_NAME}`}>
-        Begin with your
-        <br />
-        <em>transcript</em>.
-      </Masthead>
-      <Section
-        num={index + 1}
-        label={current.label}
-        title={current.title}
-        last
-        notes={<Note lead={current.note.lead}>{current.note.body}</Note>}
-      >
+      <Masthead>Set Up Your Profile</Masthead>
+      <Section num={index + 1} label={current.label} last notesFlush notes={<Note>{current.note}</Note>}>
         <ol className="steps" aria-label="Steps">
           {STEPS.map((s, i) => (
             <li key={s.id} aria-current={s.id === step ? "step" : undefined} className={i < index ? "done" : undefined}>
@@ -272,7 +250,7 @@ function UploadStep({ profile, onDone }: { profile: Profile; onDone: (courses: C
       </p>
       {empty && (
         <div className="state" role="alert">
-          <h3>We didn't find any courses in this file.</h3>
+          <h3>We Didn't Find Any Courses in This File</h3>
           <p>
             It may be blank, unreadable, or not a transcript. Try another file, or continue without courses and every
             requirement will show as missing.
@@ -296,19 +274,19 @@ function UploadStep({ profile, onDone }: { profile: Profile; onDone: (courses: C
         {empty ? (
           <>
             <button className="primary" type="button" onClick={tryAnother} disabled={!!busy}>
-              Try another file
+              Try Another File
             </button>
             <button type="button" onClick={() => void continueWithoutCourses()} disabled={!!busy}>
-              {busy === "matching" ? "Matching…" : "Continue without courses"}
+              {busy === "matching" ? "Matching…" : "Continue Without Courses"}
             </button>
           </>
         ) : (
           <>
             <button className="primary" type="submit" disabled={!file || !!busy}>
-              {busy === "reading" ? "Reading transcript…" : "Upload"}
+              {busy === "reading" ? "Reading Transcript…" : "Upload"}
             </button>
             <button className="text" type="button" onClick={() => void continueWithoutCourses()} disabled={!!busy}>
-              {busy === "matching" ? "Matching…" : "I haven't taken any college courses yet"}
+              {busy === "matching" ? "Matching…" : "I Haven't Taken Any College Courses Yet"}
             </button>
           </>
         )}
@@ -405,10 +383,10 @@ function ConfirmStep({
       {error && <p className="error">{error}</p>}
       <div className="actions">
         <button type="button" onClick={add}>
-          + Add course
+          + Add Course
         </button>
         <button className="primary" type="button" onClick={confirmAndMatch} disabled={busy || rows.length === 0}>
-          {busy ? "Matching…" : "These are right — match my credits"}
+          {busy ? "Matching…" : "These Are Right — Match My Credits"}
         </button>
       </div>
     </div>

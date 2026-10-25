@@ -12,15 +12,7 @@ const NAV = [
   { to: "/degree", label: "Degree" },
   { to: "/radar", label: "Opportunities" },
   { to: "/counselor", label: "Counselor" },
-  { to: "/agent", label: "Droid activity" },
 ];
-
-// The footer's right-hand note, per page (design/mockups).
-const FOOTER_NOTE: Record<string, string> = {
-  "/radar": "Every listing links to its source",
-  "/counselor": "Hindsight explains computed results · It never decides whether a credit counts",
-};
-const DEFAULT_NOTE = "Every claim is sourced · Confirm decisions with your advisor";
 
 export function Layout() {
   const { pathname } = useLocation(); // also re-reads the session on navigation (onboarding writes it)
@@ -57,7 +49,10 @@ export function Layout() {
       <header className="app-header">
         <Link to="/" className="brand" aria-label={`${APP_NAME}, home`}>
           <img src="/brand/janus-ink.svg" alt="" width={34} height={38} />
-          <span className="wordmark">{APP_NAME.toUpperCase()}</span>
+          <span className="brand-text">
+            <span className="wordmark">{APP_NAME.toUpperCase()}</span>
+            <span className="subline">Plan Your Four-Year Journey</span>
+          </span>
         </Link>
         <nav className="nav" aria-label="Main">
           {NAV.map((item) => (
@@ -70,9 +65,9 @@ export function Layout() {
           <span className="header-meta">
             {[CAMPUS_SHORT[profile.campus], majorsLine(profile.majors), currentTerm()].filter(Boolean).join(" · ")}
           </span>
-        ) : (
+        ) : pathname === "/onboarding" ? null : (
           <Link to="/onboarding" className="header-meta">
-            Set up your profile →
+            Set Up Your Profile
           </Link>
         )}
       </header>
@@ -87,10 +82,8 @@ export function Layout() {
       </main>
       <div className="hairline" />
       <footer className="app-footer">
-        <span>
-          {APP_NAME} · <em className="motto">Respice · Prospice</em>
-        </span>
-        <span>{FOOTER_NOTE[pathname] ?? DEFAULT_NOTE}</span>
+        <span>Confirm decisions with your advisor.</span>
+        <Link to="/agent">How listings stay fresh</Link>
       </footer>
     </>
   );
