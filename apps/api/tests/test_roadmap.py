@@ -196,3 +196,18 @@ def test_term_system_from_assist_with_a_fallback():
 ])
 def test_option_alternatives(option, alternatives):
     assert planner.option_alternatives(option) == alternatives
+
+
+def test_unknown_uncurated_labels_never_reach_assist(assist_fake):
+    """A label ASSIST doesn't list for this pair would otherwise trigger a live lookup per label."""
+    profile = Profile(id="p", created_at="", **PROFILE)
+    majors, _ = planner.resolve_majors(DS, [], "sjsu", planner.load_majors())
+    asked = []
+
+    def match(label):
+        asked.append(label)
+        return get_service().match(113, 39, ASSIST_YEAR_ID, label, [])
+
+    fake = [f"Basket Weaving {i}, B.A." for i in range(20)]
+    planner.roadmap_for(profile, [], majors, fake, match, today=OCT_2026)
+    assert asked == [DS]

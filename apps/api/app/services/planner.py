@@ -836,13 +836,30 @@ def sending_catalog(profile: Profile, label: str) -> SendingCatalog | None:
     )
 
 
+MAX_UNCURATED_FOR_ROADMAP = 3
+
+
+def _known_labels(profile: Profile, labels: list[str]) -> list[str]:
+    """Uncurated labels worth an ASSIST match: only exact labels from the (cached) majors list for
+    this college pair, and only a few, so one request can't fan out into many ASSIST calls."""
+    if not labels:
+        return []
+    try:
+        known = {m.label for m in get_service().majors(profile.sending_institution_id,
+                                                       profile.receiving_institution_id, ASSIST_YEAR_ID)}
+    except AssistError as e:
+        log.info("roadmap: ASSIST majors unavailable: %s", e)
+        return []
+    return [label for label in labels if label in known][:MAX_UNCURATED_FOR_ROADMAP]
+
+
 def roadmap_for(profile: Profile, courses: list[Course], majors: list[Major], uncurated: list[str],
                 planning_match: Callable[[str], MatchResult | None], today: date | None = None,
                 transfer_term: str | None = None) -> Roadmap:
     """The roadmap /plan and the counselor both show. `planning_match` gives a major's ASSIST
     match with in-progress courses as passed (None when there's no agreement or ASSIST is down).
     Majors without curated requirements still get their community-college courses."""
-    labels = [m.major_label for m in majors] + uncurated
+    labels = [m.major_label for m in majors] + _known_labels(profile, uncurated)
     matches = {label: m for label in labels if (m := planning_match(label)) is not None}
     catalogs = {label: c for label in matches if (c := sending_catalog(profile, label)) is not None}
     done = satisfied(courses, matches.values(), majors)
