@@ -13,6 +13,25 @@ export const TYPE_LABEL: Record<string, string> = {
 
 export const typeLabel = (type: string) => TYPE_LABEL[type] ?? type;
 
+const MODALITY_LABEL: Record<string, string> = {
+  in_person: "In person",
+  online: "Online",
+  hybrid: "Hybrid",
+};
+
+const checkedFmt = new Intl.DateTimeFormat("en-US", {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+  timeZone: "UTC",
+});
+
+/** "Checked Oct 25, 2026" for a program's YYYY-MM-DD last_checked. */
+function checkedOn(day: string): string | null {
+  const at = new Date(`${day}T00:00:00Z`);
+  return Number.isNaN(at.getTime()) ? null : `Checked ${checkedFmt.format(at)}`;
+}
+
 // Scraped URLs are untrusted: only link out to http(s).
 export function safeUrl(url: string): URL | undefined {
   try {
@@ -40,11 +59,17 @@ export function Listing({
   item,
   now,
   rank,
+  kind,
+  fit,
 }: {
   item: RankedOpportunity;
   now: number;
   /** Lead with the rank numeral instead of the time left. */
   rank?: number;
+  /** The listing's subcategory label ("Career Fairs"); the item type otherwise. */
+  kind?: string;
+  /** Why it fits the student's week: "Free Tuesday 2–5 PM". */
+  fit?: string;
 }) {
   const link = safeUrl(item.url);
   const target = closeAt(item, now);
@@ -67,9 +92,13 @@ export function Listing({
     : [starts && `Starts ${starts}`, due && `Deadline ${due}`]
         .filter(Boolean)
         .join(" · ");
-  const meta = [typeLabel(item.type), item.org, link && hostOf(link)]
+  const meta = [kind ?? typeLabel(item.type), item.org, link && hostOf(link)]
     .filter(Boolean)
     .join(" · ");
+  const where = [item.modality && MODALITY_LABEL[item.modality], item.location]
+    .filter(Boolean)
+    .join(" · ");
+  const recurring = item.type === "program" && item.window;
 
   return (
     <li className="entry">
@@ -97,7 +126,9 @@ export function Listing({
         ) : (
           <>
             <div className="entry-big">—</div>
-            <div className="label later">No deadline</div>
+            <div className="label later">
+              {recurring ? "Recurring" : "No deadline"}
+            </div>
           </>
         )}
       </div>
@@ -115,8 +146,21 @@ export function Listing({
             item.title
           )}
         </h3>
+        {fit && <p className="entry-fit">{fit}</p>}
         {item.reason && <p className="entry-reason">{item.reason}</p>}
         {when && <p className="entry-when">{when}</p>}
+        {where && <p className="entry-where">{where}</p>}
+        {recurring && (
+          <p className="entry-when">
+            {item.window}
+            {item.last_checked && (
+              <span className="entry-checked">
+                {" "}
+                · {checkedOn(item.last_checked)}
+              </span>
+            )}
+          </p>
+        )}
       </div>
       {link && (
         <a

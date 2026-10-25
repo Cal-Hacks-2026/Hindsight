@@ -400,7 +400,7 @@ def ranked_opportunities(profile: Profile, rows: list[dict[str, Any]], now: date
 
 # ---- Opportunities: ten categories, programs, fits your week ----
 
-FILTERED_FEED_SIZE = 50
+FILTERED_FEED_SIZE = 100  # Fits Your Week narrows a week of listings in the browser
 
 
 @dataclass
@@ -468,7 +468,7 @@ def feed(profile: Profile, rows: list[dict[str, Any]], filters: Filters | None =
          now: datetime | None = None) -> tuple[list[RankedOpportunity], list[OpportunityCategory]]:
     """The feed and per-category counts. With no filter it's the ranked top 20 with Claude reasons
     (ranked_opportunities). With any filter it's every current listing that passes, best first,
-    up to 50; reasons come from the cache or are computed, so a filter never waits on Claude."""
+    up to 100; reasons come from the cache or are computed, so a filter never waits on Claude."""
     now = now or datetime.now(timezone.utc)
     filters = filters or Filters()
     live = [r for r in rows if is_current(r, now) and not is_for_faculty(r)]

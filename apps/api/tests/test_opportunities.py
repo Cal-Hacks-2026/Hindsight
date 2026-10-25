@@ -278,6 +278,14 @@ def test_time_modality_and_location_filters(feed):
     assert [i["id"] for i in get(pid, location="ballroom").json()["items"]] == ["ds"]
 
 
+def test_filters_dont_spend_the_claude_per_ip_limit(feed, monkeypatch):
+    monkeypatch.setattr(claude_limits, "limiter", ClaudeLimiter(per_ip_per_min=1, daily_cap=100))
+    pid = make_profile()
+    codes = [get(pid, category=c).status_code for c in ("clubs", "research", "careers", "growth")]
+    assert codes == [200, 200, 200, 200]
+    assert [get(pid).status_code, get(pid).status_code] == [200, 429]  # the unfiltered feed still counts
+
+
 def test_bad_filters_are_422(feed):
     pid = make_profile()
     assert get(pid, category="parties").status_code == 422

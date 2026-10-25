@@ -17,6 +17,7 @@ import type {
   GeResponse,
   HealthResponse,
   MatchResult,
+  OpportunitiesQuery,
   OpportunitiesResponse,
   PlanResponse,
   ProfileResponse,
@@ -134,7 +135,10 @@ export const api = {
       `/profiles/${enc(id)}/ge${pattern ? `?${new URLSearchParams({ pattern })}` : ""}`,
     ),
 
-  opportunities: (id: string) => request<OpportunitiesResponse>(`/profiles/${enc(id)}/opportunities`),
+  opportunities: (id: string, query: OpportunitiesQuery = {}) => {
+    const qs = new URLSearchParams(Object.entries(query).filter((e): e is [string, string] => !!e[1])).toString();
+    return request<OpportunitiesResponse>(`/profiles/${enc(id)}/opportunities${qs ? `?${qs}` : ""}`);
+  },
 
   counselor: (id: string, body: CounselorRequest) =>
     request<CounselorResponse>(`/profiles/${enc(id)}/counselor`, { method: "POST", body: json(body) }),

@@ -4,7 +4,7 @@ import uuid
 from datetime import timedelta
 from typing import Literal
 
-from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, Query, Response, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, Query, Request, Response, UploadFile
 from fastapi.concurrency import run_in_threadpool
 
 from app.config import campus_for
@@ -180,13 +180,15 @@ def _ge_progress(profile: Profile, courses: list, pattern: str | None) -> GeResp
 
 
 @router.get("/{profile_id}/opportunities", response_model=OpportunitiesResponse,
-            response_model_exclude_none=True, dependencies=[Depends(claude_limits.per_ip)])
-def opportunities(profile_id: str, background: BackgroundTasks,
+            response_model_exclude_none=True)
+def opportunities(profile_id: str, background: BackgroundTasks, request: Request,
                   category: str | None = None, subcategory: str | None = None,
                   start: str | None = Query(None, alias="from"), end: str | None = Query(None, alias="to"),
                   modality: OpportunityModality | None = None,
                   location: str | None = Query(None, max_length=100)) -> OpportunitiesResponse:
     filters = _opportunity_filters(category, subcategory, start, end, modality, location)
+    if not filters.active():  # only the unfiltered feed asks Claude for reasons
+        claude_limits.per_ip(request)
     profile = _get_profile(profile_id)
     if profile.campus not in radar_sources.load().campuses:
         # No sources for this campus: an empty feed, never another campus's listings.
