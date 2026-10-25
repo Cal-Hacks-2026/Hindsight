@@ -4,6 +4,7 @@
 
 <p align="center">
   <a href="https://hindsight-web-yl0k.onrender.com">Live app</a> ·
+  <a href="https://cal-hacks-2026.github.io/Hindsight/">Website</a> ·
   <!-- VIDEO LINK -->Demo video (coming soon) ·
   <a href="https://devpost.com/software/hindsight-68sruh">Devpost</a> ·
   <a href="#run-locally">Run locally</a>
