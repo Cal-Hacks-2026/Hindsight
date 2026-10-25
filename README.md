@@ -7,7 +7,7 @@
 
 <h1 align="center">Hindsight</h1>
 
-<p align="center"><em>Everything you'd wish you knew, before you need it.</em></p>
+<p align="center"><em>Transfer Planner</em></p>
 
 <p align="center">
   <a href="https://hindsight-web-yl0k.onrender.com">Open the app</a> ·

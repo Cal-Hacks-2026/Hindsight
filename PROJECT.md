@@ -7,7 +7,7 @@
 
 ## 0. Status & naming
 
-- **Name:** **Hindsight** — tagline: *"Everything you'd wish you knew, before you need it."* (alt kept in reserve: Day One)
+- **Name:** **Hindsight** — slogan: **Transfer Planner**
 - **Repo:** `github.com/Cal-Hacks-2026/Hindsight`
 - **Code identifier:** product name lives in one config constant (`APP_NAME = "Hindsight"`); never hardcode it in logic.
 - **Event:** Cal Hacks 13.0, Palace of Fine Arts, SF. Build freeze **Saturday 2:00 PM**. Devpost deadline **Sunday 8:50 AM**. Judging Sunday 10:30 AM (live demo required).
@@ -242,11 +242,13 @@ type AgentEvent = { run_id: string; kind: "plan" | "step" | "diff" | "result" | 
 | Route | Purpose |
 |---|---|
 | `/onboarding` | campus, majors, goals → transcript upload → confirm courses |
-| `/` (Today) | top alerts + deadlines + this week's picks |
-| `/degree` | match results, gotcha flags, semester plan (T2: interactive map + what-if) |
+| `/` | opens My plan after setup, onboarding before setup |
+| `/plan` | next proposed courses, issues needing attention, progress, full term plan |
+| `/credits` | course matches, alternatives, agreement rules, and sources |
+| `/degree` | redirects to `/plan` for existing links |
 | `/radar` | ranked events/opportunities with "why this fits you" |
 | `/counselor` | Claude chat grounded in profile + results, with citations |
-| `/agent` | Droid run log: plan → steps → diffs → results |
+| `/agent` | redirects to `/plan`; background operations have no student screen |
 
 ---
 
@@ -278,3 +280,7 @@ type AgentEvent = { run_id: string; kind: "plan" | "step" | "diff" | "result" | 
 - No mocked data in the final demo for Apify-sourced items or ASSIST results.
 - Every academic claim shown to a user carries a citation.
 - `main` always runs. Work on branches, open PRs, Atishay merges.
+
+## Product direction
+
+The approved student experience and future nationwide advising scope are documented in [docs/ROADMAP.md](docs/ROADMAP.md). [DESIGN.md](DESIGN.md) governs the current interface. Historical build and sponsor sections above describe the original event scope.

@@ -1,141 +1,38 @@
-# DESIGN.md — Hindsight design language
+# Hindsight design language
 
-> Read this before touching any UI. It defines how Hindsight looks and why.
-> Companion docs: `PROJECT.md` (what we build), `DECISIONS.md` (why we decided).
+## Identity
 
----
+Name: **Hindsight**. Slogan: **Transfer Planner**.
 
-## 1. The vibe in one line
+Use the existing Janus engraving in `apps/web/public/brand/janus-ink.svg` as the main logo. Preserve the original artwork. Use the light variant when a dark background requires it. The two faces connect completed coursework with the student's next steps.
 
-**"An academic institution that publishes research, designed by a Swiss modernist."**
+## Purpose
 
-Old-world authority, modern restraint, and an interface that reads like a well-typeset paper. Hindsight gives students **high-stakes advice about their degree**, so the design must earn trust: calm, rigorous, sourced, permanent.
+Help transfer students answer: what counts, what should I take next, and what could delay my transfer?
 
-It fuses three layers plus one motif:
+The plan is the starting point. Credits explain the evidence. Opportunities support campus participation. Ask Hindsight handles follow-up questions. Operational logs are not part of student navigation.
 
-| Layer | What it brings | Reference |
-|---|---|---|
-| **Heritage institution** | Authority, permanence: "this advice can be trusted" | Engraved circular seals (lion + crown + keys, chariot); the Yale serif headline |
-| **Scientific paper** | Rigor: everything numbered, sourced, captioned | Yale deck's numbered table of contents and "THE PROBLEM / THE GOAL" rows on hairline rules |
-| **Swiss minimalism** | Clarity and calm; good UX through restraint | Brand.AI's clean grotesk; tiny Helvetica corner labels; time & space hairlines and whitespace |
-| **Motif: the bookshelf** | The library, the archive, accumulated knowledge | Book spines in the Yale deck, Artspace, and time & space |
+## Visual system
 
----
+- Off-white paper, black typography, neutral surfaces, and subtle dotted-paper details.
+- Bold, large sans-serif type. Page titles: 72–88px on desktop. Section headings: 28–32px. Body and inputs: 22–24px. Navigation and buttons: 20–22px. Supporting details: at least 18px.
+- Adapt layout and title sizes for phones while keeping supporting text readable.
+- Use short labels, direct recommendations, and generous space. Remove decorative kickers, repeated institution paths, current-term badges, blanket footer warnings, and explanatory text that duplicates the interface.
+- Keep black line illustrations of books, stationery, graduation caps, and campus objects. They support hierarchy and empty states without competing with coursework.
+- Make controls large enough for touch. Keep visible keyboard focus, semantic headings, and text labels alongside meaningful icons.
 
-## 2. Lessons from each reference
+## Information hierarchy
 
-1. **Yale redesign concept (Tetiana Prokhoda):** huge, tightly stacked serif headline in black with **one word in italic blue**. Tiny uppercase sans labels pinned to the corners. Grainy paper-gray background. Thin full-width rules between sections. Section numbers in a **light gray** that recedes. → *One accent color, used once per screen, in italic.*
-2. **The seals:** monochrome, engraved/woodcut line work, circular, symbolic. → *The logo is a seal, not a startup glyph.*
-3. **Artspace "Upcoming Releases":** high-contrast serif display above a shelf of colorful spines. → *Color lives inside objects (spines, chips); the page stays neutral.*
-4. **time & space Book Corner:** hairline under the title, small sans paragraph, browsable shelf. → *The shelf can be the navigation; browsing feels physical.*
-5. **Brand.AI "A living OS":** giant grotesk, black for the statement and warm gray for the rest; soft neutral floating cards; pill tags. → *Hierarchy through value (black vs. gray), not only size; quiet components.*
+1. Next proposed term: courses, units, prerequisites, and why each course is included.
+2. Issues requiring action: unfinished sequences, uncertain equivalencies, or other documented blockers.
+3. Progress: requirements met, in progress, partly complete, and still needed; estimated milestones with their limits.
+4. Full course plan with start and transfer controls.
+5. Sources and relevant details, reachable from the claims they support.
 
----
+The credit view explains university requirements, confirmed prior coursework, and next actions. A missing published equivalency is not a rejected transfer-credit decision. Use readable course cards rather than dense tables for the student-facing credit review.
 
-## 3. Identity
+## Accuracy in the interface
 
-### Logo: the Janus seal
-A circular, engraved-style emblem, black on paper. The symbol is **Janus**, the Roman god with two faces: one looking back, one looking forward. That is *hindsight + foresight*: the transcript (past) and the plan (future).
+Preserve citations, agreement-year differences, minimum-grade rules, confidence, sequence requirements, and catalog limitations. Targeted uncertainty belongs with the relevant decision. Do not substitute a repeated generic disclaimer for a clear explanation of what needs checking.
 
-Around the ring, the Latin motto ***Respice · Prospice*** ("look back, look forward").
-
-**Rule:** the seal must be **original**. Evoke Stanford/Harvard/Oxford; never copy their marks.
-
-### Wordmark
-`HINDSIGHT` in the display serif, uppercase, generous tracking. Tagline: *Everything you'd wish you knew, before you need it.*
-
----
-
-## 4. Typography
-
-| Role | Style | Usage |
-|---|---|---|
-| **Display** | High-contrast classical serif, tightly stacked (tight leading, slight negative tracking) | Page titles only. One italic word in the accent color: "Your *degree*", "What you'd *wish* you knew" |
-| **Interface** | Clean Helvetica-style grotesk | Buttons, labels, body, tables: everything functional |
-| **Meta labels** | Tiny uppercase grotesk, wide tracking | Pinned to page corners: `HINDSIGHT · SJSU · DATA SCIENCE + ECONOMICS · FALL 2026` |
-| **Course codes** | Grotesk with tabular figures (or mono) | `MATH 1A`, `ECON 101` scan like data |
-
-Hierarchy comes from **value** (ink vs. warm gray) as much as size.
-
----
-
-## 5. Color
-
-| Token | Use |
-|---|---|
-| **Paper** | Grainy off-white background |
-| **Ink** | Near-black text and rules |
-| **Gray** | Secondary text, receding section numerals |
-| **Hairline** | Thin full-width rules (ink at low opacity) |
-| **Accent: institutional blue** | The ONE accent (the Yale italic blue). Max once per screen, usually an italic word or the active state |
-| **Status (muted)** | Satisfied = muted green · Partial = muted ochre · Missing = muted red · At-university-only = slate blue |
-
-Color inside objects (book spines by department, chips) is allowed; the page itself stays neutral.
-
----
-
-## 6. Scientific-paper UX patterns
-
-This is what makes the style functional, not decorative. **"High-stakes advice, cited" becomes visible design.**
-
-| Paper convention | Hindsight feature |
-|---|---|
-| **Abstract** | Top of Degree: "34 units remain. 2 requirements need attention. Earliest finish: Spring 2029." |
-| **Numbered sections** | §1 Credits · §2 Remaining · §3 Plan · §4 Opportunities, with large light-gray numerals |
-| **Footnote citations** | Every claim carries a superscript `¹`; sources sit in the margin as **sidenotes** (ASSIST row, catalog page, opportunity URL) |
-| **Figures with captions** | "Fig. 1: Your path to graduation" |
-| **Tables with hairline rules** | Course lists in classic academic style: no boxes, thin rules only |
-
----
-
-## 7. Signature visual: the bookshelf
-
-**Your degree is a shelf.**
-- Each **completed** course is a **spine already on the shelf**.
-- **Remaining** courses are **outlined empty slots**.
-- Each **semester** of the plan is a **shelf row**.
-- Spines are **colored by department** (MATH, ECON, DATA, ENGL).
-- Radar opportunities can also render as spines.
-
-A judge understands "I have most of my books; here's what's missing" instantly.
-
----
-
-## 8. Sketch: Degree screen
-
-```
-HINDSIGHT · SJSU                                   DATA SCIENCE + ECONOMICS · FALL 2026
-────────────────────────────────────────────────────────────────────────────────────────
-                         Your  degree,  in  *hindsight*.          ← big serif, one italic blue word
-
-ABSTRACT  34 units remain. Two requirements need attention.¹ Earliest finish: Spring 2029.²
-────────────────────────────────────────────────────────────────────────────────────────
-01   CREDITS                                                        ¹ ASSIST, De Anza → SJSU,
-     ▌▌▌▌▌ ▌▌▌ ▌▌▌▌  ┆ ┆ ┆                                           2023–24, row 14
-     (shelved spines = done · dashed slots = missing)               ² SJSU Catalog 2025–26 p. 412
-
-02   PLAN                                         Fig. 1: Your path to graduation
-     FALL 27   ▌▌▌▌
-     SPR 28    ▌▌▌ ┆
-```
-
----
-
-## 9. References
-
-- **Tufte CSS** (edwardtufte.github.io/tufte-css): sidenote citations, scientific-paper web layout
-- **Distill.pub**: research articles as interactive web pages
-- **Stripe Press** (press.stripe.com): books as UI objects; serif + sans; institutional calm
-- **Works in Progress** magazine: modern editorial serif, scholarly and clean
-- **Swiss Style** (Josef Müller-Brockmann, Massimo Vignelli): grid, Helvetica, hairline discipline
-
----
-
-## 10. Rules for anyone building UI (including Claude Code)
-
-1. One accent color, used at most once per screen.
-2. Display serif for page titles only; everything functional is grotesk.
-3. No boxes where a hairline rule will do.
-4. Every academic claim shows its citation.
-5. Generous whitespace; let it breathe.
-6. The seal and wordmark are original, never borrowed university marks.
+See [the product roadmap](docs/ROADMAP.md) for coverage and subsequent advising capabilities.
