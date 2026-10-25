@@ -13,6 +13,8 @@ import type {
   CoursesResponse,
   CreateProfileRequest,
   FreeBlocksResponse,
+  GePattern,
+  GeResponse,
   HealthResponse,
   MatchResult,
   OpportunitiesResponse,
@@ -92,12 +94,19 @@ export const api = {
   match: (id: string, major_label: string) =>
     request<MatchResult>(`/profiles/${enc(id)}/match`, { method: "POST", body: json({ major_label }) }),
 
-  plan: (id: string, majors: string[], terms: { transfer?: string; start?: string } = {}) =>
+  // `ge`: also plan the missing GE areas before transfer, in the pattern given (or the default).
+  plan: (
+    id: string,
+    majors: string[],
+    terms: { transfer?: string; start?: string } = {},
+    ge?: { pattern?: GePattern },
+  ) =>
     request<PlanResponse>(
       `/profiles/${enc(id)}/plan?${new URLSearchParams({
         majors: majors.join(","),
         ...(terms.transfer ? { transfer_term: terms.transfer } : {}),
         ...(terms.start ? { start_term: terms.start } : {}),
+        ...(ge ? { ge: "true", ...(ge.pattern ? { ge_pattern: ge.pattern } : {}) } : {}),
       })}`,
     ),
 
@@ -119,6 +128,11 @@ export const api = {
     ),
 
   scheduledPlan: (id: string) => request<ScheduledPlanResponse>(`/profiles/${enc(id)}/schedule/planned`),
+
+  ge: (id: string, pattern?: GePattern) =>
+    request<GeResponse>(
+      `/profiles/${enc(id)}/ge${pattern ? `?${new URLSearchParams({ pattern })}` : ""}`,
+    ),
 
   opportunities: (id: string) => request<OpportunitiesResponse>(`/profiles/${enc(id)}/opportunities`),
 

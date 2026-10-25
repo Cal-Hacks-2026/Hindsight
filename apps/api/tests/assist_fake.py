@@ -13,6 +13,8 @@ import httpx
 from app.services.assist import ArticulationCache, AssistClient, AssistService
 
 FIXTURES = Path(__file__).parent / "fixtures" / "assist"
+GE_FIXTURES = Path(__file__).parent / "fixtures" / "ge"  # {calgetc,igetc}-{college}-{year}.json
+GE_LIST_TYPES = {"CALGETC": 8, "IGETC": 3}
 
 DS_KEY = "77/113/to/39/Major/0739dd42-491e-45c4-3e82-08dec89fcc4a"
 ECON_BS_KEY = "77/113/to/39/Major/18619712-eec7-4023-3ef3-08dec89fcc4a"
@@ -105,6 +107,14 @@ class FakeAssist:
             return httpx.Response(400, json={"result": None, "isSuccessful": False, "validationFailure": {
                 "isValid": False, "errors": [{"propertyName": "Key", "errorMessage": "Agreement was not found"}],
             }})
+        if path == "/api/transferability/courses":
+            list_type = (q.get("listType") or "").upper()
+            f = GE_FIXTURES / f"{list_type.lower()}-{q.get('institutionId')}-{q.get('academicYearId')}.json"
+            if list_type in GE_LIST_TYPES and f.exists():
+                return httpx.Response(200, json=json.loads(f.read_text()))
+            # Like ASSIST: an unpublished year is an empty list; an unknown type is list 0.
+            return httpx.Response(200, json={"listType": GE_LIST_TYPES.get(list_type, 0), "courseInformationList": [],
+                                             "academicYear": {"id": int(q.get("academicYearId") or 0)}})
         return httpx.Response(404)
 
 

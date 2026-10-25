@@ -1,6 +1,7 @@
 import json
 import logging
 import uuid
+from typing import Literal
 
 from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, Query, Response, UploadFile
 from fastapi.concurrency import run_in_threadpool
@@ -11,6 +12,7 @@ from app.models import (
     CounselorResponse,
     CoursesResponse,
     CreateProfileRequest,
+    GeResponse,
     MatchRequest,
     MatchResult,
     OpportunitiesResponse,
@@ -21,9 +23,11 @@ from app.models import (
     UpdateCoursesRequest,
 )
 from app.services import agent_client, claude_limits, counselor, planner, profile_limits, profile_store, transcript
+from app.services import ge as ge_service
 from app.services.assist import AssistError, AssistNotFound, get_service
 from app.services.assist import limits as assist_limits
 from app.services.db import StoreError
+from app.services.ge import plan as ge_plan
 from app.services.radar import rank, sources as radar_sources, store as radar_store
 
 log = logging.getLogger(__name__)
@@ -118,7 +122,9 @@ def plan(profile_id: str, majors: str | None = Query(None, description="Comma-se
          transfer_term: str | None = Query(None, description="'Fall 2028' or 'Spring 2028'; default: the "
                                                              "first Fall after the community-college terms"),
          start_term: str | None = Query(None, description="First community-college term, e.g. 'Winter 2027'; "
-                                                          "default: next Fall with no courses, else the next term")
+                                                          "default: next Fall with no courses, else the next term"),
+         ge: bool = Query(False, description="Plan missing GE areas in the community-college terms"),
+         ge_pattern: Literal["calgetc", "igetc"] | None = Query(None, description="GE pattern override")
          ) -> PlanResponse:
     profile = _get_profile(profile_id)
     try:
@@ -141,9 +147,11 @@ def plan(profile_id: str, majors: str | None = Query(None, description="Comma-se
             log.warning("plan: ASSIST match for %r failed: %s", label, e)
             return None
 
+    ge_progress = _ge_progress(profile, courses, ge_pattern) if ge else None
     try:
         roadmap = planner.roadmap_for(profile, courses, chosen, uncurated, planning_match,
-                                      transfer_term=transfer_term, start_term=start_term)
+                                      transfer_term=transfer_term, start_term=start_term,
+                                      ge_slots=ge_plan.slots(ge_progress) if ge_progress else ())
     except planner.PlannerError as e:
         raise HTTPException(status_code=e.status, detail=str(e)) from e
     # Without curated requirements every major is "uncurated"; full_plan=False says that once.
@@ -152,7 +160,19 @@ def plan(profile_id: str, majors: str | None = Query(None, description="Comma-se
                         transfer_term=roadmap.transfer_term, earliest_transfer_term=roadmap.earliest_transfer_term,
                         start_term=roadmap.start_term, default_start_term=roadmap.default_start_term,
                         start_term_choices=roadmap.start_term_choices,
-                        not_before_transfer=roadmap.not_before_transfer or None)
+                        not_before_transfer=roadmap.not_before_transfer or None,
+                        ge_pattern=ge_progress.pattern if ge_progress else None,
+                        ge_not_before_transfer=roadmap.ge_not_before_transfer or None)
+
+
+def _ge_progress(profile: Profile, courses: list, pattern: str | None) -> GeResponse | None:
+    """GE is extra on the plan: if ASSIST can't give the lists, plan without it (no ge_pattern)."""
+    try:
+        return ge_service.progress(courses, profile.sending_institution_id, ge_service.get_store(), pattern,
+                                   profile.receiving_institution_id)
+    except AssistError as e:
+        log.warning("plan: GE lists unavailable: %s", e)
+        return None
 
 
 @router.get("/{profile_id}/opportunities", response_model=OpportunitiesResponse,

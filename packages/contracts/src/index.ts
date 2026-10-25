@@ -77,6 +77,12 @@ export type SemesterCourse = {
   units: number;
   reason: string;
   prereqs: string[];
+  // ---- GE progress (feature: GE), only with /plan?ge=true ----
+  // The GE area this course fills, e.g. "Cal-GETC 3A". A GE slot (pick any approved course)
+  // also has `ge_options`, the approved courses at the college; a major course that also
+  // counts for an area has `ge_area` only.
+  ge_area?: string;
+  ge_options?: string[];
 };
 
 export type Semester = {
@@ -148,6 +154,11 @@ export type PlanResponse = {
   not_before_transfer?: string[];
   // false when we don't have the university's degree requirements: no after-transfer terms.
   full_plan?: boolean;
+  // ---- GE progress (feature: GE), only with ?ge=true ----
+  // The GE pattern planned before transfer, and the GE areas ("Cal-GETC 3A") that don't fit
+  // before a requested transfer term.
+  ge_pattern?: GePattern;
+  ge_not_before_transfer?: string[];
 };
 export type OpportunitiesResponse = { items: RankedOpportunity[] };
 export type CounselorRequest = { message: string; history: ChatMessage[] };
@@ -205,6 +216,59 @@ export type UniversityGuideResponse = {
   available: boolean; // false: no guide for this university yet
   university_name?: string;
   guide?: UniversityGuide;
+};
+
+// ---- GE progress (feature: GE): GET /profiles/{id}/ge ----
+
+export type GePattern = "calgetc" | "igetc";
+
+export type GeCourse = {
+  code: string; // as on the transcript, e.g. "EWRT 1A"
+  title: string;
+  units: number;
+  grade: string;
+  term: string;
+  // pass_no_pass, igetc_course (an IGETC course from before Fall 2025 used for Cal-GETC),
+  // calgetc_course (a Cal-GETC course used for IGETC), below_c (on the list but under a C)
+  flags: string[];
+  citation: Citation; // the ASSIST list for the year the course was taken
+};
+
+export type GeOption = { code: string; title: string; units: number };
+
+export type GeArea = {
+  code: string; // "1A", "2", "4", …
+  title: string;
+  status: "done" | "in_progress" | "missing";
+  courses_required: number;
+  still_needed: number; // courses still to take (in-progress ones count as taken)
+  units: number; // of the courses that count, in the college's units
+  units_required: number;
+  courses: GeCourse[]; // the student's courses that count here
+  options?: GeOption[]; // approved at the student's college, for areas not done
+  not_counted?: GeCourse[]; // on the list, but the grade doesn't count
+  note?: string;
+  citation: Citation;
+  // false for an IGETC area the student's university system doesn't require (1C is CSU only,
+  // 6 is UC only); left out of the summary.
+  required: boolean;
+};
+
+export type GeSummary = { done: number; in_progress: number; missing: number };
+
+export type GeResponse = {
+  pattern: GePattern;
+  pattern_name: string; // "Cal-GETC" or "IGETC"
+  default_pattern: GePattern; // from when the student started; ?pattern= overrides it
+  rule: string; // why this pattern, in a sentence or two
+  rule_citation: Citation;
+  started_term?: string; // first community-college term on the transcript
+  institution?: string;
+  term_system: "quarter" | "semester";
+  options_year: string; // ASSIST year the options come from, e.g. "2026-2027"
+  areas: GeArea[];
+  summary: GeSummary;
+  citations: Citation[]; // ASSIST lists and standards used
 };
 
 // ---- Class schedule (SCHEDULE) ----

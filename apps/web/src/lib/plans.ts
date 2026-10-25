@@ -4,6 +4,7 @@
 import { useEffect, useState } from "react";
 import type { PlanResponse, Semester } from "@hindsight/contracts";
 import { api } from "./api";
+import { loadGePattern } from "./ge";
 
 export type Plans = { combined: Semester[]; single: Record<string, Semester[]>; response: PlanResponse };
 
@@ -18,14 +19,16 @@ const cache = new Map<string, Promise<Plans>>();
 export type TermPicks = { transfer?: string; start?: string };
 
 function load(profileId: string, majors: string[], terms: TermPicks): Promise<Plans> {
-  const key = JSON.stringify([profileId, majors, terms.transfer ?? null, terms.start ?? null]);
+  // GE areas are planned too, in the pattern picked on the Credits page (or the default).
+  const ge = { pattern: loadGePattern(profileId) };
+  const key = JSON.stringify([profileId, majors, terms.transfer ?? null, terms.start ?? null, ge.pattern ?? null]);
   let promise = cache.get(key);
   if (!promise) {
     // One major alone is optional context: a failure there only drops the comparison.
     const singles = majors.length > 1 ? majors : [];
     promise = Promise.all([
-      api.plan(profileId, majors, terms),
-      ...singles.map((m) => api.plan(profileId, [m], terms).catch(() => null)),
+      api.plan(profileId, majors, terms, ge),
+      ...singles.map((m) => api.plan(profileId, [m], terms, ge).catch(() => null)),
     ]).then(([combined, ...rest]) => ({
       combined: combined!.semesters,
       response: combined!,

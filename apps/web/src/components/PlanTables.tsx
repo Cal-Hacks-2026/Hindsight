@@ -226,6 +226,18 @@ function completedCounts(hits: PlanRow[], ctx: PlanContext): Count[] {
   );
 }
 
+const GE_CHOICES_SHOWN = 4;
+
+/** "Take one of ARTS 1A, ARTS 1B, ARTS 2A, ARTS 2B or 40 more". */
+function geChoices(options: string[]): string {
+  const shown = options.slice(0, GE_CHOICES_SHOWN).join(", ");
+  const more = options.length - GE_CHOICES_SHOWN;
+  if (more > 0) return `Take one of ${shown} or ${more} more`;
+  return options.length > 1
+    ? `Take one of ${options.slice(0, -1).join(", ")} or ${options.at(-1)}`
+    : `Take ${options[0] ?? "an approved course"}`;
+}
+
 /** A planned course: the requirement the planner chose it for, from its reason. */
 function plannedCounts(
   course: SemesterCourse,
@@ -233,18 +245,35 @@ function plannedCounts(
   ctx: PlanContext,
 ): Count[] {
   const reason = course.reason.replace(PLACEHOLDER_PREFIX, "");
+  // A GE slot: any course on the area's approved list (/plan?ge=true).
+  if (course.ge_options)
+    return [
+      {
+        key: "ge",
+        text: `${course.ge_area}: ${course.title}`,
+        refs: [],
+        note: geChoices(course.ge_options),
+      },
+    ];
+  // A major course that also counts for a GE area.
+  const ge: Count[] = course.ge_area
+    ? [{ key: "ge", text: `Also ${course.ge_area}`, refs: [] }]
+    : [];
   if (semester.phase === "before_transfer") {
     // "For MATH 30 - Calculus I (Data Science, B.S.); ASSIST option: MATH 1A"
     const hits = ctx.rows.filter((r) =>
       reason.includes(`For ${r.req.receiving_course} (`),
     );
-    if (hits.length) return requirementCounts(hits, ctx);
+    if (hits.length) return [...requirementCounts(hits, ctx), ...ge];
     // The saved match predates this plan: name the requirement from the reason, uncited.
-    return [...reason.matchAll(/(?:^|; )For (.+?) \(/g)].map((m, i) => ({
-      key: `${i}`,
-      text: `${ctx.names.campus} ${parseReceiving(m[1]!).code}`,
-      refs: [],
-    }));
+    return [
+      ...[...reason.matchAll(/(?:^|; )For (.+?) \(/g)].map((m, i) => ({
+        key: `${i}`,
+        text: `${ctx.names.campus} ${parseReceiving(m[1]!).code}`,
+        refs: [],
+      })),
+      ...ge,
+    ];
   }
   // "Core Courses (Economics, B.S.)", "Major Electives: pick 1 of 2 still needed toward 15 units
   // (Data Science, B.S.); any listed elective works", "Prerequisite for CS 146"
@@ -461,8 +490,9 @@ function PlannedTerm({
       kind="planned"
       unitLabel={unitLabelOf(semester)}
       tint={tint}
-      rows={semester.courses.map((c) => ({
-        key: c.code,
+      rows={semester.courses.map((c, i) => ({
+        // GE slots repeat a code ("Cal-GETC 4" twice).
+        key: c.ge_options ? `${c.code}-${i}` : c.code,
         code: c.code,
         title: c.title,
         units: c.units,
@@ -528,6 +558,7 @@ export function PlanTables({
   const transfer = response?.transfer_term;
   const earliest = response?.earliest_transfer_term;
   const late = response?.not_before_transfer;
+  const geLate = response?.ge_not_before_transfer;
   const college = before[0]?.institution ?? names.collegeLong;
   const campus = after[0]?.institution ?? names.campusLong;
   const quarters = (before[0]?.term_system ?? "quarter") === "quarter";
@@ -612,6 +643,14 @@ export function PlanTables({
               />
             )}
           </div>
+          {geLate && geLate.length > 0 && (
+            <p className="plan-warning" role="status">
+              {transfer} is too early to finish {listing(geLate)} at{" "}
+              {names.college}.
+              {earliest &&
+                ` Transferring in ${earliest} leaves time for all of them.`}
+            </p>
+          )}
           {late && late.length > 0 && (
             <p className="plan-warning" role="status">
               {transfer} is too early for {listing(late)} at {names.college}, so{" "}
@@ -648,7 +687,10 @@ export function PlanTables({
             <p className="phase-note">
               Up to {CC_UNIT_CAP} {quarters ? "quarter" : "semester"} units per
               term. Courses follow ASSIST sequences; check {names.college}{" "}
-              prerequisites. GE (Cal-GETC) isn't included yet.
+              prerequisites.{" "}
+              {response?.ge_pattern
+                ? `${response.ge_pattern === "igetc" ? "IGETC" : "Cal-GETC"} general education comes after the major courses; pick each course from the area's list on the Credits page.`
+                : "General education isn't included."}
             </p>
           </div>
 
