@@ -1,0 +1,21 @@
+/* University: "What to Expect" guide items, ruled like the other lists. */
+.guide-items {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.guide-items li {
+  padding: 20px 0;
+  font-size: var(--text-body);
+  font-weight: 400;
+  line-height: 1.5;
+}
+.guide-items li:first-child {
+  padding-top: 0;
+}
+.guide-items li:last-child {
+  padding-bottom: 0;
+}
+.guide-items li + li {
+  border-top: 1px solid var(--hair);
+}

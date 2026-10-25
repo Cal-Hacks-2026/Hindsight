@@ -1,0 +1,466 @@
+{
+  "university_id": 39,
+  "university_name": "San José State University",
+  "last_updated": "2026-10-25",
+  "generated_at": "2026-10-25T07:55:04+00:00",
+  "sections": [
+    {
+      "id": "transfer_services",
+      "title": "Transfer Services and Orientation",
+      "opportunity_types": [
+        "program",
+        "event"
+      ],
+      "input_hash": "8d463f9f104f23e484972b07964c64edadcfc94f08d76709e1ae36f4bb89ee6f",
+      "items": [
+        {
+          "text": "Transfer orientation (Spartan Experience for Transfers) is a mandatory one-day session. If you do not attend, or if you leave during any part of it, you will not be able to attend SJSU that semester.",
+          "source_ids": [
+            "sjsu-transfer-orientation"
+          ],
+          "quote": "Orientation is mandatory and attendance will be recorded. If you do not attend, or if you leave during any portion of the event, you will NOT"
+        },
+        {
+          "text": "You sign up for orientation during the Next Steps Intent to Enroll process, when you select an orientation date. Complete the Spartan Link online orientation module before you attend.",
+          "source_ids": [
+            "sjsu-transfer-steps",
+            "sjsu-transfer-orientation"
+          ],
+          "quote": "During the Next Steps Intent to Enroll\nprocess, you will select an orientation date."
+        },
+        {
+          "text": "Your nonrefundable enrollment deposit is $250. It includes your orientation payment and a deposit toward part of your tuition and fees for your first term.",
+          "source_ids": [
+            "sjsu-transfer-steps"
+          ],
+          "quote": "Your nonrefundable Enrollment Deposit of $250 includes your orientation\npayment and a deposit toward a portion of your tuition and fees for your first term\nof enrollment."
+        },
+        {
+          "text": "You register for classes during orientation through your MySJSU account, and academic advisors are available there for upper-division advising.",
+          "source_ids": [
+            "sjsu-orientation-faq"
+          ],
+          "quote": "All incoming transfer students will register for classes while at New Student Orientation\nvia your MySJSU student account."
+        },
+        {
+          "text": "You complete the WST Directed Self Placement exercise for writing placement, since SJSU has suspended the Writing Skills Test. Submit final transcripts by the date on your MySJSU To Do List.",
+          "source_ids": [
+            "sjsu-transfer-steps"
+          ],
+          "quote": "SJSU has suspended offering the Writing Skills Test (WST), which is a prerequisite\nto 100W and SJSU Studies courses (GE Areas R, S, and V) and created an alternative\nprocess to meet the WST requirement called the WST Directed Self Placement exercise\n(DSP)."
+        },
+        {
+          "text": "You pay tuition and fees after you register, and you check your MySJSU account under \"Finances\" for the due date. You must also provide proof of specific immunizations before the first day of classes.",
+          "source_ids": [
+            "sjsu-transfer-steps"
+          ],
+          "quote": "Fees are due after registering for your classes. Check your MySJSU account under \"Finances\"\nto see your payment due date."
+        }
+      ],
+      "not_covered": [
+        "Fall 2026 orientation dates",
+        "Immunization requirements list",
+        "Tuition and fee amounts"
+      ]
+    },
+    {
+      "id": "academics",
+      "title": "Academic Culture",
+      "opportunity_types": [
+        "workshop"
+      ],
+      "input_hash": "d9057b926a0374751e00964eeb361fed8963d7b059c40d53fff4427afc310446",
+      "items": [
+        {
+          "text": "SJSU runs on semesters. For Fall 2027, instruction runs from Thu, Aug. 19 to Mon, Dec. 6, and the final examination period is Wed, Dec. 8 to Wed, Dec. 15.",
+          "source_ids": [
+            "sjsu-registrar-fall-2027"
+          ],
+          "quote": "Thu, Aug. 19\nFirst Day of Instruction"
+        },
+        {
+          "text": "For Fall 2027, undergraduates start with a limit of 17 units. The limit rises to 19 units for continuing undergraduates in good standing on Mon, June 28, and for graduating seniors who filed by 3/19/27 on Mon, June 21.",
+          "source_ids": [
+            "sjsu-registrar-fall-2027"
+          ],
+          "quote": "Undergrads: Start with 17 units"
+        },
+        {
+          "text": "Transfer students get advising from the Student Success Center of their college. For example, the College of Social Sciences Student Success Center has advisors who guide transfer students.",
+          "source_ids": [
+            "sjsu-success-centers",
+            "sjsu-coss-transfer-advising"
+          ],
+          "quote": "Advisors provide transfer students with the guidance and\nresources necessary to succeed in their studies."
+        },
+        {
+          "text": "If you are in the College of Science, the Student Success Center advises newly admitted transfers at Spartan Experience for Transfers (SET) group orientation advising. Advising is limited if your transfer credit report is incomplete or inaccurate, so send official final transcripts for any summer course.",
+          "source_ids": [
+            "sjsu-cos-new-student-advising"
+          ],
+          "quote": "CoS-SSC Advising will be limited if your transfer credit report is not complete and accurate."
+        },
+        {
+          "text": "After you complete orientation, College of Science students can book advising appointments through Spartan Connect. Appointments made before you finish orientation are cancelled.",
+          "source_ids": [
+            "sjsu-cos-new-student-advising"
+          ],
+          "quote": "Appointments scheduled before your Orientation completion will be cancelled."
+        },
+        {
+          "text": "Peer Connections offers free tutoring, mentoring, supplemental instruction, learning assistants, and strengths coaching. Tutoring includes drop-in sessions, appointments, and embedded tutors who attend every class.",
+          "source_ids": [
+            "sjsu-peer-connections"
+          ],
+          "quote": "Peer Connections provides free tutoring, mentoring, supplemental instruction, learning\nassistants, and strengths coaching for students at SJSU."
+        }
+      ],
+      "not_covered": [
+        "Typical class sizes",
+        "Advising for colleges other than Social Sciences and Science"
+      ]
+    },
+    {
+      "id": "getting_around",
+      "title": "Getting Around",
+      "opportunity_types": [],
+      "input_hash": "637a63f1aa09f0d0cd0c52a3d2cce532f8903a104a11d9d49351e97d5c4f70b7",
+      "items": [
+        {
+          "text": "SJSU's main campus is in downtown San José, between San Fernando and San Salvador Streets and between 4th and 10th Streets.",
+          "source_ids": [
+            "sjsu-parking-maps"
+          ],
+          "quote": "The SJSU main campus is located in downtown San José between San Fernando and San Salvador Streets and between 4th and 10th Streets."
+        },
+        {
+          "text": "Clipper BayPass gives you free rides on bus, rail, and ferry services across the Bay Area, including VTA, BART, Caltrain, and AC Transit. It is provided to full- and part-time SJSU students as part of the IRA fee, and it renews automatically if you are enrolled at the beginning of each semester.",
+          "source_ids": [
+            "sjsu-as-baypass"
+          ],
+          "quote": "BayPass is provided to all full and part-time SJSU students as part of their IRA fee"
+        },
+        {
+          "text": "To get BayPass, you need your own 19-digit physical or mobile Clipper card and must submit the BayPass application to Transportation Solutions. Approval can take up to two business days, and BayPass is then loaded onto the card you submitted.",
+          "source_ids": [
+            "sjsu-as-baypass"
+          ],
+          "quote": "Eligible students must obtain their own 19-digit physical or mobile Clipper card and\nsubmit their application to Transportation Solutions."
+        },
+        {
+          "text": "If you are a new student or have no active SmartPass, you need to complete the BayPass application. Students who are exempt from fees, including Special Session, Open University, or International Gateway students, are not eligible.",
+          "source_ids": [
+            "sjsu-as-baypass"
+          ],
+          "quote": "New students and students without an active SmartPass will need to complete the BayPass application form."
+        },
+        {
+          "text": "BayPass does not cover ACE, Capitol Corridor, Highway 17 Express, Amtrak, or parking at transit agency parking facilities. You need a separate ticket or fare for those services.",
+          "source_ids": [
+            "sjsu-as-baypass",
+            "sjsu-as-regional-transit"
+          ],
+          "quote": "Some regional and intercity services are not covered by BayPass or SmartPass."
+        },
+        {
+          "text": "If you drive, student commuter virtual permits are sold through SJSU Parking Online Services and the Parking Services office. For Fall 2026, the 'S' Semester Permit is $228 and is effective 08/14/2026 through 12/31/2026; the 'S' Academic Year permit is $456 through 5/31/2027.",
+          "source_ids": [
+            "sjsu-parking-commuter"
+          ],
+          "quote": "All Student Commuter Virtual Permits are available for purchase through SJSU Parking Online Services and Parking Services office."
+        }
+      ],
+      "not_covered": [
+        "Campus map details beyond the main campus boundaries",
+        "Which permit suits transfer students specifically"
+      ]
+    },
+    {
+      "id": "housing",
+      "title": "Housing",
+      "opportunity_types": [],
+      "input_hash": "8d91e1dc07da625b23e5db22ce3c947bf95a6eb7c5d380ec6e0099376a888247",
+      "items": [
+        {
+          "text": "Campus housing is optional. If you want to live on campus, you complete a Housing application, which SJSU lists as Step 4 of the transfer steps to enrollment.",
+          "source_ids": [
+            "sjsu-transfer-steps"
+          ],
+          "quote": "Step 4 - Apply for Campus Housing (optional)",
+          "edited": "Reviewer: the generated text said housing is not one of the enrollment steps; the page lists it as optional Step 4."
+        },
+        {
+          "text": "Your housing application is not complete, and you cannot be assigned a space, until you pay the non-refundable $50 application fee, submit the online application, sign the License Agreement, and pay the $300 Initial Housing Payment.",
+          "source_ids": [
+            "sjsu-housing-apply"
+          ],
+          "quote": "Applications are not considered complete and eligible to be assigned a housing space,\nuntil all steps above are completed."
+        },
+        {
+          "text": "Housing rates for 2026-2027 include basic utilities (gas/electricity, water and garbage), Wi-Fi internet access, and a Roku TV.",
+          "source_ids": [
+            "sjsu-housing-rates"
+          ],
+          "quote": "Housing rates include: Basic utilities (gas/electricity, water & garbage), Wi Fi internet\naccess, Roku TV."
+        },
+        {
+          "text": "For 2026-2027, SJSU lists rates for The Bricks and Joe West, Campus Village Buildings A, B, C and 2, Spartan Village on the Paseo, and International House. Payments are due on the first of the month, or the next business day if the first is a weekend or holiday.",
+          "source_ids": [
+            "sjsu-housing-rates"
+          ],
+          "quote": "All payments are due the first of the month, or if the first is a weekend or holiday,\non the following business day."
+        },
+        {
+          "text": "Some Campus Village Building A (CVA) apartment spaces are limited by class standing: the 2 Bedroom spaces are for grad, senior or junior students only. The CVA efficiency is for graduate students only.",
+          "source_ids": [
+            "sjsu-housing-rates"
+          ],
+          "quote": "2026 - 2027 CVA Student 2 Bedroom Single Bedspace (Grad, Senior or Junior Only) [pdf]"
+        },
+        {
+          "text": "Demand is high: 6050 students requested campus-affiliated housing against 4901 beds. The 6050 figure covers all students who requested housing, and SJSU reports 2905 incoming freshmen, transfer, and international students needing housing.",
+          "source_ids": [
+            "sjsu-housing-info"
+          ],
+          "quote": "Number of students who request campus-owned, campus-operated, or campus-affiliated\nstudent housing: 6050"
+        }
+      ],
+      "not_covered": [
+        "Actual rate amounts per room type",
+        "Application deadlines for transfer students",
+        "Housing application dates for terms after Fall 2026",
+        "Which buildings suit transfer students specifically"
+      ]
+    },
+    {
+      "id": "student_life",
+      "title": "Student Life",
+      "opportunity_types": [
+        "club",
+        "event"
+      ],
+      "input_hash": "045adfd4eb7b4f4323715ede7273c6a7d6945ab21e81a91b480c015cf6c845f8",
+      "items": [
+        {
+          "text": "At SJSU, clubs and student groups are called Recognized Student Orgs (RSOs). The university recognizes over 350 of them.",
+          "source_ids": [
+            "sjsu-get-involved",
+            "sjsu-student-orgs"
+          ],
+          "quote": "At SJSU, clubs and student groups are called Recognized Student Orgs (RSOs)."
+        },
+        {
+          "text": "Many RSOs are tied to a major or field, such as the Computer Science Club, Biology Student Association, Pre-Nursing Club and Society of Women Engineers.",
+          "source_ids": [
+            "sjsu-student-orgs"
+          ],
+          "quote": "Computer Science Club"
+        },
+        {
+          "text": "If you are not sure where to start, visit the Student Involvement Office on the ground floor of the Student Union, Suite 1400.",
+          "source_ids": [
+            "sjsu-get-involved"
+          ],
+          "quote": "We’re located on the ground floor of the Student Union,\nSuite 1400."
+        },
+        {
+          "text": "Associated Students runs services including a General Services Center (textbook savings, notarizing documents, Clipper Cards), Transportation Solutions, a Print Shop and a Child Development Center. It also provides funding requests for student clubs and organizations.",
+          "source_ids": [
+            "sjsu-associated-students"
+          ],
+          "quote": "Save on textbooks, get documents notarized, pick up your Clipper Card…and more."
+        },
+        {
+          "text": "Student Involvement offers leadership programs and conferences, and SJSU's fraternity and sorority life has 40+ chapters.",
+          "source_ids": [
+            "sjsu-get-involved"
+          ],
+          "quote": "Join SJSU’s leadership programs and conferences."
+        }
+      ],
+      "not_covered": [
+        "Specific Weeks of Welcome dates for any term",
+        "How to join a particular club",
+        "Leadership program schedules and eligibility"
+      ]
+    },
+    {
+      "id": "first_semester",
+      "title": "First-Semester Tips",
+      "opportunity_types": [
+        "workshop"
+      ],
+      "input_hash": "247e6acbdacf98a6d5786e77ec34abd25c785c9bb7ff7d61d91fd193e10dd789",
+      "items": [
+        {
+          "text": "Check your MySJSU \"To Do List\" and messages, because SJSU communicates by posting items there and sending messages to your MySJSU account.",
+          "source_ids": [
+            "sjsu-transfer-steps"
+          ],
+          "quote": "SJSU communicates by posting items to your “To Do List” and sending\nmessages to your MySJSU account."
+        },
+        {
+          "text": "For Fall 2027, the last day to drop classes without a \"W\" grade and the last day to add or drop classes via MySJSU is Wed, Sep. 15 (add/drop ends at 11:59 pm).",
+          "source_ids": [
+            "sjsu-registrar-fall-2027"
+          ],
+          "quote": "Wed, Sep. 15\nLast Day to Drop Classes without a \"W\" Grade\nLast Day to Add/Drop Classes via MySJSU (ends at 11:59 pm)"
+        },
+        {
+          "text": "For Fall 2027, the enrollment census date is Thu, Sep. 16, and no add/drop activities are allowed after it. Late drop and late add requests then require a petition process starting Fri, Sep. 17.",
+          "source_ids": [
+            "sjsu-registrar-fall-2027"
+          ],
+          "quote": "Enrollment Census Date (no add/drop activities allowed)"
+        },
+        {
+          "text": "For Fall 2027, the automated waitlist remains active unless a class is opted out, and opted-out classes require a permission number to enroll. The waitlist ends Mon, Aug. 30, and a permission number is required to add classes from Tue, Aug. 31.",
+          "source_ids": [
+            "sjsu-registrar-fall-2027"
+          ],
+          "quote": "The automated waitlist remains active unless a class is opted out. Opted-out classes\nrequire a permission number for enrollment."
+        },
+        {
+          "text": "Weeks of Welcome run during the first four to six weeks of each semester and include more than 90 events to help you connect and explore campus life.",
+          "source_ids": [
+            "sjsu-get-involved"
+          ],
+          "quote": "The first four to six weeks\nof the semester—known as Weeks of Welcome—feature more than 90 events designed to\nhelp students connect, explore campus life, and get involved."
+        }
+      ],
+      "not_covered": [
+        "Add/drop and census dates for other terms",
+        "How to get a permission number",
+        "Withdrawal deadline details beyond the Fall 2027 calendar"
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "id": "sjsu-transfer-orientation",
+      "title": "Spartan Experience for Transfers (Transfer Orientation)",
+      "publisher": "SJSU New Student and Family Programs",
+      "url": "https://www.sjsu.edu/newspartans/transfer-orientation/",
+      "retrieved_on": "2026-10-25"
+    },
+    {
+      "id": "sjsu-orientation-faq",
+      "title": "Orientation Frequently Asked Questions",
+      "publisher": "SJSU New Student and Family Programs",
+      "url": "https://www.sjsu.edu/newspartans/faq.php",
+      "retrieved_on": "2026-10-25"
+    },
+    {
+      "id": "sjsu-transfer-steps",
+      "title": "Transfer Steps to Enrollment",
+      "publisher": "SJSU Admissions",
+      "url": "https://www.sjsu.edu/admissions/transfer/been-admitted/transfer-steps-to-enrollment/index.php",
+      "retrieved_on": "2026-10-25"
+    },
+    {
+      "id": "sjsu-registrar-fall-2027",
+      "title": "Fall 2027 Registration Calendar",
+      "publisher": "SJSU Office of the Registrar",
+      "url": "https://www.sjsu.edu/registrar/calendar/fall-2027.php",
+      "retrieved_on": "2026-10-25"
+    },
+    {
+      "id": "sjsu-success-centers",
+      "title": "Student Success Centers",
+      "publisher": "SJSU Undergraduate Advising",
+      "url": "https://www.sjsu.edu/advising/academic-advising/student-success-centers.php",
+      "retrieved_on": "2026-10-25"
+    },
+    {
+      "id": "sjsu-coss-transfer-advising",
+      "title": "Transfer Advising, College of Social Sciences Student Success Center",
+      "publisher": "SJSU College of Social Sciences",
+      "url": "https://www.sjsu.edu/socsci-ssc/academic-advising/transfer/index.php",
+      "retrieved_on": "2026-10-25"
+    },
+    {
+      "id": "sjsu-cos-new-student-advising",
+      "title": "New Student Advising, College of Science Student Success Center",
+      "publisher": "SJSU College of Science",
+      "url": "https://www.sjsu.edu/science-ssc/advising/new-student/index.php",
+      "retrieved_on": "2026-10-25"
+    },
+    {
+      "id": "sjsu-peer-connections",
+      "title": "Peer Connections",
+      "publisher": "SJSU Peer Connections",
+      "url": "https://www.sjsu.edu/peerconnections/",
+      "retrieved_on": "2026-10-25"
+    },
+    {
+      "id": "sjsu-as-baypass",
+      "title": "SJSU Clipper BayPass",
+      "publisher": "Associated Students, SJSU (Transportation Solutions)",
+      "url": "https://www.sjsu.edu/as/departments/transportation-solutions/baypass/index.php",
+      "retrieved_on": "2026-10-25"
+    },
+    {
+      "id": "sjsu-as-regional-transit",
+      "title": "Regional Transit",
+      "publisher": "Associated Students, SJSU (Transportation Solutions)",
+      "url": "https://www.sjsu.edu/as/departments/transportation-solutions/regional-transit/index.php",
+      "retrieved_on": "2026-10-25"
+    },
+    {
+      "id": "sjsu-parking-commuter",
+      "title": "Student Commuter Permits",
+      "publisher": "SJSU Parking Services",
+      "url": "https://www.sjsu.edu/parking/permits/student-commuter.php",
+      "retrieved_on": "2026-10-25"
+    },
+    {
+      "id": "sjsu-parking-maps",
+      "title": "Parking Maps",
+      "publisher": "SJSU Parking Services",
+      "url": "https://www.sjsu.edu/parking/maps/index.php",
+      "retrieved_on": "2026-10-25"
+    },
+    {
+      "id": "sjsu-housing-apply",
+      "title": "Apply for Housing",
+      "publisher": "SJSU University Housing Services",
+      "url": "https://www.sjsu.edu/housing/apply-for-housing/index.php",
+      "retrieved_on": "2026-10-25"
+    },
+    {
+      "id": "sjsu-housing-rates",
+      "title": "Academic Year Housing Rates",
+      "publisher": "SJSU University Housing Services",
+      "url": "https://www.sjsu.edu/housing/apply-for-housing/housing-rates/academic-year-rates.php",
+      "retrieved_on": "2026-10-25"
+    },
+    {
+      "id": "sjsu-housing-info",
+      "title": "Additional Housing Information",
+      "publisher": "SJSU University Housing Services",
+      "url": "https://www.sjsu.edu/housing/about-us/additional-housing-information.php",
+      "retrieved_on": "2026-10-25"
+    },
+    {
+      "id": "sjsu-get-involved",
+      "title": "Get Involved at SJSU",
+      "publisher": "SJSU Student Involvement",
+      "url": "https://www.sjsu.edu/getinvolved/",
+      "retrieved_on": "2026-10-25"
+    },
+    {
+      "id": "sjsu-student-orgs",
+      "title": "Recognized Student Orgs",
+      "publisher": "SJSU Student Involvement",
+      "url": "https://www.sjsu.edu/getinvolved/student-orgs/index.php",
+      "retrieved_on": "2026-10-25"
+    },
+    {
+      "id": "sjsu-associated-students",
+      "title": "Associated Students, SJSU",
+      "publisher": "Associated Students, SJSU",
+      "url": "https://www.sjsu.edu/as/",
+      "retrieved_on": "2026-10-25"
+    }
+  ]
+}

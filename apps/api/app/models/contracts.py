@@ -227,3 +227,47 @@ class HealthResponse(BaseModel):
     app: str
     storage: bool = True
     claude: bool = True
+
+
+# ---- University guide (UNIVERSITY) ----
+# "What to Expect" at the student's university: short sections written only from official or
+# institutional pages, every item citing them (GET /universities/{id}/guide).
+
+GuideSectionId = Literal["transfer_services", "academics", "getting_around", "housing", "student_life",
+                         "first_semester"]
+
+
+class GuideSource(BaseModel):
+    id: str
+    title: str
+    publisher: str  # e.g. "SJSU University Housing Services", "Associated Students, SJSU"
+    url: str
+    retrieved_on: str  # YYYY-MM-DD the page was read
+
+
+class GuideItem(BaseModel):
+    text: str
+    source_ids: list[str]  # ids in UniversityGuide.sources; never empty
+
+
+class GuideSection(BaseModel):
+    id: GuideSectionId
+    title: str
+    items: list[GuideItem]
+    # Opportunities categories (RankedOpportunity.type) worth linking from this section.
+    opportunity_types: list[str] | None = None
+
+
+class UniversityGuide(BaseModel):
+    university_id: int  # ASSIST institution id (39 = SJSU)
+    university_name: str
+    last_updated: str  # YYYY-MM-DD the sources were last read
+    sections: list[GuideSection]
+    sources: list[GuideSource]  # cited sources, in footnote order
+
+
+class UniversityGuideResponse(BaseModel):
+    university_id: int
+    available: bool  # false: no guide for this university yet
+    university_name: str | None = None
+    guide: UniversityGuide | None = None
