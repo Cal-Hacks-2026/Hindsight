@@ -192,6 +192,9 @@ class UpdateCoursesRequest(BaseModel):
 
 class AssistMajorsResponse(BaseModel):
     majors: list[AssistMajor]
+    # MAJORS-YEAR: the ASSIST year the majors come from. Earlier than the year asked for when that
+    # one has no majors yet (up to three years back); the year asked for when none has any.
+    year_id: int
     # MAJORS-FALLBACK: set ("2026-10-25", UTC) only when ASSIST failed and the pair's list kept
     # from its last live load was used.
     saved_on: str | None = None
@@ -211,7 +214,7 @@ class PlanResponse(BaseModel):
     transfer_term: str | None = None  # when the after-transfer terms start
     earliest_transfer_term: str | None = None  # the first Fall after the before-transfer terms finish
     start_term: str | None = None  # first community-college term
-    default_start_term: str | None = None  # next Fall with no courses yet, else the next registrable term
+    default_start_term: str | None = None  # next registrable term at college or with courses, else next Fall
     start_term_choices: list[str] | None = None  # community-college terms the student can start in
     # Community-college courses that don't fit before a requested transfer_term; their
     # university equivalents are planned after transfer instead.

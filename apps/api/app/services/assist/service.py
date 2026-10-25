@@ -36,6 +36,9 @@ MAX_PRIOR_YEARS = 6
 # ASSIST's earliest academic year (1980–81); one year past ours once it's published.
 MIN_YEAR_ID = 31
 MAX_YEAR_ID = ASSIST_YEAR_ID + 1
+# ASSIST can list a year for a pair before publishing any majors in it (one UC campus listed
+# 2026–27 with none yet): an empty year falls back to the latest of this many years before it.
+MAJORS_FALLBACK_YEARS = 3
 
 log = logging.getLogger(__name__)
 
@@ -131,15 +134,21 @@ class AssistService:
 
     def year_for(self, sending: int, receiving: int) -> int:
         """The ASSIST year to read a pair's agreements from (I-17): ours when the pair has it,
-        else the latest year that has agreements (some universities had none for 2026–27 at first). ASSIST_YEAR_ID
-        when that can't be told."""
+        else the latest year that has agreements (some universities had none for 2026–27 at first),
+        and the year its majors actually come from when that one has none yet (MAJORS-YEAR).
+        ASSIST_YEAR_ID when that can't be told."""
         try:
             years = self._partner_years(sending).get(receiving, [])
         except AssistError as e:
             log.info("partner years unavailable for %s → %s: %s", sending, receiving, e)
             return ASSIST_YEAR_ID
         usable = [y for y in years if MIN_YEAR_ID <= y <= ASSIST_YEAR_ID]
-        return usable[-1] if usable else ASSIST_YEAR_ID
+        listed = usable[-1] if usable else ASSIST_YEAR_ID
+        try:
+            return self._reports_in_year(sending, receiving, listed)[1]
+        except AssistError as e:
+            log.info("majors unavailable for %s → %s (%s): %s", sending, receiving, listed, e)
+            return listed
 
     def term_system(self, institution_id: int) -> Literal["quarter", "semester"]:
         """From ASSIST's `termType` (1 = quarter, 0 = semester); when ASSIST can't say, the campus
@@ -198,18 +207,34 @@ class AssistService:
     def _reports(self, sending: int, receiving: int, year: int) -> list[dict[str, Any]]:
         return self._reports_and_saved_at(sending, receiving, year)[0]
 
-    def majors_and_saved_at(self, sending: int, receiving: int,
-                            year: int) -> tuple[list[AssistMajor], str | None]:
-        """`majors`, plus when the list was kept if ASSIST failed and a kept copy was used."""
-        reports, saved_at = self._reports_and_saved_at(sending, receiving, year)
+    def _reports_in_year(self, sending: int, receiving: int,
+                         year: int) -> tuple[list[dict[str, Any]], int, str | None]:
+        """A pair's majors reports from `year`, or when it has none, from the latest of the
+        MAJORS_FALLBACK_YEARS before it that has some (MAJORS-YEAR); with the year used and when
+        the list was kept (as `_reports_and_saved_at`). Each year is cached on its own. When no
+        year has any, the empty list for `year`."""
+        asked = self._reports_and_saved_at(sending, receiving, year)
+        if asked[0]:
+            return asked[0], year, asked[1]
+        for y in range(year - 1, max(year - MAJORS_FALLBACK_YEARS, MIN_YEAR_ID) - 1, -1):
+            reports, saved_at = self._reports_and_saved_at(sending, receiving, y)
+            if reports:
+                return reports, y, saved_at
+        return asked[0], year, asked[1]
+
+    def majors_in_year(self, sending: int, receiving: int,
+                       year: int) -> tuple[list[AssistMajor], int, str | None]:
+        """`majors`, plus the year they come from (`year`, or an earlier one when `year` has none
+        yet) and when the list was kept if ASSIST failed and a kept copy was used."""
+        reports, used, saved_at = self._reports_in_year(sending, receiving, year)
         return [
             AssistMajor(label=r["label"], key=r["key"])
             for r in reports
             if r.get("label") and r.get("key")
-        ], saved_at
+        ], used, saved_at
 
     def majors(self, sending: int, receiving: int, year: int) -> list[AssistMajor]:
-        return self.majors_and_saved_at(sending, receiving, year)[0]
+        return self.majors_in_year(sending, receiving, year)[0]
 
     def agreement(self, sending: int, receiving: int, year: int, major_label: str) -> Agreement:
         """Exact label match → cached (or fetched) agreement → parsed."""

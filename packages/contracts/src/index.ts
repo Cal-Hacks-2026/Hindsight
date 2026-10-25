@@ -161,9 +161,11 @@ export type CreateProfileRequest = Omit<
 export type ProfileResponse = { profile: Profile };
 export type CoursesResponse = { courses: Course[] };
 export type UpdateCoursesRequest = { courses: Course[] };
+// MAJORS-YEAR: year_id is the ASSIST year the majors come from, earlier than the year asked for
+// when that one has no majors yet (up to three years back).
 // MAJORS-FALLBACK: saved_on ("2026-10-25", UTC) only when ASSIST failed and the pair's list kept
 // from its last live load was used.
-export type AssistMajorsResponse = { majors: AssistMajor[]; saved_on?: string };
+export type AssistMajorsResponse = { majors: AssistMajor[]; year_id: number; saved_on?: string };
 export type AssistInstitutionsResponse = { institutions: AssistInstitution[] };
 export type MatchRequest = { major_label: string };
 /** uncurated_majors: chosen majors left out of the plan because they have no curated requirements yet. */
@@ -173,7 +175,7 @@ export type PlanResponse = {
   transfer_term?: string; // when the after-transfer terms start
   earliest_transfer_term?: string; // the first Fall after the before-transfer terms finish
   start_term?: string; // first community-college term
-  default_start_term?: string; // next Fall with no courses yet, else the next registrable term
+  default_start_term?: string; // next registrable term at college or with courses, else next Fall
   start_term_choices?: string[]; // community-college terms the student can start in
   // Community-college courses that don't fit before a requested transfer_term; their
   // university equivalents are planned after transfer instead.

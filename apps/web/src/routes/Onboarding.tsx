@@ -196,6 +196,8 @@ function ProfileStep({ onDone }: { onDone: (p: Profile) => void }) {
   const [collegesSavedOn, setCollegesSavedOn] = useState<string>();
   const [universitiesSavedOn, setUniversitiesSavedOn] = useState<string>();
   const [majorsSavedOn, setMajorsSavedOn] = useState<string>();
+  // The ASSIST year the majors came from: earlier than the university's when that one has none yet.
+  const [majorsYear, setMajorsYear] = useState<number>();
   const [university, setUniversity] = useState<AssistInstitution>();
   const [listError, setListError] = useState<string | null>(null);
   const [options, setOptions] = useState<AssistMajor[]>();
@@ -244,7 +246,8 @@ function ProfileStep({ onDone }: { onDone: (p: Profile) => void }) {
     };
   }, [college]);
 
-  // Majors for the pair, from the year ASSIST has agreements for. Picks not offered for the new pair drop.
+  // Majors for the pair, from the year ASSIST lists for it (the API steps back from a year with no
+  // majors yet and says which it used). Picks not offered for the new pair drop.
   useEffect(() => {
     if (!college || !university) {
       setOptions(undefined);
@@ -253,12 +256,14 @@ function ProfileStep({ onDone }: { onDone: (p: Profile) => void }) {
     let live = true;
     setOptions(undefined);
     setMajorsSavedOn(undefined);
+    setMajorsYear(undefined);
     setError(null);
     api.assistMajors(college.id, university.id, university.year_id ?? yearId).then(
       (r) => {
         if (!live) return;
         const sorted = [...r.majors].sort((a, b) => a.label.localeCompare(b.label));
         setOptions(sorted);
+        setMajorsYear(r.year_id);
         // Set when ASSIST failed and the API used the list kept from this pair's last live load.
         setMajorsSavedOn(r.saved_on);
         setMajors((m) => m.filter((label) => sorted.some((o) => o.label === label)));
@@ -273,7 +278,7 @@ function ProfileStep({ onDone }: { onDone: (p: Profile) => void }) {
   // ASSIST lists ~180 majors: keep them alphabetical and narrow as you type; picks show as chips.
   const needle = filter.trim().toLowerCase();
   const shown = (options ?? []).filter((m) => m.label.toLowerCase().includes(needle));
-  const year = university?.year_id;
+  const year = majorsYear;
   const termSystem =
     college?.term_system &&
     `${college.term_system === "quarter" ? "Quarter" : "Semester"} system.`;
@@ -453,7 +458,9 @@ function ProfileStep({ onDone }: { onDone: (p: Profile) => void }) {
         )}
         {year !== undefined && !!options?.length && (
           <span className="field-hint">
-            From ASSIST's {assistYear(year)} agreements.
+            {year < ASSIST_YEAR_2026_27
+              ? `Showing ${assistYear(year)} agreements. ${assistYear(ASSIST_YEAR_2026_27)} isn't published yet for this university.`
+              : `From ASSIST's ${assistYear(year)} agreements.`}
             {majorsSavedOn && (
               <>
                 {" "}
@@ -538,24 +545,12 @@ function SavedListNote({ noun, savedOn }: { noun: string; savedOn: string }) {
   );
 }
 
-/** What the plan covers for this university, and which ASSIST year its agreements come from. */
+/** What the plan covers for this university. The ASSIST year shows under the majors list. */
 function UniversityHint({ university }: { university: AssistInstitution }) {
   const short = shortUniversity(university.name, university.id);
-  const year = university.year_id;
-  return (
-    <>
-      {university.full_plan
-        ? `Full plan: credits, community college terms and ${short} semesters.`
-        : `Credits and community college terms only. ${short}'s full degree requirements aren't available yet.`}
-      {year !== undefined && year < ASSIST_YEAR_2026_27 && (
-        <>
-          {" "}
-          ASSIST has no {assistYear(ASSIST_YEAR_2026_27)} agreements for this
-          pair yet, so {assistYear(year)} is used.
-        </>
-      )}
-    </>
-  );
+  return university.full_plan
+    ? `Full plan: credits, community college terms and ${short} semesters.`
+    : `Credits and community college terms only. ${short}'s full degree requirements aren't available yet.`;
 }
 
 function UploadStep({

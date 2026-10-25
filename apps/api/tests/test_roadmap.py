@@ -50,9 +50,10 @@ def transcript(terms) -> list[Course]:
             for term, rows in terms for p, n, u, g in rows]
 
 
-def roadmap(courses: list[Course], labels=(DS, ECON), transfer_term=None, today=OCT_2026, start_term=None):
+def roadmap(courses: list[Course], labels=(DS, ECON), transfer_term=None, today=OCT_2026, start_term=None,
+            stage=None):
     """Planned the way /plan and the counselor do it."""
-    profile = Profile(id="p", created_at="", **PROFILE)
+    profile = Profile(id="p", created_at="", **PROFILE, stage=stage)
     majors, uncurated = planner.resolve_majors(",".join(labels), [], 39, planner.load_majors())
     planning = planner.assume_in_progress_passed(courses)
 
@@ -224,6 +225,17 @@ def test_default_start_is_next_fall_with_no_courses_else_the_next_term():
     # Before September, the next Fall is this year's.
     assert planner.default_start(date(2026, 5, 1), "quarter", []) == ("Fall", 2026)
     assert planner.default_start(date(2026, 5, 1), "semester", transcript(P3)) == ("Fall", 2026)
+
+
+def test_a_student_already_at_college_starts_next_term_not_next_fall():
+    # No courses yet, but already enrolled: the next term that hasn't started (De Anza is on quarters).
+    fresh = roadmap([], stage="community_college")
+    assert fresh.default_start_term == fresh.start_term == "Winter 2027"
+    assert phase(fresh, "before_transfer")[0].term == "Winter 2027"
+    assert planner.default_start(OCT_2026, "semester", [], "community_college") == ("Spring", 2027)
+    # A high-school senior still starts in Fall.
+    assert roadmap([], stage="high_school").default_start_term == "Fall 2027"
+    assert planner.default_start(OCT_2026, "semester", [], "high_school") == ("Fall", 2027)
 
 
 def test_requested_start_term():
