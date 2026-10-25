@@ -74,11 +74,11 @@ export function University() {
         sketch="cap"
         byline={
           guide
-            ? `${guide.university_name} · Last updated ${formatDate(guide.last_updated)}`
+            ? `What to Expect at ${guide.university_name} · Last updated ${formatDate(guide.last_updated)}`
             : name
         }
       >
-        What to Expect
+        University
       </Masthead>
       {!profile ? (
         <Section label="University" title="Set Up Your Profile First" last>

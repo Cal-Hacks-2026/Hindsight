@@ -15,22 +15,26 @@
 
 <p align="center">Built at Cal Hacks 13.0</p>
 
-Hindsight helps community-college students turn their transcript into a transfer plan. It checks coursework against official articulation agreements, identifies remaining major requirements, and proposes what to take next. Alongside the plan, students get relevant campus opportunities and answers grounded in their own records.
+Hindsight is a transfer planner for California community-college students, from before transfer through graduation at the university. It checks a transcript against official articulation agreements and general-education lists, plans what to take each term, and keeps the week in view: classes, deadlines and campus opportunities that fit the student's free time. Every answer is grounded in the student's own records and cites its source.
 
-**The current demo supports De Anza College → San José State University.** Articulation matching uses the majors available for that pathway on ASSIST. Full university course planning covers Data Science, B.S. and Economics, B.S.
+**Students pick any California community college and any university it has ASSIST agreements with.** Credits, GE progress and community-college terms work for every pair. The full four-year plan, through graduation, covers San José State University's Data Science, B.S. and Economics, B.S.; SJSU also has the first University guide and campus opportunities feed.
 
-[![Hindsight’s My plan screen showing proposed next-term courses, units, and sources](docs/screenshots/transfer-planner/plan.png)](https://hindsight-web-yl0k.onrender.com)
+[![Hindsight’s Home screen: this week’s moves beside the student’s path and classes](docs/screenshots/transfer-planner/home.png)](https://hindsight-web-yl0k.onrender.com)
 
 <details>
-<summary>See credit review and Ask Hindsight</summary>
+<summary>See Plan, Credits, Schedule, Opportunities, University and Ask</summary>
 
-| My credits | Ask Hindsight |
+| Plan | Credits with GE |
 |---|---|
-| [![Course matches, requirement status, and agreement sources](docs/screenshots/transfer-planner/credits.png)](docs/screenshots/transfer-planner/credits.png) | [![Questions about a student’s courses and transfer plan](docs/screenshots/transfer-planner/ask-hindsight.png)](docs/screenshots/transfer-planner/ask-hindsight.png) |
+| [![Next-term courses and the full plan through graduation](docs/screenshots/transfer-planner/plan.png)](docs/screenshots/transfer-planner/plan.png) | [![Requirement matches and Cal-GETC or IGETC areas with their sources](docs/screenshots/transfer-planner/credits.png)](docs/screenshots/transfer-planner/credits.png) |
+| **Schedule** | **Opportunities** |
+| [![The week grid with classes and free time](docs/screenshots/transfer-planner/schedule.png)](docs/screenshots/transfer-planner/schedule.png) | [![Ranked campus opportunities with dates and source links](docs/screenshots/transfer-planner/opportunities.png)](docs/screenshots/transfer-planner/opportunities.png) |
+| **University** | **Ask Hindsight** |
+| [![What to expect at the university, each item cited to its own pages](docs/screenshots/transfer-planner/university.png)](docs/screenshots/transfer-planner/university.png) | [![A cited answer about the student’s GE, week and university](docs/screenshots/transfer-planner/ask-hindsight.png)](docs/screenshots/transfer-planner/ask-hindsight.png) |
 
 </details>
 
-*Screenshots show a fictional student profile. Academic results use recorded test responses; they are not a live evaluation of a real student.*
+*Screenshots show a fictional student profile built from the test fixtures in [`tests/fixtures`](tests/fixtures); they are not a live evaluation of a real student.*
 
 ## Why we built it
 
@@ -40,26 +44,30 @@ Our teammate Atishay transferred from De Anza to SJSU to study Data Science and 
 
 Hindsight brings those decisions together: **what counts, what comes next, and what needs attention.**
 
-## The student experience
+## What it does
 
-| Step | What the student gets |
+| Page | What the student gets |
 |---|---|
-| **Confirm coursework** | Upload a transcript PDF or image, review the extracted courses, and correct names, grades, units, or terms before matching. Students with no completed coursework can continue without a transcript. |
-| **My plan** | Next-term course proposals, requirements needing attention, progress, and a full course sequence with start and transfer-term controls. |
-| **My credits** | The university requirement, matched prior coursework, accepted alternatives, confidence, and the agreement behind each result. |
-| **Opportunities** | Campus listings ranked against majors, goals, and interests, with source links and dates. |
-| **Ask Hindsight** | Questions and follow-ups grounded in the student's confirmed transcript, computed matches, plan, and opportunities. |
+| **Home** | This week's moves: the next planned course and what it counts toward, the most important missing GE area, the next transfer or financial-aid deadline, and opportunities that fit the student's free time. Beside them: the path at a glance (requirements met, GE areas done, terms before transfer, transfer term, estimated finish) and today's and the next classes. |
+| **Plan** | Next-term courses, items needing attention, progress, and the full course plan in two phases: community-college terms before transfer, then university semesters through graduation, with start and transfer-term controls and a printable education plan. |
+| **Credits** | Each university requirement with the coursework that meets it, accepted alternatives, confidence and the ASSIST agreement behind it, plus Cal-GETC or IGETC progress area by area from the college's ASSIST lists for the year each course was taken. |
+| **Schedule** | Upload a class schedule, confirm the rows, and see the week grid with free time and which planned courses are scheduled. |
+| **Opportunities** | Campus listings ranked against majors, goals and interests, with dates and source links. |
+| **University** | What to expect at the student's university (orientation, academics, getting around, housing, student life, first-semester tips), written only from the university's own pages, every item cited. |
+| **Ask Hindsight** | A panel on every page. Questions and follow-ups answered from the student's transcript, matches, plan, GE progress, class schedule, University guide and opportunities, with numbered sources. |
 
-The interface leads with the student's next decision. Operational scan and scraper-repair logs are available through the API.
+Onboarding asks where the student is now (high school, community college, transferred or returning), then the college, university and majors in ASSIST's order. A transcript upload is optional: students with no courses yet can continue without one. The interface leads with the student's next decision. Operational scan and scraper-repair logs are available through the API.
 
 ## Try the demo
 
-1. Open the [live app](https://hindsight-web-yl0k.onrender.com) and create a profile. Choose **Data Science, B.S.**, **Economics, B.S.**, or both for the full planning demo.
-2. Upload the [fictional De Anza sample transcript](tests/fixtures/personas/p1-baseline-deanza.pdf), then review and confirm the course rows.
-3. Open **My plan** to see proposed next courses. Change the start or transfer term and inspect the full sequence.
-4. Open **My credits** to inspect requirement matches, incomplete sequences, and credits recognized under earlier agreements.
-5. Ask **“Which requirements need attention before I transfer?”** or **“What changes if I drop my second major?”**
-6. Explore **Opportunities** for the profile's ranked campus listings.
+1. Open the [live app](https://hindsight-web-yl0k.onrender.com) and create a profile. Pick **De Anza College**, **San José State University**, and **Data Science, B.S.**, **Economics, B.S.**, or both for the full planning demo.
+2. Upload the [fictional De Anza sample transcript](tests/fixtures/personas/p1-baseline-deanza.pdf), then review and confirm the course rows. Or continue with no courses.
+3. Open **Plan** for the next courses and the full plan through graduation. Change the start or transfer term.
+4. Open **Credits** for requirement matches and GE progress by area.
+5. On **Schedule**, upload the [sample class schedule](apps/api/tests/fixtures/schedule/sample-schedule.pdf) and confirm it.
+6. Back on **Home**, see this week's moves and the opportunities that fall in your free time.
+7. Open **Ask Hindsight** and try **“Which GE do I still need?”**, **“When am I free on Thursday?”** or **“What's orientation like at SJSU?”**
+8. Read **University** for SJSU's What to Expect guide.
 
 The hosted API can take time to wake after inactivity. The first personalized opportunity feed may also take longer while its explanations are prepared.
 
@@ -73,16 +81,20 @@ flowchart LR
     A[ASSIST agreements] --> M
     M --> P[Deterministic planner]
     K[University catalog data] --> P
+    G[ASSIST GE lists] --> P
+    H[Class schedule] --> W
     P --> W[Student workspace]
+    U[University pages] --> V[Cited University guide]
+    V --> W
     D[Factory Droid] --> S[Apify campus scans]
     S --> R[Normalize and rank]
     R --> W
     W --> Q[Claude answers with sources]
 ```
 
-**Academic decisions come from code and source data.** The matcher handles course groups, alternatives, sequence rules, minimum grades, in-progress coursework, and agreement years. Renumbered or ambiguous matches are flagged. The planner schedules remaining coursework around the prerequisite relationships represented in the data.
+**Academic decisions come from code and source data.** The matcher handles course groups, alternatives, sequence rules, minimum grades, in-progress coursework, and agreement years. Renumbered or ambiguous matches are flagged. GE progress checks each course against the college's Cal-GETC or IGETC list for the year it was taken. The planner schedules remaining major coursework around the prerequisite relationships in the data, then fills missing GE areas before transfer. Free time is computed from the saved class schedule.
 
-**Claude explains the results.** It extracts transcript rows, writes opportunity explanations, and answers questions using the student's data. For supported what-if questions, the counselor calls the matcher and planner. Citation IDs are checked against the sources supplied to the model.
+**Claude explains the results.** It extracts transcript and class-schedule rows, writes opportunity explanations, writes the University guide from the university's own pages (code drops any item whose quote isn't on the page it cites), and answers questions using the student's data. For supported what-if questions, the counselor calls the matcher and planner. Citation IDs are checked against the sources supplied to the model.
 
 **Campus data comes from source pages.** Apify's Cheerio Scraper fetches curated calendars and listings. Extractors normalize the results; deterministic code ranks them. Missing dates remain empty, and every listing links to its original page. Campus collection uses Apify’s existing Cheerio Scraper Actor.
 
@@ -105,24 +117,24 @@ The optional `npm run smoke:live` command in `apps/agent` exercises a real repai
 
 | Technology | Role |
 |---|---|
-| **Anthropic Claude** | Transcript extraction, source-grounded questions, and opportunity explanations. |
+| **Anthropic Claude** | Transcript and class-schedule extraction, source-grounded questions, opportunity explanations, and the cited University guide. |
 | **Factory Droid SDK** | Scheduled campus operations and permission-scoped extractor repair. |
-| **Apify** | Cheerio Scraper for campus event and opportunity sources. |
-| **ASSIST** | Official California articulation agreements, accessed through the public site's API and cached. |
+| **Apify** | Cheerio Scraper for campus event and opportunity sources and the University guide's pages. |
+| **ASSIST** | Official California articulation agreements and Cal-GETC / IGETC course lists, accessed through the public site's API and cached. |
 | **React, TypeScript, Vite** | Responsive student workspace and PWA manifest. |
 | **FastAPI, Python** | Matching, planning, service integrations, and typed API responses. |
-| **Supabase** | Profiles, confirmed coursework, cached agreements, opportunities, and run events. |
+| **Supabase** | Profiles, confirmed coursework, class schedules, cached agreements and GE lists, opportunities, and run events. |
 | **Render** | Static frontend and a shared API/agent container. |
 
 The Janus mark connects hindsight with foresight: completed coursework on one side, the path ahead on the other. The current interface uses off-white paper, bold black typography, and simple school illustrations. See [DESIGN.md](DESIGN.md).
 
 ## Accuracy, privacy, and current limits
 
-- **The student confirms the transcript.** The uploaded file is sent to Anthropic for extraction and is not stored by Hindsight. Confirmed course rows are saved in Supabase.
-- **Sources stay attached to decisions.** Requirement matches link to ASSIST agreements; curated university requirements link to catalog pages. A missing published equivalency is not presented as a rejected transfer-credit decision.
+- **The student confirms the transcript and schedule.** Uploaded files are sent to Anthropic for extraction and are not stored by Hindsight. Only the rows the student confirms are saved in Supabase.
+- **Sources stay attached to decisions.** Requirement matches link to ASSIST agreements; GE areas link to the ICAS standards and ASSIST lists; curated university requirements link to catalog pages; University guide items and deadlines link to official pages. A missing published equivalency is not presented as a rejected transfer-credit decision.
 - **A proposal is not a confirmed schedule.** Actual course offerings have not been verified. University requirements use the SJSU 2025–26 catalog and have not yet been checked against 2026–27.
-- **The plan covers major requirements.** General education, total degree units, residency, and graduation applications are outside the current audit. Requirements without a course list, including Data Science domain electives, remain unscheduled and are excluded from the estimated finish term.
-- **Coverage is limited.** Berkeley campus sources exist, but Berkeley onboarding and nationwide academic planning are not available. Current profile recovery depends on the same browser; cross-device accounts and persistent conversations are future work.
+- **The plan covers major requirements and GE.** Total degree units, residency, and graduation applications are outside the current audit. AP and IB credit and courses from other colleges aren't counted toward GE yet. Requirements without a course list, including Data Science domain electives, remain unscheduled and are excluded from the estimated finish term.
+- **Coverage is limited.** Every ASSIST college and university pair gets credits, GE and community-college terms, but only SJSU's Data Science and Economics have a plan through graduation, and only SJSU has a University guide and an opportunities feed. Current profile recovery depends on the same browser; cross-device accounts and persistent conversations are future work.
 
 Recorded integration checks and persona findings are in [AUDIT.md](AUDIT.md), with the revision and date of that audit. Test documents in [`tests/fixtures/personas`](tests/fixtures/personas) are fictional.
 
@@ -183,7 +195,7 @@ Build the web app with `npm run build:web` and serve `apps/web/dist` with a fall
 
 ## What's next
 
-Expand verified institution pairs, compare transfer destinations, add general-education and admission checks, incorporate actual course offerings and student schedules, and prepare course-evaluation requests. The same workflow should work across institutions as coverage grows. See the [product roadmap](docs/ROADMAP.md) for scope and priorities.
+Curate more universities' degree requirements and guides, compare transfer destinations, add admission checks, incorporate actual course offerings, and prepare course-evaluation requests. The same workflow should work across institutions as coverage grows. See the [product roadmap](docs/ROADMAP.md) for scope and priorities.
 
 ## Team
 

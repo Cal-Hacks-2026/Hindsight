@@ -417,8 +417,9 @@ def test_planned_route_marks_scheduled_courses(schedule_fake, monkeypatch):
     pid = make_profile()
     calls = []
 
-    def fake_plan(profile_id, majors=None, transfer_term=None, start_term=None):
-        calls.append((majors, transfer_term, start_term))
+    # No defaults: the route must pass every argument (plan()'s own defaults are Query objects).
+    def fake_plan(profile_id, *, majors, transfer_term, start_term, ge, ge_pattern):
+        calls.append((majors, transfer_term, start_term, ge, ge_pattern))
         return PlanResponse(semesters=[Semester(term="Winter 2027", courses=[
             SemesterCourse(code="MATH 1C", title="Calculus III", units=5, reason="", prereqs=[]),
             SemesterCourse(code="MATH 2A", title="Differential Equations", units=5, reason="", prereqs=[])])])
@@ -431,7 +432,9 @@ def test_planned_route_marks_scheduled_courses(schedule_fake, monkeypatch):
     res = client.get(f"/profiles/{pid}/schedule/planned", params={"transfer_term": "Fall 2028"})
     marked = ScheduledPlanResponse.model_validate(res.json()).courses
     assert [(c.code, c.scheduled_term, c.crn) for c in marked] == [("MATH 1C", "Winter 2027", "10234")]
-    assert calls == [(None, "Fall 2028", None)]
+    assert calls == [(None, "Fall 2028", None, False, None)]
+    client.get(f"/profiles/{pid}/schedule/planned", params={"ge": "true", "ge_pattern": "igetc"})
+    assert calls[-1] == (None, None, None, True, "igetc")
 
 
 # ---- Live (opt-in): one real Claude call per fixture ----

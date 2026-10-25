@@ -11,13 +11,15 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
-from app.models import ChatMessage, Citation, CounselorResponse, Profile
+from app.models import ChatMessage, Citation, CounselorResponse, Profile, ScheduledClass
 from app.services import claude_limits, counselor, mocks
 from app.services.assist import AssistError
 from app.services.claude_limits import ClaudeLimiter
 from app.services.counselor import Sources, Student, _Answer
 from app.services.db import StoreError
 from app.services.radar import store as radar_store
+from app.services.schedule import store as schedule_store
+from app.services.university import store as university_store
 
 client = TestClient(app)
 TODAY = date(2026, 10, 24)
@@ -28,6 +30,23 @@ PROFILE = {
     "name": "Atishay", "campus": "sjsu", "sending_institution_id": 113, "receiving_institution_id": 39,
     "majors": [DS], "goals": "Graduate by Spring 2028", "interests": ["ai"],
 }
+
+
+@pytest.fixture(autouse=True)
+def schedules(monkeypatch) -> dict[str, list[ScheduledClass]]:
+    """Saved class schedules by profile id, in memory (no Supabase)."""
+    saved: dict[str, list[ScheduledClass]] = {}
+    monkeypatch.setattr(schedule_store, "schedule", lambda pid, transport=None: list(saved.get(pid, [])))
+    return saved
+
+
+@pytest.fixture(autouse=True)
+def guide_from_file(monkeypatch):
+    """The checked-in guides only: the Supabase cache is never read."""
+    monkeypatch.setattr(university_store, "_from_cache", lambda uid, transport=None: None)
+    university_store.clear_memory()
+    yield
+    university_store.clear_memory()
 
 
 def courses():
@@ -222,7 +241,8 @@ def test_plan_uses_assist_matches_and_answers_finish_by():
     cc = {c["code"]: c for t in before["terms"] for c in t["courses"]}
     [math39] = cc["MATH 2B"]["counts_for"]
     assert math39["requirement"].startswith("MATH 39") and s.sources.citations[math39["source"]].source == "assist"
-    assert plan["transfer_term"] == plan["semesters"][0]["term"] == "Fall 2027"  # first Fall after De Anza
+    # First Fall after De Anza, with the missing GE areas planned before transfer (as /plan?ge=true).
+    assert plan["transfer_term"] == plan["semesters"][0]["term"] == "Fall 2029"
     assert plan["finishes_by_target"] is True and plan["terms_needed"] == len(before["terms"]) + len(plan["semesters"])
     assert s.plan([DS], "Spring 2027")["finishes_by_target"] is False
     unparsed = s.plan([DS], "sometime in 2028")
@@ -399,3 +419,150 @@ def test_in_progress_counts_for_the_plan_but_is_reported_as_matched():
     scheduled = {c["code"] for sem in plan["semesters"] for c in sem["courses"]}
     assert "MATH 31" not in scheduled and "MATH 31" in plan["already_done_by_code"]
     assert plan["in_progress_counted_as_done"] == ["MATH 1B"]
+
+
+# ---- GE, class schedule and University guide (INTEGRATION) ----
+
+
+def klass(course, days, start, end, mode="in_person", **kw) -> ScheduledClass:
+    return ScheduledClass(term="Fall 2026", course=course, title=kw.pop("title", "Course"), mode=mode,
+                          days=list(days), start_time=start, end_time=end, start_date="2026-09-21",
+                          end_date="2026-12-11", confirmed=True, **kw)
+
+
+def test_ge_progress_is_in_the_context_and_cited():
+    s = student()
+    data = counselor.build_context(s)
+    ge = data["ge_progress"]
+    assert ge["pattern"] == "IGETC" and ge["started_term"] == "Fall 2023"  # first De Anza term on P1's transcript
+    assert ge["covers"] == counselor.GE_COVERS
+    areas = {a["area"]: a for a in ge["areas"]}
+    assert areas["2"]["status"] == "done" and areas["2"]["counted_courses"]
+    english = areas["1A"]
+    assert english["status"] == "missing" and english["still_needed"] == 1
+    assert english["take_one_of"] and len(english["take_one_of"]) <= counselor.MAX_GE_OPTIONS
+    assert english["options_total"] >= len(english["take_one_of"])
+    # Every area cites its standard, and the options their ASSIST list for this year.
+    assert s.sources.citations[english["source"]].url.startswith("https://icas-ca.org/")
+    options = s.sources.citations[english["options_source"]]
+    assert options.source == "assist" and "2026" in options.label
+    assert s.sources.citations[ge["why_this_pattern_source"]].source == "web"
+
+
+def test_plan_schedules_the_missing_ge_areas_like_the_plan_page():
+    s = student()
+    plan = s.plan([DS], None)
+    slots = [c for t in plan["before_transfer"]["terms"] for c in t["courses"] if "ge_area" in c]
+    assert slots and slots[0]["ge_area"] == "IGETC 1A"
+    assert slots[0]["take_one_of"] and s.sources.citations[slots[0]["source"]].url.startswith("https://icas-ca.org/")
+    assert plan["covers"] == counselor.PLAN_COVERS and "General Education" in plan["covers"]
+    assert "General Education (Cal-GETC) isn't in the plan" not in counselor.SYSTEM
+
+
+def test_ge_unavailable_is_reported_and_the_plan_still_runs(monkeypatch):
+    def down(*a, **kw):
+        raise AssistError("timeout")
+
+    monkeypatch.setattr(counselor.ge, "progress", down)
+    s = student()
+    data = counselor.build_context(s)
+    assert data["ge_progress"] == {"error": "GE progress is unavailable right now"}
+    assert data["plan"]["semesters"] and data["plan"]["ge_not_planned"] == "GE progress is unavailable right now"
+
+
+def test_class_schedule_gives_classes_and_free_time(schedules):
+    s = student()
+    schedules["p1"] = [klass("MATH D001B", ["Mon", "Wed"], "09:30", "11:20", location="S44"),
+                       klass("CIS D022C", ["Tue", "Thu"], "13:30", "15:20", mode="hybrid"),
+                       klass("ECON D001A", [], None, None, mode="asynchronous")]
+    sched = counselor.build_context(s)["class_schedule"]
+    assert sched["saved"] and sched["current_term"] == "Fall 2026"
+    math = next(c for c in sched["classes"] if c["course"] == "MATH D001B")
+    assert math["time"] == "9:30 AM–11:20 AM" and math["days"] == ["Mon", "Wed"] and math["location"] == "S44"
+    assert next(c for c in sched["classes"] if c["course"] == "ECON D001A")["time"] is None
+    # The next 7 days from TODAY (Saturday 2026-10-24), so "Thursday" is the coming one.
+    assert [d["date"] for d in sched["free_time"]] == [f"2026-10-{n}" for n in range(24, 31)]
+    thursday = next(d for d in sched["free_time"] if d["day"] == "Thu")
+    assert thursday["date"] == "2026-10-29"
+    assert thursday["free"] == ["7:00 AM–1:30 PM", "3:20 PM–10:00 PM"]
+    assert thursday["classes"] == ["CIS D022C 1:30 PM–3:20 PM"]
+    assert sched["free_time_covers"] == counselor.FREE_TIME_COVERS
+    assert '"source"' not in json.dumps(sched)  # the student's own data carries no source
+
+
+def test_no_saved_schedule_and_a_store_outage_are_said_plainly(schedules, monkeypatch):
+    assert counselor.build_context(student())["class_schedule"] == {"saved": False}
+
+    def down(pid, transport=None):
+        raise StoreError("down")
+
+    monkeypatch.setattr(schedule_store, "schedule", down)
+    assert counselor.build_context(student())["class_schedule"] == {
+        "error": "The class schedule is unavailable right now"}
+
+
+def test_a_term_that_hasnt_started_shows_its_first_weeks(schedules):
+    s = student()
+    schedules["p1"] = [klass("MATH D001C", ["Mon"], "09:30", "11:20").model_copy(
+        update={"term": "Winter 2027", "start_date": "2027-01-05", "end_date": "2027-03-26"})]
+    sched = counselor.build_context(s)["class_schedule"]
+    assert sched["current_term"] == "Winter 2027"
+    assert sched["free_time"][0]["date"] == "2027-01-05" and len(sched["free_time"]) == 7
+
+
+def test_university_guide_items_cite_the_universitys_pages():
+    s = student()
+    guide = counselor.build_context(s)["university_guide"]
+    assert guide["available"] and guide["university"] == "San José State University"
+    titles = [sec["title"] for sec in guide["sections"]]
+    assert "Transfer Services and Orientation" in titles
+    orientation = next(sec for sec in guide["sections"] if sec["title"] == "Transfer Services and Orientation")
+    item = orientation["items"][0]
+    assert "orientation" in item["text"].lower() and item["sources"]
+    cited = s.sources.citations[item["sources"][0]]
+    assert cited.source == "web" and cited.url.startswith("https://www.sjsu.edu/")
+
+
+def test_no_guide_for_other_universities():
+    s = student(campus="other", receiving_institution_id=117,
+                receiving_institution_name="University of California, Los Angeles")
+    assert counselor.build_context(s)["university_guide"] == {
+        "available": False, "university": "University of California, Los Angeles"}
+
+
+def test_the_three_new_questions_get_cited_answers(counselor_claude, schedules):
+    pid = make_student()
+    schedules[pid] = [klass("CIS D022C", ["Tue", "Thu"], "13:30", "15:20")]
+
+    def answer(req):
+        data = student_data(req)
+        english = next(a for a in data["ge_progress"]["areas"] if a["area"] == "1A")
+        guide = data["university_guide"]["sections"][0]["items"][0]
+        thursday = next(d for d in data["class_schedule"]["free_time"] if d["day"] == "Thu")
+        return (f"You still need IGETC 1A [{english['source']}]; take one of {english['take_one_of'][0]} "
+                f"[{english['options_source']}]. Thursday you're free {', '.join(thursday['free'])}. "
+                f"Orientation: {guide['text']} [{guide['sources'][0]}]", None)
+
+    counselor_claude.steps.append(final(answer))
+    res = ask(pid, "Which GE do I still need, when am I free on Thursday, and what's orientation like?")
+    assert res.status_code == 200, res.text
+    body = CounselorResponse.model_validate(res.json())
+    assert "[1]" in body.reply and "[3]" in body.reply and "[S" not in body.reply
+    assert [c.source for c in body.citations] == ["web", "assist", "web"]
+    assert body.citations[0].url.startswith("https://icas-ca.org/")
+    assert body.citations[2].url.startswith("https://www.sjsu.edu/")
+    assert "1:30 PM" in body.reply  # Thursday's free time ends when the class starts
+
+
+def test_prompt_grounds_the_new_context():
+    prompt = " ".join(counselor.SYSTEM.split())
+    assert "ge_progress" in prompt and "take_one_of" in prompt
+    assert "only from class_schedule.classes and class_schedule.free_time" in prompt
+    assert "university_guide is written only from the university's own pages" in prompt
+    assert "profile, transcript, and class schedule need no citation" in prompt
+
+
+def test_opportunity_times_are_pacific():
+    assert counselor._pacific("2026-10-29T19:00:00+00:00") == "Thu 2026-10-29, 12:00 PM Pacific"
+    assert counselor._pacific("2026-10-30T07:00:00+00:00") == "Fri 2026-10-30"  # date-only: midnight Pacific
+    assert counselor._pacific(None) is None and counselor._pacific("soon") == "soon"

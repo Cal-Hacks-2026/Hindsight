@@ -127,13 +127,6 @@
   text-decoration: none;
 }
 
-/* ---- Stub pages ---- */
-.coming-together-note {
-  margin: 0;
-  font-size: var(--text-body);
-  color: var(--gray);
-}
-
 /* ---- Onboarding: the stage question's radios, sized like its checkboxes ---- */
 .section input[type="radio"] {
   width: 22px;

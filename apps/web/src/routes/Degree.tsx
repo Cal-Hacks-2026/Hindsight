@@ -261,7 +261,7 @@ function NoResults({
   return (
     <>
       <Masthead sketch={view === "credits" ? "books" : "cap"}>
-        {view === "credits" ? "My credits" : "Plan"}
+        {view === "credits" ? "Credits" : "Plan"}
       </Masthead>
       <Section label="Summary" last>
         <p className="lede">
@@ -400,7 +400,7 @@ function Report({
         byline={majorsLine(majors)}
         sketch={view === "credits" ? "books" : "cap"}
       >
-        {view === "credits" ? "My credits" : "Plan"}
+        {view === "credits" ? "Credits" : "Plan"}
       </Masthead>
       {view === "credits" ? (
         <>
@@ -747,7 +747,7 @@ function Credits({
   return (
     <Section
       label="Credits"
-      title="What counts toward your major"
+      title="What Counts Toward Your Major"
       notes={<CreditNotes rows={rows} />}
     >
       <div
@@ -803,7 +803,7 @@ function Missed({ rows, courses }: { rows: Row[]; courses?: Course[] }) {
   return (
     <Section label="Heads up" notesFlush>
       <div className="missed">
-        <h2>Credits worth a second look</h2>
+        <h2>Credits Worth a Second Look</h2>
         <ul>
           {rows.map((r) => {
             const via = r.req.satisfied_by

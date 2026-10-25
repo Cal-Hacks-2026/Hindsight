@@ -1345,7 +1345,7 @@ table.confirm button {
     align-items: center;
   }
   h1 {
-    font-size: clamp(44px, 9vw, 60px);
+    font-size: clamp(34px, 9vw, 60px);
     letter-spacing: -2px;
   }
   .byline {
