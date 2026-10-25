@@ -67,7 +67,14 @@ export type SemesterCourse = {
   prereqs: string[];
 };
 
-export type Semester = { term: string; courses: SemesterCourse[] };
+export type Semester = {
+  term: string;
+  courses: SemesterCourse[];
+  // Two-phase roadmap (I-03): community-college terms before transfer, university terms after.
+  phase?: "before_transfer" | "after_transfer";
+  institution?: string; // e.g. "De Anza College"
+  term_system?: "quarter" | "semester"; // how `units` are counted
+};
 
 export type RankedOpportunity = {
   id: string;
@@ -104,7 +111,18 @@ export type UpdateCoursesRequest = { courses: Course[] };
 export type AssistMajorsResponse = { majors: AssistMajor[] };
 export type MatchRequest = { major_label: string };
 /** uncurated_majors: chosen majors left out of the plan because they have no curated requirements yet. */
-export type PlanResponse = { semesters: Semester[]; uncurated_majors?: string[] };
+export type PlanResponse = {
+  semesters: Semester[]; // before-transfer terms first, then after-transfer terms
+  uncurated_majors?: string[];
+  transfer_term?: string; // when the after-transfer terms start
+  earliest_transfer_term?: string; // the first Fall after the before-transfer terms finish
+  start_term?: string; // first community-college term
+  default_start_term?: string; // next Fall with no courses yet, else the next registrable term
+  start_term_choices?: string[]; // community-college terms the student can start in
+  // Community-college courses that don't fit before a requested transfer_term; their
+  // university equivalents are planned after transfer instead.
+  not_before_transfer?: string[];
+};
 export type OpportunitiesResponse = { items: RankedOpportunity[] };
 export type CounselorRequest = { message: string; history: ChatMessage[] };
 export type CounselorResponse = { reply: string; citations: Citation[] };

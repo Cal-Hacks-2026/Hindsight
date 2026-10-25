@@ -1,25 +1,36 @@
-"""Planner v1: remaining major requirements → semesters (PHASES.md Phase 1, step 6).
+"""Planner: remaining major requirements → a two-phase roadmap (PHASES.md Phase 1, step 6; I-03).
 
-Reads curated majors from data/requirements/*.json, drops what the student has
-already satisfied, then schedules the rest term by term: a course goes in only once
-all its prerequisites are done in an earlier term, it's offered that term, and the
-term stays under the unit cap. Courses that unlock the longest chains go first.
+Before transfer: every open ASSIST requirement the community college can cover gets one
+option (fewest courses still to take), and those courses go in community-college terms
+(quarters or semesters) in sequence order, under the unit cap.
+
+After transfer: reads curated majors from data/requirements/*.json, drops what the student
+has already satisfied or will finish before transfer, then schedules the rest term by term
+from the transfer term: a course goes in only once all its prerequisites are done in an
+earlier term, it's offered that term, and the term stays under the unit cap. Courses that
+unlock the longest chains go first.
 
 Deterministic: Claude doesn't take part in planning.
 """
 
 import json
+import logging
 import os
 import re
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
+from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
 from typing import Literal
 
 from pydantic import BaseModel
 
-from app.models import Course, MatchResult, Semester, SemesterCourse
-from app.services.assist.evaluator import LETTER_GRADES, grade_verdict
+from app.config import ASSIST_YEAR_ID
+from app.models import Course, MatchResult, Profile, Requirement, Semester, SemesterCourse
+from app.services.assist import AssistError, get_service
+from app.services.assist.evaluator import LETTER_GRADES, grade_verdict, option_receivers, sending_courses
+
+log = logging.getLogger(__name__)
 
 REQUIREMENTS_DIR = Path(
     os.getenv("REQUIREMENTS_DIR") or Path(__file__).resolve().parents[4] / "data" / "requirements"
@@ -285,7 +296,9 @@ def build_plan(
     satisfied: set[str],
     today: date | None = None,
     unit_cap: float = DEFAULT_UNIT_CAP,
+    start: tuple[Season, int] | None = None,
 ) -> list[Semester]:
+    """University terms from `start` (default: the next term after `today`)."""
     catalog: dict[str, CatalogCourse] = {}
     for major in majors:
         catalog.update(major.courses)
@@ -382,7 +395,7 @@ def build_plan(
     done = set(satisfied)
     semesters: list[Semester] = []
     idle_terms = 0
-    for season, year in _terms(next_term(today or date.today())):
+    for season, year in _terms(start or next_term(today or date.today())):
         if not remaining:
             break
         if len(semesters) >= MAX_TERMS or idle_terms >= len(PLAN_SEASONS):
@@ -416,3 +429,472 @@ def build_plan(
         remaining.difference_update(picked)
         done.update(picked)  # only usable from the next term on: eligibility is computed before picking
     return semesters
+
+
+# ---- Before transfer: community-college courses from ASSIST options (I-03) ----
+
+TermSystem = Literal["quarter", "semester"]
+CC_SEASONS: dict[TermSystem, tuple[str, ...]] = {"quarter": ("Fall", "Winter", "Spring"), "semester": ("Fall", "Spring")}
+SEASON_ORDER = {"Winter": 0, "Spring": 1, "Summer": 2, "Fall": 3}
+DEFAULT_CC_UNIT_CAP = 15.0  # quarter or semester units, whichever the college uses
+# When the agreement doesn't give a course's units: a typical lecture course.
+FALLBACK_CC_UNITS: dict[TermSystem, float] = {"quarter": 5.0, "semester": 4.0}
+MAX_TRANSFER_YEARS = 8  # how far ahead a requested transfer term may be
+_TERM = re.compile(r"^(Fall|Winter|Spring|Summer) (\d{4})$")
+_CC_NUMBER = re.compile(r"^C?(\d+)([A-Z]*)$")
+
+
+@dataclass(frozen=True)
+class SendingCatalog:
+    """What the roadmap needs from one major's current ASSIST agreement."""
+
+    college: str  # sending institution, e.g. "De Anza College"
+    campus: str  # receiving institution, e.g. "San Jose State University"
+    courses: dict[str, tuple[str, float]]  # sending code → (title, units)
+    receivers: dict[str, list[str]]  # option text → receiving codes it earns
+
+
+@dataclass
+class CCPick:
+    """One open requirement and the community-college option chosen for it."""
+
+    requirement: Requirement
+    majors: list[str]
+    option: str  # as ASSIST lists it, e.g. "MATH 1B + MATH 1C (or honors)"
+    courses: list[str]  # still to take, in sequence order
+    covers: list[str]  # receiving course codes it completes
+
+
+@dataclass
+class Roadmap:
+    semesters: list[Semester]  # before transfer, then after
+    transfer_term: str
+    earliest_transfer_term: str
+    start_term: str  # first community-college term
+    default_start_term: str
+    start_term_choices: list[str]
+    not_before_transfer: list[str] = field(default_factory=list)
+    picks: list[CCPick] = field(default_factory=list)  # the ones scheduled before transfer
+    college: str | None = None
+    campus: str | None = None
+    term_system: TermSystem = "semester"
+
+
+def term_key(term: str) -> int | None:
+    """'Winter 2027' → a sortable index; None if not '<Season> <YYYY>'."""
+    m = _TERM.match(term.strip())
+    return int(m.group(2)) * 4 + SEASON_ORDER[m.group(1)] if m else None
+
+
+def _split_top(text: str, sep: str) -> list[str]:
+    """Split on `sep` outside parentheses."""
+    parts, depth, start, i = [], 0, 0, 0
+    while i < len(text):
+        ch = text[i]
+        depth += (ch == "(") - (ch == ")")
+        if depth == 0 and text.startswith(sep, i):
+            parts.append(text[start:i])
+            i += len(sep)
+            start = i
+            continue
+        i += 1
+    parts.append(text[start:])
+    return [p.strip() for p in parts if p.strip()]
+
+
+def option_alternatives(option: str) -> list[list[str]]:
+    """Every way to complete one ASSIST option, as course lists in the order listed:
+    "MATH 1B + MATH 1C (or honors)" → [["MATH 1B", "MATH 1C"]];
+    "(MATH 1A or MATH 1AH) + MATH 1B" → [["MATH 1A", "MATH 1B"], ["MATH 1AH", "MATH 1B"]]."""
+
+    def alts(text: str) -> list[list[str]]:
+        out: list[list[str]] = []
+        for alt in _split_top(text, " or "):
+            seqs: list[list[str]] = [[]]
+            for piece in _split_top(alt, " + "):
+                sub = alts(piece[1:-1]) if piece.startswith("(") and piece.endswith(")") else [[piece]]
+                seqs = [a + b for a in seqs for b in sub]
+            out += seqs
+        return out
+
+    return alts(option.replace(" (or honors)", ""))
+
+
+def _min_grade(req: Requirement) -> str | None:
+    return next((f.removeprefix("min_grade_") for f in req.flags if f.startswith("min_grade_")), None)
+
+
+def _receiving_codes(req: Requirement) -> list[str]:
+    """'MATH 31 - Calculus II' → ['MATH 31']; 'ENGL 1B - … or ENGL 2 - …' → ['ENGL 1B', 'ENGL 2']."""
+    codes = []
+    for piece in re.split(r"; | or | \+ |: ", req.receiving_course):
+        codes += [f"{p} {n}" for p, n in COURSE_CODE.findall(piece.split(" - ")[0])]
+    return list(dict.fromkeys(codes))
+
+
+def pick_cc_courses(matches: Iterable[MatchResult], catalogs: dict[str, SendingCatalog],
+                    courses: Iterable[Course]) -> list[CCPick]:
+    """One option per open requirement that has community-college options: the fewest courses
+    still to take, ties to the first listed. For a requirement every part of which is needed,
+    a tie goes first to the option that finishes a sequence the student started (CIS 22A taken,
+    so CIS 22B rather than CIS 35A). A course already picked for another requirement isn't picked
+    again (one course earns one requirement). A requirement shared by several majors is picked once."""
+    taken = [c for c in courses if c.confirmed]
+
+    def done(req: Requirement) -> set[str]:
+        return {f"{c.prefix} {c.number}" for c in taken if _passed(c, _min_grade(req))}
+
+    by_course: dict[str, CCPick] = {}
+    open_reqs = [(m.major_label, r) for m in matches for r in m.requirements
+                 if r.status in ("missing", "partial") and r.options]
+    open_reqs.sort(key=lambda mr: mr[1].rule != "all")  # n_of choices can then reuse planned courses
+    planned: set[str] = set()
+    for label, req in open_reqs:
+        if req.receiving_course in by_course:
+            if label not in by_course[req.receiving_course].majors:
+                by_course[req.receiving_course].majors.append(label)
+            continue
+        have = done(req)
+        best = None
+        for i, option in enumerate(req.options or []):
+            for alt in option_alternatives(option):
+                todo = [c for c in alt if c not in have]
+                if not todo or planned & set(todo):
+                    continue  # taken already yet still open, or counted for another requirement
+                fresh = req.rule == "all" and not any(c in have for c in alt)
+                if best is None or (len(todo), fresh, i) < best[0]:
+                    best = ((len(todo), fresh, i), option, todo)
+        if best is None:
+            continue
+        _, option, todo = best
+        listed = _receiving_codes(req)
+        catalog = catalogs.get(label)
+        # In a "choose from" list, only the course(s) this option earns.
+        earned = catalog.receivers.get(option, []) if catalog and req.rule == "n_of" else []
+        covers = [c for c in earned if c in listed] or listed
+        by_course[req.receiving_course] = CCPick(req, [label], option, todo, covers)
+        planned.update(todo)
+    return list(by_course.values())
+
+
+def next_cc_term(today: date, system: TermSystem) -> tuple[str, int]:
+    """First community-college term a student can still register for."""
+    if system == "semester":
+        return next_term(today)
+    if today.month <= 3:
+        return "Spring", today.year
+    if today.month <= 8:
+        return "Fall", today.year
+    return "Winter", today.year + 1
+
+
+def default_start(today: date, system: TermSystem, courses: Iterable[Course]) -> tuple[str, int]:
+    """Where the college terms start by default: the next Fall for a student with no courses yet
+    (a high-school senior starts in Fall), otherwise the next term they can register for."""
+    if any(c.confirmed for c in courses):
+        return next_cc_term(today, system)
+    return "Fall", today.year if today.month <= 8 else today.year + 1
+
+
+def start_choices(today: date, system: TermSystem, n: int = 12) -> list[str]:
+    """College terms a student can start in: the next registrable term on."""
+    terms = _cc_terms(next_cc_term(today, system), system)
+    return ["{} {}".format(*next(terms)) for _ in range(n)]
+
+
+def parse_start_term(raw: str, today: date, system: TermSystem) -> tuple[str, int]:
+    """A requested first college term: one of `start_choices`."""
+    term = raw.strip().title()
+    choices = start_choices(today, system)
+    if term not in choices:
+        raise PlannerError(f"Pick a starting term from {choices[0]} to {choices[-1]}.")
+    season, year = term.split()
+    return season, int(year)
+
+
+def _cc_terms(start: tuple[str, int], system: TermSystem):
+    seasons = CC_SEASONS[system]
+    season, year = start
+    i = seasons.index(season)
+    while True:
+        yield seasons[i], year
+        i = (i + 1) % len(seasons)
+        if seasons[i] == "Winter" or (system == "semester" and seasons[i] == "Spring"):
+            year += 1
+
+
+def _course_number(code: str) -> tuple[int, str]:
+    """'MATH 1B' → (1, 'B'); 'ECON C2001' → (2001, ''). Unparseable numbers sort last."""
+    m = _CC_NUMBER.match(code.rsplit(" ", 1)[-1])
+    return (int(m.group(1)), m.group(2)) if m else (10**6, code)
+
+
+def _sequence_root(code: str) -> tuple[str, str, str] | None:
+    """'MATH 1B' → ('MATH', '1', 'B'): same prefix and number, lettered A, B, C… = one sequence.
+    A trailing H (honors) is ignored: 'MATH 1AH' → ('MATH', '1', 'A')."""
+    prefix, _, number = code.rpartition(" ")
+    m = _CC_NUMBER.match(number)
+    if not m or not m.group(2):
+        return None
+    letters = m.group(2)[:-1] if len(m.group(2)) > 1 and m.group(2).endswith("H") else m.group(2)
+    return (prefix, number[: len(number) - len(m.group(2))], letters) if len(letters) == 1 else None
+
+
+def _acyclic(nodes: Iterable[str], deps: dict[str, set[str]]) -> bool:
+    indeg = {n: len(deps.get(n, ())) for n in nodes}
+    users: dict[str, list[str]] = {}
+    for n, ds in deps.items():
+        for d in ds:
+            users.setdefault(d, []).append(n)
+    ready = [n for n, k in indeg.items() if k == 0]
+    seen = 0
+    while ready:
+        n = ready.pop()
+        seen += 1
+        for u in users.get(n, []):
+            indeg[u] -= 1
+            if indeg[u] == 0:
+                ready.append(u)
+    return seen == len(indeg)
+
+
+def schedule_cc(picks: list[CCPick], units: dict[str, float], titles: dict[str, str], system: TermSystem,
+                start: tuple[str, int], majors: Iterable[Major] = (), unit_cap: float = DEFAULT_CC_UNIT_CAP,
+                institution: str | None = None) -> list[Semester]:
+    """Community-college terms. We don't have the college's prerequisites, so order comes from:
+    the order courses are listed in an option (MATH 1B + MATH 1C), lettered sequences
+    (MATH 1A → 1B → 1C, CIS 22A → 22B → 22C), and the university's prerequisites between the
+    requirements they cover (MATH 31 needs MATH 30, so MATH 1B waits for MATH 1A). Longest chain
+    first, then course number."""
+    reasons: dict[str, list[str]] = {}
+    for p in picks:
+        for code in p.courses:
+            why = f"For {p.requirement.receiving_course} ({', '.join(p.majors)}); ASSIST option: {p.option}"
+            reasons.setdefault(code, [])
+            if why not in reasons[code]:
+                reasons[code].append(why)
+    codes = list(reasons)
+    hard: dict[str, set[str]] = {c: set() for c in codes}
+    for p in picks:
+        for before, after in zip(p.courses, p.courses[1:]):
+            hard[after].add(before)
+    roots: dict[tuple[str, str], list[tuple[str, str]]] = {}
+    for code in codes:
+        if root := _sequence_root(code):
+            roots.setdefault(root[:2], []).append((root[2], code))
+    for seq in roots.values():
+        seq.sort()
+        for (_, before), (_, after) in zip(seq, seq[1:]):
+            hard[after].add(before)
+    deps = hard if _acyclic(codes, hard) else {c: set() for c in codes}
+    # University prerequisites between the requirements the picks cover; an edge that would
+    # close a cycle is left out.
+    catalog = {code: c for m in majors for code, c in m.courses.items()}
+    covered_by = {code: p for p in picks for code in p.covers}
+
+    def depends(code: str, on: str) -> bool:
+        stack, seen = [code], set()
+        while stack:
+            c = stack.pop()
+            if c == on:
+                return True
+            if c not in seen:
+                seen.add(c)
+                stack += deps[c]
+        return False
+
+    for p in picks:
+        for code in p.covers:
+            for pre in catalog[code].all_prereqs() if code in catalog else []:
+                q = covered_by.get(pre)
+                if q is None or q is p:
+                    continue
+                for after in p.courses:
+                    for before in q.courses:
+                        if before != after and not depends(before, after):
+                            deps[after].add(before)
+
+    users: dict[str, list[str]] = {c: [] for c in codes}
+    for c, ds in deps.items():
+        for d in ds:
+            users[d].append(c)
+
+    def height(code: str) -> int:
+        return 1 + max((height(u) for u in users[code]), default=0)
+
+    remaining, done, terms = set(codes), set(), []
+    for season, year in _cc_terms(start, system):
+        if not remaining:
+            break
+        eligible = sorted((c for c in remaining if deps[c] <= done),
+                          key=lambda c: (-height(c), _course_number(c), c))
+        picked, load = [], 0.0
+        for code in eligible:
+            if load + units[code] <= unit_cap or not picked:
+                picked.append(code)
+                load += units[code]
+        terms.append(Semester(
+            term=f"{season} {year}",
+            courses=[SemesterCourse(code=c, title=titles[c], units=units[c], reason="; ".join(reasons[c]), prereqs=[])
+                     for c in picked],
+            phase="before_transfer", institution=institution, term_system=system,
+        ))
+        remaining.difference_update(picked)
+        done.update(picked)
+    return terms
+
+
+def parse_transfer_term(raw: str, today: date) -> tuple[Season, int]:
+    """A requested transfer term: a Fall or Spring from the next registrable term on."""
+    m = _TERM.match(raw.strip().title())
+    if not m or m.group(1) not in PLAN_SEASONS:
+        raise PlannerError("Give the transfer term as 'Fall <year>' or 'Spring <year>', e.g. 'Fall 2028'.")
+    season, year = m.group(1), int(m.group(2))
+    first = next_term(today)
+    if term_key(f"{season} {year}") < term_key("{} {}".format(*first)):
+        raise PlannerError(f"Pick a transfer term from {first[0]} {first[1]} on.")
+    if year > today.year + MAX_TRANSFER_YEARS:
+        raise PlannerError(f"Pick a transfer term before {today.year + MAX_TRANSFER_YEARS + 1}.")
+    return season, year  # type: ignore[return-value]
+
+
+def earliest_transfer(cc_terms: list[Semester], start: tuple[str, int]) -> tuple[Season, int]:
+    """The first Fall after the community-college terms finish (or from their start, with none)."""
+    if cc_terms:
+        season, year = cc_terms[-1].term.split()
+        return "Fall", int(year) + (1 if season == "Fall" else 0)
+    return "Fall", start[1]
+
+
+def build_roadmap(
+    majors: list[Major],
+    satisfied: set[str],
+    matches: list[MatchResult],
+    catalogs: dict[str, SendingCatalog],
+    courses: list[Course],
+    system: TermSystem,
+    today: date | None = None,
+    transfer_term: str | None = None,
+    start_term: str | None = None,
+    cc_unit_cap: float = DEFAULT_CC_UNIT_CAP,
+    unit_cap: float = DEFAULT_UNIT_CAP,
+) -> Roadmap:
+    """Community-college terms for what the college can cover, then university terms from the
+    transfer term for the rest. With a requested transfer term earlier than the college terms
+    allow, a requirement whose courses don't all fit before it moves to after transfer.
+    College terms start at `start_term`, or `default_start`."""
+    today = today or date.today()
+    # A requirement already met by its university course code (taken there) needs nothing here.
+    picks = [p for p in pick_cc_courses(matches, catalogs, courses) if not set(p.covers) <= satisfied]
+    units: dict[str, float] = {}
+    titles: dict[str, str] = {}
+    for cat in catalogs.values():
+        for code, (title, u) in cat.courses.items():
+            titles.setdefault(code, title)
+            if u > 0:
+                units.setdefault(code, u)
+    for p in picks:
+        for code in p.courses:
+            units.setdefault(code, FALLBACK_CC_UNITS[system])
+            titles.setdefault(code, code)
+    college = next((c.college for c in catalogs.values()), None)
+    campus = next((c.campus for c in catalogs.values()), None)
+    default = default_start(today, system, courses)
+    start = default if start_term is None else parse_start_term(start_term, today, system)
+
+    def schedule(chosen: list[CCPick]) -> list[Semester]:
+        return schedule_cc(chosen, units, titles, system, start, majors, cc_unit_cap, college)
+
+    catalog = {code: c for m in majors for code, c in m.courses.items()}
+
+    def ready(p: CCPick, others: list[CCPick]) -> bool:
+        """The university prerequisites of what `p` covers are done, or covered before transfer too."""
+        ok = satisfied | {code for q in others for code in q.covers}
+        known = [catalog[code] for code in p.covers if code in catalog]
+        return all(pre in ok or pre not in catalog for c in known for pre in c.prereqs) and all(
+            any(pre in ok or pre not in catalog for pre in group) for c in known for group in c.prereqs_one_of)
+
+    kept = picks
+    while unready := [p for p in kept if not ready(p, [q for q in kept if q is not p])]:
+        kept = [p for p in kept if p not in unready]
+    cc = schedule(kept)
+    earliest = earliest_transfer(cc, start)
+    transfer = earliest if transfer_term is None else parse_transfer_term(transfer_term, today)
+    limit = term_key("{} {}".format(*transfer))
+    if cc and term_key(cc[-1].term) >= limit:
+        # Keep requirements in pick order while all their courses still finish before transfer.
+        fitting, cc = [], []
+        for p in kept:
+            if not ready(p, fitting):
+                continue
+            trial = schedule(fitting + [p])
+            if term_key(trial[-1].term) < limit:
+                fitting, cc = fitting + [p], trial
+        kept = fitting
+    in_cc = {c.code for s in cc for c in s.courses}
+    not_before = list(dict.fromkeys(c for p in picks if p not in kept for c in p.courses if c not in in_cc))
+    covered = {code for p in kept for code in p.covers}
+    after = build_plan(majors, satisfied | covered, today=today, unit_cap=unit_cap, start=transfer)
+    for s in after:
+        s.phase, s.institution, s.term_system = "after_transfer", campus, "semester"
+    return Roadmap(
+        semesters=cc + after,
+        transfer_term="{} {}".format(*transfer),
+        earliest_transfer_term="{} {}".format(*earliest),
+        start_term="{} {}".format(*start),
+        default_start_term="{} {}".format(*default),
+        start_term_choices=start_choices(today, system),
+        not_before_transfer=not_before,
+        picks=kept,
+        college=college,
+        campus=campus,
+        term_system=system,
+    )
+
+
+def sending_catalog(profile: Profile, label: str) -> SendingCatalog | None:
+    """The current agreement's sending courses and option map; None when ASSIST can't give it."""
+    try:
+        ag = get_service().agreement(profile.sending_institution_id, profile.receiving_institution_id,
+                                     ASSIST_YEAR_ID, label)
+    except AssistError as e:
+        log.info("roadmap: no agreement for %r: %s", label, e)
+        return None
+    return SendingCatalog(
+        college=ag.sending.name,
+        campus=ag.receiving.name,
+        courses={code: (sc.title, sc.units) for code, sc in sending_courses(ag).items()},
+        receivers=option_receivers(ag),
+    )
+
+
+MAX_UNCURATED_FOR_ROADMAP = 3
+
+
+def _known_labels(profile: Profile, labels: list[str]) -> list[str]:
+    """Uncurated labels worth an ASSIST match: only exact labels from the (cached) majors list for
+    this college pair, and only a few, so one request can't fan out into many ASSIST calls."""
+    if not labels:
+        return []
+    try:
+        known = {m.label for m in get_service().majors(profile.sending_institution_id,
+                                                       profile.receiving_institution_id, ASSIST_YEAR_ID)}
+    except AssistError as e:
+        log.info("roadmap: ASSIST majors unavailable: %s", e)
+        return []
+    return [label for label in labels if label in known][:MAX_UNCURATED_FOR_ROADMAP]
+
+
+def roadmap_for(profile: Profile, courses: list[Course], majors: list[Major], uncurated: list[str],
+                planning_match: Callable[[str], MatchResult | None], today: date | None = None,
+                transfer_term: str | None = None, start_term: str | None = None) -> Roadmap:
+    """The roadmap /plan and the counselor both show. `planning_match` gives a major's ASSIST
+    match with in-progress courses as passed (None when there's no agreement or ASSIST is down).
+    Majors without curated requirements still get their community-college courses."""
+    labels = [m.major_label for m in majors] + _known_labels(profile, uncurated)
+    matches = {label: m for label in labels if (m := planning_match(label)) is not None}
+    catalogs = {label: c for label in matches if (c := sending_catalog(profile, label)) is not None}
+    done = satisfied(courses, matches.values(), majors)
+    system = get_service().term_system(profile.sending_institution_id)
+    return build_roadmap(majors, done, list(matches.values()), catalogs, courses, system,
+                         today=today, transfer_term=transfer_term, start_term=start_term)

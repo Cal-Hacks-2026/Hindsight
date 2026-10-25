@@ -105,7 +105,12 @@ def match(profile_id: str, body: MatchRequest) -> MatchResult:
 
 @router.get("/{profile_id}/plan", response_model=PlanResponse,
             response_model_exclude_none=True, dependencies=[Depends(assist_limits.per_ip)])
-def plan(profile_id: str, majors: str | None = Query(None, description="Comma-separated major labels")) -> PlanResponse:
+def plan(profile_id: str, majors: str | None = Query(None, description="Comma-separated major labels"),
+         transfer_term: str | None = Query(None, description="'Fall 2028' or 'Spring 2028'; default: the "
+                                                             "first Fall after the community-college terms"),
+         start_term: str | None = Query(None, description="First community-college term, e.g. 'Winter 2027'; "
+                                                          "default: next Fall with no courses, else the next term")
+         ) -> PlanResponse:
     profile = _get_profile(profile_id)
     try:
         chosen, uncurated = planner.resolve_majors(majors, profile.majors, profile.campus, planner.load_majors())
@@ -115,20 +120,27 @@ def plan(profile_id: str, majors: str | None = Query(None, description="Comma-se
     # per ASSIST for a chosen major, matching in-progress courses as if passed.
     courses = profile_store.confirmed_courses(profile_id)
     planning = planner.assume_in_progress_passed(courses)
-    matches = []
-    for major in chosen:
+
+    def planning_match(label: str) -> MatchResult | None:
         try:
-            matches.append(get_service().match(profile.sending_institution_id, profile.receiving_institution_id,
-                                               ASSIST_YEAR_ID, major.major_label, planning))
+            return get_service().match(profile.sending_institution_id, profile.receiving_institution_id,
+                                       ASSIST_YEAR_ID, label, planning)
         except AssistNotFound:
-            pass  # no agreement for this major: only the transcript counts
+            return None  # no agreement for this major: only the transcript counts
         except AssistError as e:
-            log.warning("plan: ASSIST match for %r failed: %s", major.major_label, e)
+            log.warning("plan: ASSIST match for %r failed: %s", label, e)
+            return None
+
     try:
-        semesters = planner.build_plan(chosen, planner.satisfied(courses, matches, chosen))
+        roadmap = planner.roadmap_for(profile, courses, chosen, uncurated, planning_match,
+                                      transfer_term=transfer_term, start_term=start_term)
     except planner.PlannerError as e:
         raise HTTPException(status_code=e.status, detail=str(e)) from e
-    return PlanResponse(semesters=semesters, uncurated_majors=uncurated or None)
+    return PlanResponse(semesters=roadmap.semesters, uncurated_majors=uncurated or None,
+                        transfer_term=roadmap.transfer_term, earliest_transfer_term=roadmap.earliest_transfer_term,
+                        start_term=roadmap.start_term, default_start_term=roadmap.default_start_term,
+                        start_term_choices=roadmap.start_term_choices,
+                        not_before_transfer=roadmap.not_before_transfer or None)
 
 
 @router.get("/{profile_id}/opportunities", response_model=OpportunitiesResponse,

@@ -1,4 +1,4 @@
-import { Fragment, useState, type FormEvent, type ReactNode } from "react";
+import { Fragment, useEffect, useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 import type { Course, MatchResult, Profile, Requirement, Semester } from "@hindsight/contracts";
 import { Masthead, Note, Section, StatusMark, type StatusTone } from "../components/Paper";
@@ -19,7 +19,18 @@ import {
   shortMajor,
 } from "../lib/format";
 import { mentionsGraduation, parseGoalTerm, termIndex } from "../lib/goal";
-import { lastTerm, termUnits, usePlans, type Plans } from "../lib/plans";
+import {
+  afterTransfer,
+  beforeTransfer,
+  lastTerm,
+  loadTerm,
+  saveTerm,
+  termUnits,
+  transferChoices,
+  usePlans,
+  type Plans,
+  type TermPicks,
+} from "../lib/plans";
 import { loadSession } from "../lib/session";
 import { departmentColor, parseReceiving, spineHeight, spineWidth, type ParsedCourse } from "../lib/shelf";
 
@@ -80,8 +91,8 @@ const SHORT_NAMES: Record<string, string> = {
   "San José State University": "SJSU",
 };
 
-/** `college`: the sending college's short name, e.g. "De Anza", "Foothill". */
-type Agreement = { start: number; span: string; text: string; short: string; college: string };
+/** `college`: the sending college's short name, e.g. "De Anza", "Foothill"; `from`/`to`: full names. */
+type Agreement = { start: number; span: string; text: string; short: string; college: string; from: string; to: string };
 
 function agreementOf(label: string): Agreement | undefined {
   const m = AGREEMENT_RE.exec(label);
@@ -95,6 +106,8 @@ function agreementOf(label: string): Agreement | undefined {
     text: `ASSIST · ${name(from!)} → ${name(to!)} · ${major} · ${span} agreement`,
     short: `ASSIST ${span}`,
     college: SHORT_NAMES[from!] ?? from!.replace(/ College$/, ""),
+    from: from!,
+    to: to!,
   };
 }
 
@@ -204,7 +217,24 @@ function Report({ profile, matches, courses }: { profile: Profile; matches: Matc
   // The planner only knows curated majors; the rest get the ASSIST rows above and no plan.
   const planned = majors.filter((m) => catalogMajor(m));
   const uncurated = majors.filter((m) => !catalogMajor(m));
-  const plans = usePlans(profile.id, planned.length ? majors : []);
+  // The student's start and transfer terms, if they picked them; otherwise the planner's defaults.
+  const [picks, setPicks] = useState<TermPicks>(() => {
+    const transfer = loadTerm("transfer", profile.id);
+    return {
+      transfer: transfer && transferChoices().includes(transfer) ? transfer : undefined,
+      start: loadTerm("start", profile.id),
+    };
+  });
+  const plans = usePlans(profile.id, planned.length ? majors : [], picks);
+  function pick(which: keyof TermPicks, term: string | undefined) {
+    saveTerm(which, profile.id, term);
+    setPicks((p) => ({ ...p, [which]: term }));
+  }
+  // A saved start term that has since passed is rejected (422): fall back to the default.
+  const staleStart = plans.status === "error" && plans.error instanceof ApiError && plans.error.status === 422 && !!picks.start;
+  useEffect(() => {
+    if (staleStart) pick("start", undefined);
+  });
 
   // Number the sources in reading order: agreements as the rows cite them, then the catalog.
   const sources = new Sources();
@@ -212,11 +242,19 @@ function Report({ profile, matches, courses }: { profile: Profile; matches: Matc
   const catalogRefs = majors.flatMap((label) => {
     const c = catalogMajor(label);
     return c
-      ? [sources.add(c.source_url, `SJSU Catalog ${yearSpan(c.catalog_year)} · ${label}${label.endsWith(".") ? "" : "."} Not yet checked against the current catalog.`, `Catalog ${yearSpan(c.catalog_year)}`)]
+      ? [sources.add(c.source_url, `${CAMPUS_SHORT[profile.campus]} Catalog ${yearSpan(c.catalog_year)} · ${label}${label.endsWith(".") ? "" : "."} Not yet checked against the current catalog.`, `Catalog ${yearSpan(c.catalog_year)}`)]
       : [];
   });
 
   const campus = CAMPUS_SHORT[profile.campus];
+  // Names as the ASSIST agreement gives them, so a Foothill report never says De Anza.
+  const agreement = matches.flatMap((m) => m.requirements.map((r) => agreementOf(r.citation.label))).find(Boolean);
+  const names: Names = {
+    college: agreement?.college ?? "your college",
+    collegeLong: agreement?.from ?? SENDING_LONG,
+    campus,
+    campusLong: agreement?.to ?? CAMPUS_LONG[profile.campus],
+  };
   const today = formatLongDate();
   const missed = rows.filter((r) => r.req.status === "satisfied" && r.older);
 
@@ -224,7 +262,7 @@ function Report({ profile, matches, courses }: { profile: Profile; matches: Matc
     <>
       <Masthead
         kicker="Report No. 01 · Credit articulation & degree plan"
-        byline={`${profile.name.trim() ? `Prepared for ${bylineName(profile.name)} · ` : ""}${SENDING_LONG} → ${CAMPUS_LONG[profile.campus]} · ${today}`}
+        byline={`${profile.name.trim() ? `Prepared for ${bylineName(profile.name)} · ` : ""}${names.collegeLong} → ${CAMPUS_LONG[profile.campus]} · ${today}`}
       >
         Your degree,
         <br />
@@ -242,27 +280,21 @@ function Report({ profile, matches, courses }: { profile: Profile; matches: Matc
           </p>
         ))}
       >
-        <Abstract rows={rows} majors={planned} plans={plans.status === "ready" ? plans.plans : undefined} catalogRefs={catalogRefs} campus={campus} />
+        <Abstract rows={rows} majors={planned} plans={plans.status === "ready" ? plans.plans : undefined} catalogRefs={catalogRefs} names={names} />
       </Section>
 
       {plans.status === "ready" && <GoalCheck goals={profile.goals} majors={planned} plans={plans.plans} />}
 
       <Credits rows={rows} courses={courses} majors={majors} campus={campus} />
 
-      <Section num={2} label="Plan" title="The books still to collect, term by term." notes={<PlanNotes majors={planned} plans={plans.status === "ready" ? plans.plans : undefined} />}>
+      <Section num={2} label="Plan" title="The books still to collect, term by term." notes={<PlanNotes majors={planned} plans={plans.status === "ready" ? plans.plans : undefined} names={names} />}>
         <NotPlanned majors={uncurated} campus={campus} />
         {!planned.length ? null : plans.status === "loading" ? (
           <PlanLoading />
         ) : plans.status === "error" ? (
           <PlanError error={plans.error} />
         ) : (
-          <>
-            <p className="plan-caveat">
-              Planned terms are proposals: we haven't confirmed which terms SJSU offers each course, so check the
-              schedule before you register.
-            </p>
-            <PlanShelves semesters={plans.plans.combined} majors={planned} catalogRefs={catalogRefs} />
-          </>
+          <Roadmap plans={plans.plans} majors={planned} catalogRefs={catalogRefs} names={names} picks={picks} onPick={pick} />
         )}
       </Section>
 
@@ -270,6 +302,9 @@ function Report({ profile, matches, courses }: { profile: Profile; matches: Matc
     </>
   );
 }
+
+/** Institution names for copy, from the agreement: "De Anza" / "De Anza College", "SJSU" / "San Jose State University". */
+type Names = { college: string; collegeLong: string; campus: string; campusLong: string };
 
 // ---- Abstract ----
 
@@ -295,14 +330,15 @@ function Abstract({
   majors,
   plans,
   catalogRefs,
-  campus,
+  names,
 }: {
   rows: Row[];
   majors: string[];
   plans?: Plans;
   catalogRefs: number[];
-  campus: string;
+  names: Names;
 }) {
+  const { campus, college } = names;
   const done = rows.filter((r) => r.req.status === "satisfied");
   const partial = rows.filter((r) => r.req.status === "partial");
   const inProgress = rows.filter((r) => r.req.status === "in_progress");
@@ -314,7 +350,7 @@ function Abstract({
   if (done.length) {
     counts.push(
       <Fragment key="done">
-        {countWord(counted.size, true)} of your De Anza courses already {counted.size === 1 ? "satisfies" : "satisfy"}{" "}
+        {countWord(counted.size, true)} of your {college} courses already {counted.size === 1 ? "satisfies" : "satisfy"}{" "}
         {countWord(done.length)} {campus}{" "}
         {plural(done.length, "requirement")}
         {older.length > 0 &&
@@ -323,7 +359,7 @@ function Abstract({
       </Fragment>,
     );
   } else {
-    counts.push(<Fragment key="done">None of your De Anza courses satisfy a {campus} requirement yet. </Fragment>);
+    counts.push(<Fragment key="done">None of your {college} courses satisfy a {campus} requirement yet. </Fragment>);
   }
   if (open.length) {
     const codes = open.map(rowCode);
@@ -354,8 +390,16 @@ function Abstract({
   if (combined) {
     const [first, ...others] = majors;
     const alone = first ? plans.single[first] && lastTerm(plans.single[first]!) : undefined;
+    const before = beforeTransfer(plans.combined);
+    const transfer = plans.response.transfer_term;
+    const path = !transfer
+      ? ""
+      : before.length
+        ? `Take ${countWord(before.length)} ${plural(before.length, "term")} at ${college} (through ${lastTerm(before)}), then transfer to ${campus} in ${transfer}. `
+        : `Nothing in your plan is left to take at ${college}; transfer to ${campus} in ${transfer}. `;
     finish = (
       <p className="lede">
+        {path}
         {alone && others.length
           ? `You can finish in ${alone} with ${shortMajor(first!)} only, or ${combined} with ${majorsLine(others)} added.`
           : `Your earliest finish is ${combined}.`}
@@ -660,15 +704,166 @@ function CreditNotes({ rows }: { rows: Row[] }) {
 
 // ---- 02 Plan ----
 
-function PlanShelves({ semesters, majors, catalogRefs }: { semesters: Semester[]; majors: string[]; catalogRefs: number[] }) {
+// The planner's default caps (apps/api/app/services/planner.py DEFAULT_UNIT_CAP, DEFAULT_CC_UNIT_CAP).
+const CC_UNIT_CAP = 15;
+
+function Roadmap({
+  plans,
+  majors,
+  catalogRefs,
+  names,
+  picks,
+  onPick,
+}: {
+  plans: Plans;
+  majors: string[];
+  catalogRefs: number[];
+  names: Names;
+  picks: TermPicks;
+  onPick: (which: keyof TermPicks, term: string | undefined) => void;
+}) {
+  const before = beforeTransfer(plans.combined);
+  const after = afterTransfer(plans.combined);
+  const {
+    transfer_term: transfer,
+    earliest_transfer_term: earliest,
+    not_before_transfer: late,
+    default_start_term: defaultStart,
+    start_term_choices: startChoices,
+  } = plans.response;
+  const college = before[0]?.institution ?? names.collegeLong;
+  const campus = after[0]?.institution ?? names.campusLong;
+  const quarters = (before[0]?.term_system ?? "quarter") === "quarter";
+  const years = [...new Set(majors.flatMap((m) => catalogMajor(m)?.catalog_year ?? []))].map(yearSpan);
+  return (
+    <>
+      <p className="plan-caveat">
+        Planned terms are proposals: we haven't confirmed which terms {names.college} and {names.campus} offer each
+        course, so check the schedule before you register.
+      </p>
+
+      <div className="term-picks">
+        {defaultStart && startChoices && (
+          <TermSelect
+            id="start-term"
+            label={`Starting at ${names.college} in`}
+            value={picks.start}
+            defaultTerm={defaultStart}
+            defaultNote="default"
+            choices={startChoices}
+            onPick={(t) => onPick("start", t)}
+          />
+        )}
+        {transfer && (
+          <TermSelect
+            id="transfer-term"
+            label={`Transfer to ${names.campus} in`}
+            value={picks.transfer}
+            defaultTerm={earliest ?? transfer}
+            defaultNote="earliest"
+            choices={transferChoices()}
+            onPick={(t) => onPick("transfer", t)}
+          />
+        )}
+      </div>
+      {late && late.length > 0 && (
+        <p className="plan-warning" role="status">
+          {transfer} is too early for {listing(late)} at {names.college}, so {late.length === 1 ? "its" : "their"}{" "}
+          {names.campus} {late.length === 1 ? "equivalent is" : "equivalents are"} planned after transfer instead.
+          {earliest && ` Transferring in ${earliest} leaves time for all of them.`}
+        </p>
+      )}
+
+      <div className="phase">
+        <h3 className="phase-head">
+          <span className="phase-kicker">Before transfer</span> at {college}
+        </h3>
+        {before.length ? (
+          <PlanShelves
+            semesters={before}
+            unitLabel={quarters ? "qtr units" : "units"}
+            caption={
+              <>
+                <em className="fig">Fig. 2.</em> One ASSIST option for each open requirement, the fewest courses
+                first, at up to {CC_UNIT_CAP} {quarters ? "quarter" : "semester"} units per term. Order follows course
+                sequences; check {names.college} prerequisites. Hover a spine for the requirement it covers.
+              </>
+            }
+          />
+        ) : (
+          <p className="lede">Nothing left to take at {names.college} for {majorsLine(majors)}.</p>
+        )}
+        <p className="phase-note">GE (Cal-GETC) isn't included yet.</p>
+      </div>
+
+      <div className="phase">
+        <h3 className="phase-head">
+          <span className="phase-kicker">After transfer</span> at {campus}
+        </h3>
+        {after.length ? (
+          <PlanShelves
+            semesters={after}
+            unitLabel="units"
+            caption={
+              <>
+                <em className="fig">Fig. 3.</em> Proposed sequence for {majorsLine(majors)} from {transfer}, at up to{" "}
+                {UNIT_CAP} units per term. Order respects prerequisites in the {names.campus} Catalog {listing(years)}.
+                <Refs ns={catalogRefs} /> Hover a spine for why it's there.
+              </>
+            }
+          />
+        ) : (
+          <p className="lede">Nothing left to schedule at {names.campus}: every listed requirement is done or planned before transfer.</p>
+        )}
+      </div>
+    </>
+  );
+}
+
+/** A term picker whose empty value means the planner's default ("Fall 2028 (earliest)"). */
+function TermSelect({
+  id,
+  label,
+  value,
+  defaultTerm,
+  defaultNote,
+  choices,
+  onPick,
+}: {
+  id: string;
+  label: string;
+  value?: string;
+  defaultTerm: string;
+  defaultNote: string;
+  choices: string[];
+  onPick: (term: string | undefined) => void;
+}) {
+  function change(e: ChangeEvent<HTMLSelectElement>) {
+    onPick(e.target.value || undefined);
+  }
+  return (
+    <div className="term-pick">
+      <label htmlFor={id}>{label}</label>
+      <select id={id} value={value ?? ""} onChange={change}>
+        <option value="">
+          {defaultTerm} ({defaultNote})
+        </option>
+        {choices
+          .filter((t) => t !== defaultTerm)
+          .map((t) => (
+            <option key={t} value={t}>
+              {t}
+            </option>
+          ))}
+      </select>
+    </div>
+  );
+}
+
+function PlanShelves({ semesters, caption, unitLabel }: { semesters: Semester[]; caption: ReactNode; unitLabel: string }) {
   const [expanded, setExpanded] = useState(false);
   const shown = expanded ? semesters : semesters.slice(0, TERMS_SHOWN);
   const hidden = semesters.slice(TERMS_SHOWN);
-  const years = [...new Set(majors.flatMap((m) => catalogMajor(m)?.catalog_year ?? []))].map(yearSpan);
-
-  if (!semesters.length) {
-    return <p className="lede">Nothing left to schedule: every listed requirement is already done.</p>;
-  }
 
   return (
     <figure className="terms">
@@ -677,7 +872,9 @@ function PlanShelves({ semesters, majors, catalogRefs }: { semesters: Semester[]
           <div className="term-label">
             {s.term}
             <br />
-            <span>{termUnits(s)} units</span>
+            <span>
+              {termUnits(s)} {unitLabel}
+            </span>
           </div>
           <div className="term-shelf">
             <Shelf label={`${s.term} courses`}>
@@ -689,7 +886,7 @@ function PlanShelves({ semesters, majors, catalogRefs }: { semesters: Semester[]
                   kind="outline"
                   width={spineWidth(c.units)}
                   height={spineHeight(c.code, 124, 142)}
-                  title={`${c.code} · ${c.title} · ${c.units} units. ${c.reason.replace(PLACEHOLDER_PREFIX, "")}${
+                  title={`${c.code} · ${c.title} · ${c.units} ${unitLabel}. ${c.reason.replace(PLACEHOLDER_PREFIX, "")}${
                     c.prereqs.length ? `. Needs ${c.prereqs.join(", ")}` : ""
                   }`}
                 />
@@ -707,22 +904,19 @@ function PlanShelves({ semesters, majors, catalogRefs }: { semesters: Semester[]
           </div>
           <div className="term-shelf">
             <button type="button" className="text" onClick={() => setExpanded((e) => !e)} aria-expanded={expanded}>
-              {expanded ? "Show the next three terms only" : `Show the full path to ${lastTerm(semesters)}`}
+              {expanded ? "Show the first three terms only" : `Show every term to ${lastTerm(semesters)}`}
             </button>
           </div>
         </div>
       )}
-      <figcaption style={{ maxWidth: 640 }}>
-        <em className="fig">Fig. 2.</em> Proposed sequence for {majorsLine(majors)} at up to {UNIT_CAP} units per term.
-        Order respects prerequisites in the SJSU Catalog {listing(years)}.<Refs ns={catalogRefs} /> Term-by-term course
-        offerings are not yet confirmed. Hover a spine for why it's there.
-      </figcaption>
+      <figcaption style={{ maxWidth: 640 }}>{caption}</figcaption>
     </figure>
   );
 }
 
-function PlanNotes({ majors, plans }: { majors: string[]; plans?: Plans }) {
+function PlanNotes({ majors, plans, names }: { majors: string[]; plans?: Plans; names: Names }) {
   const combined = plans && lastTerm(plans.combined);
+  const transfer = plans?.response.transfer_term;
   const singles = plans ? majors.flatMap((m) => (plans.single[m]?.length ? [[m, lastTerm(plans.single[m]!)!] as const] : [])) : [];
   const unscheduled = majors.flatMap((m) =>
     (catalogMajor(m)?.unscheduled ?? []).map((g) => `${g.units} units of ${shortMajor(m)} ${g.title}`),
@@ -730,11 +924,18 @@ function PlanNotes({ majors, plans }: { majors: string[]; plans?: Plans }) {
   const placeholder = plans?.combined.some((s) => s.courses.some((c) => c.reason.startsWith(PLACEHOLDER_PREFIX)));
   return (
     <>
+      {transfer && (
+        <Note lead="Transfer.">
+          {plans?.response.earliest_transfer_term === transfer
+            ? `${transfer}, the first Fall after your ${names.college} courses. You can pick another term above the plan.`
+            : `${transfer}, as you picked. The earliest that fits every ${names.college} course is ${plans?.response.earliest_transfer_term}.`}
+        </Note>
+      )}
       {combined && (
         <Note lead="Earliest finish.">
           {singles.length && majors.length > 1
             ? `${singles.map(([m, t]) => `${t} with ${shortMajor(m)} alone`).join("; ")}. Together, ${combined}.`
-            : `${combined}, at up to ${UNIT_CAP} units per term.`}
+            : `${combined}, at up to ${UNIT_CAP} units per ${names.campus} term.`}
         </Note>
       )}
       {unscheduled.length > 0 && (

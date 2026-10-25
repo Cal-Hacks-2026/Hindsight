@@ -206,24 +206,27 @@ class Student:
                 self.planning_matches[label] = None
         return self.planning_matches[label]
 
-    def plan(self, labels: list[str] | None, target_term: str | None = None) -> dict[str, Any]:
-        """The planner's semesters for `labels` (default: the profile's majors), with sources.
+    def plan(self, labels: list[str] | None, target_term: str | None = None,
+             transfer_term: str | None = None) -> dict[str, Any]:
+        """The planner's roadmap for `labels` (default: the profile's majors), with sources:
+        community-college terms before transfer, then university semesters from the transfer term.
 
         A course counts as done when it's passed or in progress on the transcript, or the
         ASSIST match for one of the chosen majors marked it satisfied (in-progress courses
-        matched as passed). Chosen majors without curated requirements are left out and named.
+        matched as passed). Chosen majors without curated requirements are left out of the
+        university semesters and named; their community-college courses are still planned.
         """
         try:
             majors, uncurated = planner.resolve_majors(",".join(labels) if labels else None, self.profile.majors,
                                                        self.profile.campus, planner.load_majors())
+            roadmap = planner.roadmap_for(self.profile, self.courses, majors, uncurated, self.planning_match,
+                                          today=self.today, transfer_term=transfer_term)
         except planner.PlannerError as e:
             return {"error": str(e)}
         satisfied = planner.satisfied(
             self.courses, filter(None, (self.planning_match(m.major_label) for m in majors)), majors)
-        try:
-            semesters = planner.build_plan(majors, satisfied, today=self.today)
-        except planner.PlannerError as e:
-            return {"error": str(e)}
+        before = [s for s in roadmap.semesters if s.phase == "before_transfer"]
+        semesters = [s for s in roadmap.semesters if s.phase == "after_transfer"]
 
         owner = {}
         for major in majors:
@@ -241,7 +244,19 @@ class Student:
                 facts["needs_review"] = review
             return facts
 
-        last_term = semesters[-1].term if semesters else None
+        picks_for: dict[str, list[planner.CCPick]] = {}
+        for p in roadmap.picks:
+            for code in p.courses:
+                picks_for.setdefault(code, []).append(p)
+
+        def cc_facts(c) -> dict[str, Any]:
+            return {"code": c.code, "title": c.title, "units": c.units, "counts_for": [{
+                "requirement": p.requirement.receiving_course, "majors": p.majors, "assist_option": p.option,
+                "source": self.sources.add(p.requirement.citation),
+            } for p in picks_for.get(c.code, [])]}
+
+        last_term = roadmap.semesters[-1].term if roadmap.semesters else None
+        college = roadmap.college or "the community college"
         out: dict[str, Any] = {
             "majors": [m.major_label for m in majors],
             "requirements_sources": [
@@ -250,6 +265,25 @@ class Student:
             "placeholder_data": any(m.placeholder for m in majors),
             "requirements_caveats": {m.major_label: m.needs_review for m in majors if m.needs_review},
             "covers": PLAN_COVERS,
+            "before_transfer": {
+                "college": roadmap.college,
+                "term_system": roadmap.term_system,
+                # The next Fall for a student with no courses yet, otherwise the next registrable term.
+                "start_term": roadmap.start_term,
+                "units_per_term_cap": planner.DEFAULT_CC_UNIT_CAP,
+                "how_chosen": ("One ASSIST option per open requirement: the fewest courses still to take, ties to "
+                               "the first listed. Requirements with no community-college option are after transfer."),
+                "order_caveat": (f"Order follows course sequences and the university's prerequisites; we don't have "
+                                 f"{college}'s prerequisites or schedule, so check them before registering."),
+                "terms": [{
+                    "term": s.term,
+                    "units": sum(c.units for c in s.courses),
+                    "courses": [cc_facts(c) for c in s.courses],
+                } for s in before],
+            },
+            "transfer_term": roadmap.transfer_term,
+            "earliest_transfer_term": roadmap.earliest_transfer_term,
+            # University semesters, from transfer_term.
             "semesters": [{
                 "term": s.term,
                 "units": sum(c.units for c in s.courses),
@@ -263,9 +297,11 @@ class Student:
                                                                                    f"{m.major_label} {g.title}")),
             } for m, g in planner.unscheduled_groups(majors)],
             "last_term": last_term,
-            "terms_needed": len(semesters),
+            "terms_needed": len(roadmap.semesters),
             "already_done_by_code": sorted(satisfied),
         }
+        if roadmap.not_before_transfer:
+            out["not_before_transfer"] = roadmap.not_before_transfer
         if uncurated:
             out["not_planned_majors"] = uncurated
             out["not_planned_why"] = planner.uncurated_message(self.profile.campus, uncurated)
@@ -289,7 +325,11 @@ def build_context(student: Student) -> dict[str, Any]:
                        else {"major_label": label, "error": student.match_errors[label]})
     return {
         "today": student.today.isoformat(),
-        "next_registrable_term": "{} {}".format(*planner.next_term(student.today)),
+        "next_registrable_term": {
+            "community_college": "{} {}".format(*planner.next_cc_term(
+                student.today, get_service().term_system(p.sending_institution_id))),
+            "university": "{} {}".format(*planner.next_term(student.today)),
+        },
         "profile": {"name": p.name, "campus": p.campus, "majors": p.majors, "goals": p.goals,
                     "interests": p.interests},
         "confirmed_courses": [{
@@ -329,12 +369,14 @@ TOOLS = [
     {
         "name": "plan_with_majors",
         "description": (
-            "Run the deterministic semester planner for a set of majors (e.g. the student's majors plus one "
-            "they are considering) and, if target_term is given, report whether every scheduled course "
-            "finishes by then. Use it for every 'can I finish/graduate by <term>' or 'what if I add/drop a "
-            "major' question; never estimate terms yourself. Labels should be from "
-            "curated_majors_for_planning; others are left out and listed in not_planned_majors, and if none "
-            "is curated it returns an error naming the available ones."
+            "Run the deterministic planner for a set of majors (e.g. the student's majors plus one they are "
+            "considering): community-college terms before transfer, then university semesters from the "
+            "transfer term. If target_term is given, report whether every scheduled course finishes by then; "
+            "if transfer_term is given, plan the transfer for then. Use it for every 'can I finish/graduate "
+            "by <term>', 'what if I transfer in <term>' or 'what if I add/drop a major' question; never "
+            "estimate terms yourself. Labels should be from curated_majors_for_planning; others are left out "
+            "of the university semesters and listed in not_planned_majors, and if none is curated it returns "
+            "an error naming the available ones."
         ),
         "strict": True,
         "input_schema": {
@@ -344,8 +386,11 @@ TOOLS = [
                            "description": "Exact major labels, e.g. [\"Data Science, B.S.\", \"Economics, B.S.\"]"},
                 "target_term": {"type": ["string", "null"],
                                 "description": "'<Season> <YYYY>', e.g. 'Spring 2028', or null"},
+                "transfer_term": {"type": ["string", "null"],
+                                  "description": "'Fall <YYYY>' or 'Spring <YYYY>', or null for the default "
+                                                 "(the first Fall after the community-college terms)"},
             },
-            "required": ["majors", "target_term"],
+            "required": ["majors", "target_term", "transfer_term"],
             "additionalProperties": False,
         },
     },
@@ -383,7 +428,7 @@ def _suggest_labels(student: Student, query: str) -> list[str]:
 def run_tool(student: Student, name: str, args: dict[str, Any]) -> dict[str, Any]:
     if name == "plan_with_majors":
         labels = [m for m in args.get("majors") or [] if isinstance(m, str) and m.strip()]
-        result = student.plan(labels or None, args.get("target_term"))
+        result = student.plan(labels or None, args.get("target_term"), args.get("transfer_term"))
         if "error" in result:
             majors = ", ".join(labels) or "my majors"
             student.sources.gaps["plan"] = f"a semester plan for {majors}: {result['error']}"
@@ -427,9 +472,15 @@ What is decided for you:
   match_major). Report its status, flags, and confidence as given. Never decide, guess, or imply that a
   course counts, doesn't count, or "should" count differently, and never fill a gap from general
   knowledge of ASSIST, catalogs, or the university.
-- Semester plans and finish terms come only from the planner (plan, plan_with_majors). For any "can I
-  finish / graduate by <term>" or "what if I add or drop a major" question, call plan_with_majors with
-  the majors and target term; then answer from finishes_by_target, last_term, and the semesters. The
+- Plans and finish terms come only from the planner (plan, plan_with_majors). A plan has two phases:
+  before_transfer.terms at the community college (quarters or semesters, per term_system), then
+  semesters at the university from transfer_term. "When should I take <community-college course>?" is
+  answered from before_transfer.terms; mention its order_caveat. Courses in not_before_transfer don't
+  fit before the transfer term, so their university equivalents are in the semesters instead. General
+  Education (Cal-GETC) isn't in the plan.
+- For any "can I finish / graduate by <term>", "what if I transfer in <term>", or "what if I add or drop
+  a major" question, call plan_with_majors with the majors, target term, and transfer term; then answer
+  from finishes_by_target, last_term, and the terms. The
   plan covers what its `covers` field says and nothing more, so a plan finishing by the target does not
   by itself mean the student graduates then; say what it does and doesn't cover. Requirements in
   not_scheduled are part of the degree but in no semester, so last_term doesn't include them; name them.

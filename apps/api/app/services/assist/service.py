@@ -10,7 +10,7 @@ import threading
 import time
 from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
-from typing import Any
+from typing import Any, Literal
 
 from app.config import ASSIST_YEAR_ID
 from app.models import AssistMajor, Course, MatchResult
@@ -24,6 +24,8 @@ from .parser import Agreement, parse_agreement
 MAJORS_TTL_SECONDS = 6 * 3600
 MAX_CACHED_MAJOR_LISTS = 512
 INSTITUTIONS_TTL_SECONDS = 24 * 3600
+# Quarter-system colleges, for when ASSIST's institution data can't be read.
+QUARTER_COLLEGES = {113, 51}  # De Anza, Foothill
 # Bound the extra ASSIST calls a long transcript can trigger (most recent years win).
 MAX_PRIOR_YEARS = 6
 # ASSIST's earliest academic year (1980–81); one year past ours once it's published.
@@ -39,18 +41,32 @@ class AssistService:
         self.cache = cache
         # Least recently used first.
         self._majors: OrderedDict[tuple[int, int, int], tuple[float, list[dict[str, Any]]]] = OrderedDict()
-        self._institutions: tuple[float, dict[int, bool]] | None = None  # id → isCommunityCollege
+        self._institutions: tuple[float, dict[int, dict[str, Any]]] | None = None  # id → institution
         self._lock = threading.Lock()
 
-    def _community_college_by_id(self) -> dict[int, bool]:
+    def _institutions_by_id(self) -> dict[int, dict[str, Any]]:
         with self._lock:
             hit = self._institutions
         if hit and time.monotonic() - hit[0] < INSTITUTIONS_TTL_SECONDS:
             return hit[1]
-        ids = {i["id"]: bool(i.get("isCommunityCollege")) for i in self.client.institutions() if "id" in i}
+        ids = {i["id"]: i for i in self.client.institutions() if "id" in i}
         with self._lock:
             self._institutions = (time.monotonic(), ids)
         return ids
+
+    def _community_college_by_id(self) -> dict[int, bool]:
+        return {i: bool(inst.get("isCommunityCollege")) for i, inst in self._institutions_by_id().items()}
+
+    def term_system(self, institution_id: int) -> Literal["quarter", "semester"]:
+        """From ASSIST's `termType` (1 = quarter, 0 = semester); the known quarter colleges otherwise."""
+        try:
+            term_type = self._institutions_by_id().get(institution_id, {}).get("termType")
+        except AssistError as e:
+            log.info("institutions unavailable for term system: %s", e)
+            term_type = None
+        if term_type in (0, 1):
+            return "quarter" if term_type == 1 else "semester"
+        return "quarter" if institution_id in QUARTER_COLLEGES else "semester"
 
     def _validate(self, sending: int, receiving: int, year: int) -> None:
         """ASSIST agreements run community college → university."""
