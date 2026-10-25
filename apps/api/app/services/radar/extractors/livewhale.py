@@ -1,6 +1,6 @@
 """LiveWhale JSON feed (events.berkeley.edu/live/json/...) → Parsed items."""
 
-from app.services.radar.extract import Parsed, parse_when
+from app.services.radar.extract import Parsed, clean_text, parse_when
 
 
 def extract(raw, source):
@@ -19,5 +19,7 @@ def extract(raw, source):
             org=e.get("group_title") or "",
             description=e.get("summary") or "",
             tags=tags,
+            location=clean_text(e.get("location")),
+            modality="online" if e.get("is_online") else None,
         ))
     return out

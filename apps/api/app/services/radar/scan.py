@@ -25,7 +25,7 @@ from apify_client import ApifyClient
 from apify_client.errors import ApifyApiError
 
 from app.models.contracts import Campus
-from app.services.radar import extract, normalize, sources, store
+from app.services.radar import classify, extract, normalize, sources, store
 
 log = logging.getLogger(__name__)
 
@@ -181,10 +181,23 @@ def raw_items(run_id: str, source_id: str, apify: ApifyClient | None = None) -> 
     return [r for r in _dataset(run_id, apify) if r.get("sourceId") == source_id]
 
 
+def _label_leftovers(campuses: list[Campus]) -> None:
+    """One cached Claude batch for listings the category rules can't place. Never fails the scan."""
+    try:
+        rows = {str(r["id"]): r for c in campuses for r in store.candidates(c)}
+        run = classify.label_leftovers(list(rows.values()))
+        log.info("radar: labels: %d by rule, %d stored, %d new from Claude, %d by type",
+                 run.by_rule, run.already_stored, run.by_claude, run.unlabeled)
+    except store.StoreError as e:
+        log.warning("radar: labeling skipped: %s", e)
+
+
 def ingest_run(run_id: str, apify: ApifyClient | None = None, now: datetime | None = None) -> ScanResult:
     raw = _dataset(run_id, apify)
     result = normalize.normalize(raw, now or datetime.now(timezone.utc))
     stored = store.upsert(result.items) if result.items else 0
+    if stored:
+        _label_leftovers(sorted({i.campus for i in result.items}))
     log.info("radar: run %s → %d items stored; per source %s; skipped %s; extractor errors %s",
              run_id, stored, dict(result.per_source), dict(result.skipped), result.errors)
     return ScanResult(run_id=run_id, stored=stored, per_source=dict(result.per_source),

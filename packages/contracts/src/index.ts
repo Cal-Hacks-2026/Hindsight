@@ -106,6 +106,19 @@ export type RankedOpportunity = {
   reason: string;
   /** Droid alerted on it (profile_opportunities.notified). */
   notified: boolean;
+  // Opportunities: ten categories, programs, fits your week.
+  /** OpportunityCategory.id */
+  category?: string;
+  /** OpportunitySubcategory.id */
+  subcategory?: string;
+  ends_at?: string;
+  /** As the source prints it. */
+  location?: string;
+  modality?: OpportunityModality;
+  /** Recurring programs: typical timing, as the official page states it. */
+  window?: string;
+  /** Recurring programs: when the official page was read (YYYY-MM-DD). */
+  last_checked?: string;
 };
 
 export type AgentEvent = {
@@ -160,7 +173,32 @@ export type PlanResponse = {
   ge_pattern?: GePattern;
   ge_not_before_transfer?: string[];
 };
-export type OpportunitiesResponse = { items: RankedOpportunity[] };
+export type OpportunitiesResponse = {
+  items: RankedOpportunity[];
+  // Opportunities: ten categories, programs, fits your week.
+  /** All ten categories, with counts under the other filters. */
+  categories?: OpportunityCategory[];
+};
+
+// ---- Opportunities: ten categories, programs, fits your week ----
+
+export type OpportunityModality = "in_person" | "online" | "hybrid";
+export type OpportunitySubcategory = { id: string; label: string; count: number };
+export type OpportunityCategory = {
+  id: string;
+  label: string;
+  count: number;
+  subcategories: OpportunitySubcategory[];
+};
+/** Query for GET /profiles/{id}/opportunities; every field optional. `from`/`to` are ISO dates or datetimes. */
+export type OpportunitiesQuery = {
+  category?: string;
+  subcategory?: string;
+  from?: string;
+  to?: string;
+  modality?: OpportunityModality;
+  location?: string;
+};
 export type CounselorRequest = { message: string; history: ChatMessage[] };
 export type CounselorResponse = { reply: string; citations: Citation[] };
 export type AgentRunRequest = { campus: Campus };

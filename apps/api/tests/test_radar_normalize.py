@@ -52,7 +52,8 @@ def test_every_item_matches_section_8_3(result):
         assert item.campus in ("sjsu", "berkeley")
         assert item.scraped_at == SCRAPED.isoformat()
         assert set(item.model_dump()) == {"title", "type", "org", "campus", "starts_at", "deadline",
-                                          "url", "description", "tags", "scraped_at"}
+                                          "url", "description", "tags", "scraped_at",
+                                          "ends_at", "location", "modality"}
 
 
 def test_localist_uses_event_page_and_next_instance(result):

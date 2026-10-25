@@ -1,6 +1,7 @@
 import json
 import logging
 import uuid
+from datetime import timedelta
 from typing import Literal
 
 from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, Query, Response, UploadFile
@@ -16,6 +17,7 @@ from app.models import (
     MatchRequest,
     MatchResult,
     OpportunitiesResponse,
+    OpportunityModality,
     PlanResponse,
     Profile,
     ProfileResponse,
@@ -28,7 +30,9 @@ from app.services.assist import AssistError, AssistNotFound, get_service
 from app.services.assist import limits as assist_limits
 from app.services.db import StoreError
 from app.services.ge import plan as ge_plan
-from app.services.radar import rank, sources as radar_sources, store as radar_store
+from app.services.radar import classify, rank, sources as radar_sources, store as radar_store
+from app.services.radar import programs as radar_programs
+from app.services.radar.normalize import parse_when
 
 log = logging.getLogger(__name__)
 
@@ -177,15 +181,40 @@ def _ge_progress(profile: Profile, courses: list, pattern: str | None) -> GeResp
 
 @router.get("/{profile_id}/opportunities", response_model=OpportunitiesResponse,
             response_model_exclude_none=True, dependencies=[Depends(claude_limits.per_ip)])
-def opportunities(profile_id: str, background: BackgroundTasks) -> OpportunitiesResponse:
+def opportunities(profile_id: str, background: BackgroundTasks,
+                  category: str | None = None, subcategory: str | None = None,
+                  start: str | None = Query(None, alias="from"), end: str | None = Query(None, alias="to"),
+                  modality: OpportunityModality | None = None,
+                  location: str | None = Query(None, max_length=100)) -> OpportunitiesResponse:
+    filters = _opportunity_filters(category, subcategory, start, end, modality, location)
     profile = _get_profile(profile_id)
     if profile.campus not in radar_sources.load().campuses:
         # No sources for this campus: an empty feed, never another campus's listings.
         return OpportunitiesResponse(items=[])
-    items = rank.ranked_opportunities(profile, radar_store.candidates(profile.campus))
-    background.add_task(_record_ranked, profile_id, items)
+    rows = radar_store.candidates(profile.campus) + radar_programs.as_rows(profile.campus)
+    items, categories = rank.feed(profile, rows, filters)
+    if not filters.active():  # only the default feed is what Droid alerts on
+        background.add_task(_record_ranked, profile_id, [i for i in items if not radar_programs.is_program(i.id)])
     alerted = _notified_ids(profile_id)
-    return OpportunitiesResponse(items=[i.model_copy(update={"notified": i.id in alerted}) for i in items])
+    return OpportunitiesResponse(items=[i.model_copy(update={"notified": i.id in alerted}) for i in items],
+                                 categories=categories)
+
+
+def _opportunity_filters(category: str | None, subcategory: str | None, start: str | None, end: str | None,
+                         modality: str | None, location: str | None) -> rank.Filters:
+    if category and category not in classify.TAXONOMY:
+        raise HTTPException(status_code=422, detail=f"Unknown category: {category}")
+    if subcategory and not any(classify.is_label(c, subcategory) for c in ([category] if category else classify.TAXONOMY)):
+        raise HTTPException(status_code=422, detail=f"Unknown subcategory: {subcategory}")
+    lo, hi = parse_when(start), parse_when(end)
+    if (start and lo is None) or (end and hi is None):
+        raise HTTPException(status_code=422, detail="Use ISO dates for from and to, like 2026-10-26")
+    if hi is not None and end and len(end.strip()) == 10:
+        hi += timedelta(days=1) - timedelta(microseconds=1)  # a date means through the end of that day
+    if lo and hi and hi < lo:
+        raise HTTPException(status_code=422, detail="to is before from")
+    return rank.Filters(category=category or None, subcategory=subcategory or None, start=lo, end=hi,
+                        modality=modality, location=(location or "").strip() or None)
 
 
 def _notified_ids(profile_id: str) -> set[str]:

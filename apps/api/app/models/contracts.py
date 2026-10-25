@@ -122,6 +122,14 @@ class RankedOpportunity(BaseModel):
     score: float
     reason: str
     notified: bool = False  # Droid alerted on it (profile_opportunities.notified)
+    # Opportunities: ten categories, programs, fits your week.
+    category: str | None = None  # OpportunityCategory.id
+    subcategory: str | None = None  # OpportunitySubcategory.id
+    ends_at: str | None = None
+    location: str | None = None  # as the source prints it
+    modality: "OpportunityModality | None" = None
+    window: str | None = None  # recurring programs: typical timing, as the official page states it
+    last_checked: str | None = None  # recurring programs: when the official page was read (YYYY-MM-DD)
 
 
 class AgentEvent(BaseModel):
@@ -202,6 +210,30 @@ class PlanResponse(BaseModel):
 
 class OpportunitiesResponse(BaseModel):
     items: list[RankedOpportunity]
+    # Opportunities: ten categories, programs, fits your week.
+    categories: list["OpportunityCategory"] | None = None  # all ten, with counts under the other filters
+
+
+# ---- Opportunities: ten categories, programs, fits your week ----
+
+OpportunityModality = Literal["in_person", "online", "hybrid"]
+
+
+class OpportunitySubcategory(BaseModel):
+    id: str
+    label: str
+    count: int
+
+
+class OpportunityCategory(BaseModel):
+    id: str
+    label: str
+    count: int
+    subcategories: list[OpportunitySubcategory]
+
+
+RankedOpportunity.model_rebuild()
+OpportunitiesResponse.model_rebuild()
 
 
 class CounselorRequest(BaseModel):
